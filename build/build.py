@@ -16,7 +16,13 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = 'Oktober 2026'
 LASTMOD = '2026-10-31'
+ASSETV = '2026-10-31c'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
+# Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
+# bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
+CONSENT_DEFAULT = ("<script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){dataLayer.push(arguments);};"
+                   "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',"
+                   "analytics_storage:'denied',wait_for_update:500});</script>")
 
 REGISTER = [
     ('wohnen', 'Wohnen', '/wohnung-kuendigen/'),
@@ -119,6 +125,7 @@ def kopf(s, canonical):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{CONSENT_DEFAULT}
 <title>{esc(s['title'])}</title>
 <meta name="description" content="{esc(s['description'])}">
 {"" if s["url"] == "/404/" else f'<link rel="canonical" href="{canonical}">'}
@@ -134,7 +141,7 @@ def kopf(s, canonical):
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/spectral-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/public-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v={LASTMOD}">
+<link rel="stylesheet" href="/assets/css/site.css?v={ASSETV}">
 {werbung}
 {ld}
 </head>'''
@@ -256,10 +263,10 @@ def seite(s):
     mit_leiste = not s.get('ohneLeiste')
     if mit_leiste:
         leiste = f'<aside class="leiste" aria-label="Seitenleiste">{toc_html}{"" if ohne else anzeige("seite")}</aside>'
-    scripts = ['<script src="/assets/js/site.js?v=' + LASTMOD + '" defer></script>']
+    scripts = ['<script src="/assets/js/site.js?v=' + ASSETV + '" defer></script>']
     if s.get('werkzeug'):
-        scripts.insert(0, '<script src="/assets/js/brief.js?v=' + LASTMOD + '" defer></script>')
-        scripts.insert(0, '<script src="/assets/js/fristen.js?v=' + LASTMOD + '" defer></script>')
+        scripts.insert(0, '<script src="/assets/js/brief.js?v=' + ASSETV + '" defer></script>')
+        scripts.insert(0, '<script src="/assets/js/fristen.js?v=' + ASSETV + '" defer></script>')
     lead = f'<p class="lead">{s["lead"]}</p>' if s.get('lead') else ''
     held = s.get('held')
     if held:
@@ -352,7 +359,7 @@ def main():
     (OUT / 'sitemap.xml').write_text('\n'.join(xml) + '\n', encoding='utf-8')
     (OUT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n', encoding='utf-8')
     (OUT / 'ads.txt').write_text('google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0\n', encoding='utf-8')
-    (OUT / 'CNAME').write_text('vorlagenfundus24.de\n', encoding='utf-8')
+    (OUT / 'CNAME').write_text('vorlagenfundus24.de', encoding='utf-8')
     (OUT / '.nojekyll').write_text('', encoding='utf-8')
     (OUT / 'favicon.svg').write_text(LOGO.replace('aria-hidden="true" focusable="false"', 'xmlns="http://www.w3.org/2000/svg"').replace('<rect x="3" y="7"', '<rect width="40" height="40" rx="6" fill="#1F2A44"/><rect x="3" y="7"'), encoding='utf-8')
     print(f'{len(seiten)} Seiten, {len(WEITERLEITUNGEN)} Weiterleitungen gebaut.')

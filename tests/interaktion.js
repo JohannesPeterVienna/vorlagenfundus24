@@ -23,6 +23,18 @@ const assert = require('assert');
   assert((await page.textContent('.blatt')).includes('Wohnung Musterstraße 1'), 'Nutzereingabe verändert');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('text=Als Word-Datei (.docx)')]);
   await dl.saveAs(out + '/test.docx');
+  // AT befristet, erstes Jahr läuft: Sperrhinweis in Vorschau, Versand und .docx (gleiche Regeln)
+  await page.check('input[name=land][value=AT]');
+  await page.selectOption('#b-miete-kuendigung-variante_AT', 'befristet');
+  await page.fill('#b-miete-kuendigung-mietbeginn', '2026-01-01');
+  await page.fill('#b-miete-kuendigung-zugang', '2026-10-31');
+  const at = await page.textContent('.blatt');
+  assert(at.includes('ENTWURF – erst ab 1. Jänner 2027 verwendbar') && !at.includes('abgelaufen'), at.slice(0, 400));
+  assert((await page.textContent('.versand')).includes('ENTWURF'));
+  const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('text=Als Word-Datei (.docx)')]);
+  await dl2.saveAs(out + '/test-at.docx');
+  assert(require('fs').readFileSync(out + '/test-at.docx').toString('utf8').includes('ENTWURF – erst ab'), 'docx ohne Sperrhinweis');
+  await page.selectOption('#b-miete-kuendigung-variante_AT', 'unbefristet-monatlich');
   await page.emulateMedia({ media: 'print' });
   await page.evaluate(() => { document.body.classList.add('druck-brief'); const b = document.querySelector('.blatt').cloneNode(true); const d = document.createElement('div'); d.className = 'druckbereich'; b.style.transform = 'none'; d.appendChild(b); document.body.appendChild(d); });
   await page.pdf({ path: out + '/test.pdf', format: 'A4', printBackground: true, preferCSSPageSize: true });

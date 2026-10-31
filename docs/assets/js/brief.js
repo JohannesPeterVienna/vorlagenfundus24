@@ -57,6 +57,7 @@
     'DE-355-BGB': ['§ 355 BGB', 'https://www.gesetze-im-internet.de/bgb/__355.html'],
     'AT-VGG': ['§§ 10, 11, 28 VGG', 'https://ris.bka.gv.at/eli/bgbl/i/2021/175/P10/NOR40279639'],
     'DE-438': ['§ 438 BGB', 'https://www.gesetze-im-internet.de/bgb/__438.html'],
+    'DE-475e': ['§ 475e BGB', 'https://www.gesetze-im-internet.de/bgb/__475e.html'],
     'CH-210': ['Art. 210 OR', 'https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_210'],
     'CH-70-ZGB': ['Art. 70 Abs. 2 ZGB', 'https://www.fedlex.admin.ch/eli/cc/24/233_245_233/de#art_70'],
     'AT-902': ['§§ 902, 903 ABGB', 'https://www.ris.bka.gv.at/eli/jgs/1811/946/P902/NOR12018626'],
@@ -121,12 +122,13 @@
       versandArt: 'frist',
       felder: [
         { id: 'objekt', label: 'Adresse der Wohnung', typ: 'text', hilfe: 'Straße, Hausnummer, Tür/Top, PLZ Ort' },
-        { id: 'mietbeginn', label: 'Mietbeginn laut Vertrag', typ: 'date' },
+        { id: 'mietbeginn', label: 'Mietbeginn laut Vertrag', typ: 'date', hilfe: 'Bei befristeten Verträgen in Österreich: Beginn der Vertragsdauer bzw. der Verlängerung.' },
         { id: 'variante_AT', nur: 'AT', label: 'Art des Mietvertrags', typ: 'select', optionen: [['unbefristet-monatlich', 'Unbefristet, Miete monatlich'], ['unbefristet-laenger', 'Unbefristet, Miete in längeren Abständen'], ['befristet', 'Befristet (vorzeitige Kündigung nach § 29 Abs. 2 MRG)']] },
         { id: 'variante_DE', nur: 'DE', label: 'Art der Wohnung', typ: 'select', optionen: [['standard', 'Normale Mietwohnung'], ['moebliert', 'Möbliertes Zimmer in der Wohnung der Vermietung (§ 549 Abs. 2 Nr. 2 BGB)']] },
         { id: 'variante_CH', nur: 'CH', label: 'Kündigungstermin', typ: 'select', optionen: [['ortsueblich', 'Ortsübliche Termine (Gemeinde/Kanton)'], ['mietdauer', 'Kein Ortsgebrauch: Ende einer dreimonatigen Mietdauer']] },
         { id: 'termine_CH', nur: 'CH', label: 'Ortsübliche Termine (Monatsende)', typ: 'monate', hilfe: 'Häufig sind es mehrere Monatsenden im Jahr. Den Mietvertrag oder die Gemeinde fragen.' , def: '3,6,9' },
         { id: 'zugang', label: 'Wann geht der Brief voraussichtlich zu?', typ: 'date', hilfe: 'Postlaufzeit einrechnen. Maßgeblich ist der Zugang, nicht das Absendedatum.' },
+        { id: 'feiertage_DE', nur: 'DE', label: 'Feiertage am Ort, an dem der Brief zugeht', typ: 'feiertage', land: 'DE', hilfe: 'Landesfeiertage (z. B. Fronleichnam, Reformationstag, Allerheiligen) zählen nicht als Werktag und verschieben den dritten Werktag.' },
         { id: 'vertrag_frist', label: 'Steht im Vertrag eine längere Frist oder ein anderer Termin?', typ: 'check', hilfe: 'Dann gilt der Vertrag, soweit er für Sie nicht ungünstiger ist als das Gesetz. Der Rechner zeigt nur die gesetzliche Frist.' },
         { id: 'uebergabe', label: 'Terminvorschlag für die Wohnungsübergabe (optional)', typ: 'text' },
         { id: 'iban', label: 'Konto für die Rückzahlung der Kaution (optional)', typ: 'text', hilfe: 'IBAN und Kontoinhaber' },
@@ -137,6 +139,7 @@
         var opts = { land: land, zugang: v.zugang || HEUTE, feiertage: FT, mietbeginn: v.mietbeginn || null,
           variante: v['variante_' + land] || ({ AT: 'unbefristet-monatlich', DE: 'standard', CH: 'ortsueblich' })[land],
           terminMonate: String(v.termine_CH || '3,6,9').split(',') };
+        if (land === 'DE') opts.eigeneFeiertage = landFeiertage('DE', opts.zugang, v.feiertage_DE);
         try { return F.mietKuendigung(opts); } catch (e) { return { fehler: e.message }; }
       },
       text: function (land, v, fr) {
@@ -144,13 +147,27 @@
         var a = [];
         a.push(ch(land, 'hiermit kündige ich ' + (leer(v.mitmieter) ? '' : 'gemeinsam mit ' + roh(v.mitmieter) + ' ') +
           'das Mietverhältnis über die Wohnung ' + oder(v.objekt, 'Adresse der Wohnung') + ' fristgerecht zum ' + termin + ', hilfsweise zum nächstmöglichen Termin.'));
-        if (land === 'AT') a.push('Die Kündigung erfolgt schriftlich nach § 33 Abs. 1 MRG. ' + (v.variante_AT === 'befristet' ? 'Der Mietvertrag ist befristet; das erste Vertragsjahr ist abgelaufen, sodass ich von meinem Kündigungsrecht nach § 29 Abs. 2 MRG Gebrauch mache.' : 'Ich ersuche um eine kurze schriftliche Bestätigung des Kündigungstermins.'));
+        var sperre = null;
+        if (land === 'AT') {
+          // Tatsachen im Brief nur aus den geprüften Voraussetzungen (fr.jahrStatus) ableiten.
+          var befr = fr && fr.regel === 'AT-29-2-MRG';
+          var satz = 'Ich ersuche um eine kurze schriftliche Bestätigung des Kündigungstermins.';
+          if (befr && fr.jahrStatus === 'abgelaufen') satz = 'Der Mietvertrag ist befristet. Das erste Jahr der Vertragsdauer ist mit ' + datum(fr.jahrEnde, land) + ' abgelaufen; ich mache daher von meinem Kündigungsrecht nach § 29 Abs. 2 MRG Gebrauch. ' + satz;
+          else if (befr) satz = 'Der Mietvertrag ist befristet; ich mache von meinem Kündigungsrecht nach § 29 Abs. 2 MRG Gebrauch. ' + satz;
+          if (befr && fr.jahrStatus === 'laeuft') sperre = 'ENTWURF – erst ab ' + datum(fr.fruehesterZugang, land) + ' verwendbar: Das Schreiben darf frühestens an diesem Tag zugehen (§ 29 Abs. 2 MRG, erstes Vertragsjahr endet am ' + datum(fr.jahrEnde, land) + ').';
+          if (befr && fr.jahrStatus === 'unbekannt') sperre = 'ENTWURF – nicht versandfertig: Beginn der Vertragsdauer eintragen. Erst dann lässt sich prüfen, ob das erste Vertragsjahr abgelaufen ist (§ 29 Abs. 2 MRG).';
+          a.push('Die Kündigung erfolgt schriftlich nach § 33 Abs. 1 MRG. ' + satz);
+        }
         if (land === 'DE') a.push('Bitte bestätigen Sie mir den Eingang dieser Kündigung und das Beendigungsdatum schriftlich.');
         if (land === 'CH') a.push(ch(land, 'Bitte bestätigen Sie mir den Eingang dieser Kündigung und den Beendigungstermin schriftlich.' + (v.familie_CH ? ' Die Zustimmung meines Ehegatten bzw. meiner eingetragenen Partnerin oder meines eingetragenen Partners nach Art. 266m OR liegt vor; die Unterschrift steht unten.' : '')));
         if (!leer(v.uebergabe)) a.push(ch(land, 'Für die Übergabe der Wohnung schlage ich folgenden Termin vor: ' + roh(v.uebergabe) + '. ' + bitte(land) + ', mir mitzuteilen, ob der Termin passt.'));
         a.push(ch(land, bitte(land) + ', die Kaution nach Rückgabe der Wohnung ' + (leer(v.iban) ? 'auf das Ihnen bekannte Konto' : 'auf folgendes Konto: ' + roh(v.iban) + ',') + ' zurückzuzahlen' + (land === 'AT' ? ', samt den Zinsen aus ihrer Veranlagung' : '') + '.'));
+        // Unterschriften: Mietparteien und Zustimmung (Art. 266m OR) getrennt bestimmen.
+        var zusatz = [];
+        if (!leer(v.mitmieter)) zusatz.push('Weitere Mieterin/weiterer Mieter: ' + String(v.mitmieter).trim());
+        if (land === 'CH' && v.familie_CH) zusatz.push('Zustimmung nach Art. 266m OR (Ehegatte bzw. eingetragene Partnerin/eingetragener Partner)');
         return { betreff: 'Kündigung des Mietvertrags – ' + oder(v.objekt, 'Wohnung'), absaetze: a,
-          unterschriften: leer(v.mitmieter) ? 1 : 2 + (land === 'CH' && v.familie_CH ? 1 : 0) };
+          unterschriften: 1 + zusatz.length, unterschriftZeilen: zusatz, sperre: sperre };
       }
     },
 
@@ -247,13 +264,17 @@
         { id: 'uebergabe', label: 'Übergabe bzw. Lieferung am', typ: 'date' },
         { id: 'beleg', label: 'Rechnungs- oder Bestellnummer', typ: 'text' },
         { id: 'mangel', label: 'Beschreibung des Mangels', typ: 'textarea' },
+        { id: 'vertrag', label: 'Kaufvertrag geschlossen am (Bestelldatum)', typ: 'date', hilfe: 'Wichtig für die Verlängerung nach einer Reparatur (DE: Verträge ab 31.07.2026, AT: ab 01.10.2026).' },
         { id: 'entdeckt', label: 'Mangel entdeckt am', typ: 'date' },
+        { id: 'nachbesserung', nur: 'AT,DE', label: 'Der Verkäufer hat den Mangel bereits im Rahmen der Gewährleistung repariert', typ: 'check', hilfe: 'DE: § 475e Abs. 5 BGB, AT: § 10 Abs. 2a VGG – einmalige Verlängerung um ein Jahr.' },
+        { id: 'rueckerhalt', nur: 'DE', label: 'Ware nach Reparatur oder Austausch zurückerhalten am (optional)', typ: 'date', hilfe: '§ 475e Abs. 4 BGB: frühestens zwei Monate danach verjähren die Ansprüche wegen dieses Mangels.' },
         { id: 'wunsch', label: 'Was verlangen Sie zuerst?', typ: 'select', optionen: [['reparatur', 'Reparatur'], ['austausch', 'Austausch gegen eine mangelfreie Sache']] },
         { id: 'fristTage', label: 'Frist (Tage)', typ: 'number', def: '14' }
       ],
       fristen: function (land, v) {
         try {
-          var g = F.gewaehrleistung({ land: land, uebergabe: v.uebergabe || HEUTE });
+          var g = F.gewaehrleistung({ land: land, uebergabe: v.uebergabe || HEUTE, vertrag: v.vertrag || null, entdeckt: v.entdeckt || null,
+            nachbesserung: land !== 'CH' && !!v.nachbesserung, rueckerhalt: land === 'DE' ? v.rueckerhalt || null : null });
           g.antwortBis = F.fristEnde({ ereignis: F.iso(F.addDays(F.parse(HEUTE), 3)), anzahl: +v.fristTage || 14, einheit: 'tage', land: land, feiertage: FT }).ende;
           return g;
         } catch (e) { return { fehler: e.message }; }
@@ -467,10 +488,11 @@
     var z = function (label, wert, mark) { return '<div class="fristzeile"><span>' + esc(label) + '</span><b' + (mark ? ' class="mark"' : '') + '>' + esc(wert) + '</b></div>'; };
     var h = '';
     if (id === 'miete-kuendigung') {
+      if (fr.fruehesterZugang) h += z('Frühester zulässiger Zugang (§ 29 Abs. 2 MRG)', datum(fr.fruehesterZugang, land) + ' (' + F.weekdayDE(fr.fruehesterZugang) + ')', true);
       h += z('Kündigungstermin (Ende des Mietverhältnisses)', datum(fr.termin, land), true);
       h += z('Spätester Zugang beim Empfänger', datum(fr.spaetesterZugang, land) + ' (' + F.weekdayDE(fr.spaetesterZugang) + ')', true);
       h += z('Puffer bis dahin', fr.puffer >= 0 ? fr.puffer + ' Tage' : 'überschritten');
-      if (fr.hinweis) h += '<p class="fristquelle">' + esc(fr.hinweis) + '</p>';
+      if (fr.hinweis) h += '<p class="fristquelle">' + esc(fr.hinweis.replace(/\d{4}-\d{2}-\d{2}/g, function (d) { return datum(d, land); })) + '</p>';
       h += '<p class="fristquelle">Grundlage: ' + quelleHtml(fr.regel) + (land === 'AT' ? ', Form: ' + quelleHtml('AT-33-MRG') : land === 'DE' ? ', Form: ' + quelleHtml('DE-568') : ', Form: ' + quelleHtml('CH-266l')) + '. Vertragliche Abweichungen gehen vor, soweit sie zulässig sind.</p>';
     } else if (id === 'ruecktritt') {
       if (fr.hinweisCH) return '<p>In der Schweiz gibt es kein allgemeines gesetzliches Widerrufsrecht für Online-Käufe. Maßgeblich sind die Bedingungen des Shops. Das Schreiben ist deshalb als Rückgabe- bzw. Kulanzanfrage formuliert.</p>';
@@ -478,11 +500,8 @@
       if (fr.verschoben.length) h += '<p class="fristquelle">Verschoben, weil ' + fr.verschoben.map(function (s) { return datum(s.datum, land) + ' (' + s.grund + ')'; }).join(', ') + ' kein Werktag ist.</p>';
       h += '<p class="fristquelle">Grundlage: ' + quelleHtml(fr.regel) + '. Es genügt, die Erklärung innerhalb der Frist abzusenden.</p>';
     } else if (id === 'reklamation') {
-      if (fr.vermutungBis) h += z('Vermutung, dass der Mangel schon bei Übergabe bestand, bis', datum(fr.vermutungBis, land));
-      h += z(land === 'AT' ? 'Mangel muss hervorkommen bis' : 'Gewährleistungsfrist endet', datum(fr.fristEnde, land), true);
-      if (land === 'AT') h += z('Verjährung der Rechte', datum(fr.verjaehrung, land));
+      h += gewaehrleistungHtml(land, fr, z);
       h += z('Frist im Schreiben', datum(fr.antwortBis, land));
-      h += '<p class="fristquelle">Grundlage: ' + quelleHtml(land === 'AT' ? 'AT-VGG' : land === 'DE' ? 'DE-438' : 'CH-210') + ' (Kauf neuer Waren durch Verbraucher; Abweichungen bei gebrauchten Sachen und Liegenschaften möglich).</p>';
     } else if (id === 'kaution' || id === 'maengel') {
       h += z('Frist im Schreiben (bei Zugang in etwa 3 Tagen)', datum(fr.ende, land), true);
       h += '<p class="fristquelle">Eine angemessene Frist setzen Sie selbst; sie ist im Gesetz nicht in Tagen festgelegt. Fristende auf Wochenende oder Feiertag wird auf den nächsten Werktag gelegt.</p>';
@@ -504,6 +523,44 @@
     return h;
   }
 
+  /*
+   * Gewährleistung: Anzeige nur aus dem Ergebnis von F.gewaehrleistung. Nie als endgültiges Ende der
+   * Ansprüche beschriften – ohne Sonderregel heißt der Wert "Grundfrist".
+   */
+  var GW_REGEL = {
+    'DE-475e-3': 'Ablaufhemmung: vier Monate ab dem ersten Zeigen des Mangels (§ 475e Abs. 3 BGB)',
+    'DE-475e-4': 'zwei Monate ab Rückerhalt nach Nacherfüllung (§ 475e Abs. 4 BGB)',
+    'DE-475e-5': 'Verlängerung um zwölf Monate nach Nachbesserung (§ 475e Abs. 5 BGB)',
+    'AT-10-2a': 'Verlängerung um ein Jahr nach Verbesserung (§ 10 Abs. 2a VGG)'
+  };
+  function gewaehrleistungHtml(land, fr, z) {
+    var h = '';
+    if (fr.vermutungBis) h += z('Vermutung, dass der Mangel schon bei Übergabe bestand, bis', datum(fr.vermutungBis, land));
+    h += z('Grundfrist (zwei Jahre ab Übergabe)', datum(fr.grundfrist, land), fr.nurGrundfrist);
+    if (land === 'AT') {
+      if (fr.fristEnde !== fr.grundfrist) h += z('Verlängerte Gewährleistungsfrist (Mangel muss hervorkommen bis)', datum(fr.fristEnde, land), true);
+      h += z('Verjährung frühestens (gerichtlich geltend machen bis)', datum(fr.verjaehrung, land), true);
+    } else if (land === 'DE' && !fr.nurGrundfrist) {
+      h += z('Verjährung frühestens am (nach den erfassten Regeln)', datum(fr.verjaehrung, land), true);
+    }
+    if (fr.angewandt.length) h += '<p class="fristquelle">Berücksichtigt: ' + fr.angewandt.map(function (k) { return esc(GW_REGEL[k]); }).join('; ') + '.</p>';
+    fr.hinweise.forEach(function (t) { h += '<p class="fristquelle">' + esc(t) + '</p>'; });
+    h += '<p class="fristquelle">Kein endgültiges Ende Ihrer Ansprüche: ' + L(land, {
+      DE: 'Nicht eingerechnet sind etwa die Hemmung durch Verhandlungen oder Klage (§§ 203, 204 BGB), Arglist, Garantien und digitale Elemente.',
+      AT: 'Nicht eingerechnet sind etwa Garantien, Rechtsmängel und digitale Leistungen. Haben Sie den Mangel innerhalb der Frist angezeigt, bleibt die Einrede nach § 28 Abs. 3 VGG.',
+      CH: 'Nicht eingerechnet sind etwa absichtliche Täuschung (Art. 210 Abs. 6 OR), Garantien und abweichende Vereinbarungen bei gebrauchten Sachen. Mängel sind sofort nach Entdeckung zu rügen (Art. 201 OR).'
+    }) + ' Grundlage: ' + quelleHtml(land === 'AT' ? 'AT-VGG' : land === 'DE' ? 'DE-438' : 'CH-210') + (land === 'DE' ? ', ' + quelleHtml('DE-475e') : '') + ' (Kauf neuer Waren durch Verbraucher).</p>';
+    return h;
+  }
+
+  /* Landes-/Ortsfeiertage aus der Auswahl für das Zugangsjahr und das Folgejahr auflösen. */
+  function landFeiertage(land, zugang, ids) {
+    var liste = String(ids || '').split(',').filter(Boolean);
+    if (!liste.length) return [];
+    var y; try { y = F.parse(zugang).getUTCFullYear(); } catch (e) { return []; }
+    return F.expandOptional(land, [y, y + 1], FT, liste);
+  }
+
   /* ================= A4-Vorschau ================= */
   function briefDaten(id, land, v) {
     var vor = VORLAGEN[id], fr = vor.fristen ? vor.fristen(land, v) : null;
@@ -515,6 +572,7 @@
       vermerk: v.vermerk || '', ort: (v.ort || '').trim(), datum: v.datum || HEUTE,
       betreff: zurueck(t.betreff), anrede: t.keineAnrede ? '' : zurueck(t.anrede || ANREDE), absaetze: t.absaetze.map(zurueck), gruss: gruss(land),
       anlagen: t.anlagen || [], unterschriften: t.unterschriften || 1, signatur: zurueck(t.signatur || (v.abs_name || '').trim()),
+      unterschriftZeilen: t.unterschriftZeilen || (t.unterschriften > 1 ? ['weitere Unterschrift(en)'] : []), sperre: t.sperre || null,
       fensterRechts: !!v.fenster_rechts
     };
   }
@@ -533,12 +591,12 @@
     h += '<div class="zone anschrift"><div class="ruecksende">' + esc(b.abs.join(', ')) + '</div><div class="vermerk">' + (b.vermerk ? esc(b.vermerk) : '') + '</div>' +
       (b.emp.length ? b.emp.map(esc).join('<br>') : '<span style="color:#888">[Empfänger]</span>') + '</div>';
     h += '<div class="zone info">' + esc((b.ort ? b.ort + ', ' : '') + datum(b.datum, b.land)) + '</div>';
-    h += '<div class="zone text"><p class="betreff">' + esc(b.betreff) + '</p>';
+    h += '<div class="zone text">' + (b.sperre ? '<p class="sperre" role="alert">' + esc(b.sperre) + '</p>' : '') + '<p class="betreff">' + esc(b.betreff) + '</p>';
     if (b.anrede) h += '<p>' + esc(b.anrede) + '</p>';
     erstAbsatz(b).forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
     h += '<p class="gruss">' + esc(b.gruss) + '</p><div class="unterschrift"></div>';
     h += '<p>' + esc(b.signatur || '') + '</p>';
-    if (b.unterschriften > 1) h += '<p style="margin-top:12mm">______________________________<br><small>weitere Unterschrift(en)</small></p>';
+    b.unterschriftZeilen.forEach(function (t) { h += '<p class="weitere-unterschrift" style="margin-top:12mm">______________________________<br><small>' + esc(t) + '</small></p>'; });
     if (b.anlagen.length) h += '<p class="anlagen">Anlage' + (b.anlagen.length > 1 ? 'n' : '') + ':<br>' + b.anlagen.map(esc).join('<br>') + '</p>';
     h += '</div><div class="ueberlauf">Der Text ist länger als eine Seite. Bitte kürzen oder in einem Textprogramm weiterbearbeiten.</div><div class="fensterlage" aria-hidden="true"></div>';
     return h;
@@ -603,11 +661,13 @@
     if (b.vermerk) body += p(b.vermerk.toUpperCase(), { gr: 16, nach: 60 });
     body += p(b.emp.join('\n') || '[Empfänger]', { nach: mm(10) });
     body += p((b.ort ? b.ort + ', ' : '') + datum(b.datum, b.land), { rechts: true, nach: mm(8) });
+    if (b.sperre) body += p(b.sperre, { fett: true, nach: 200 });
     body += p(b.betreff, { fett: true, nach: 280 });
     if (b.anrede) body += p(b.anrede);
     erstAbsatz(b).forEach(function (a) { body += p(a); });
     body += p(b.gruss, { vor: 200, nach: mm(14) });
     body += p(b.signatur || '');
+    b.unterschriftZeilen.forEach(function (t) { body += p('______________________________\n' + t, { vor: mm(12), gr: 18 }); });
     if (b.anlagen.length) body += p('Anlage' + (b.anlagen.length > 1 ? 'n' : '') + ':\n' + b.anlagen.join('\n'), { vor: 240, gr: 20 });
     var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body +
       '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="' + mm(15) + '" w:right="' + mm(20) + '" w:bottom="' + mm(20) + '" w:left="' + mm(25) + '" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>';
@@ -662,6 +722,14 @@
     else if (f.typ === 'select') {
       inp = el('select', { id: id, name: f.id });
       f.optionen.forEach(function (o) { inp.appendChild(el('option', { value: o[0], text: o[1] })); });
+    } else if (f.typ === 'feiertage') {
+      var fbox = el('div', { class: 'wahl', role: 'group', 'aria-labelledby': id + '-l' });
+      ((FT && FT[f.land] && FT[f.land].optional) || []).forEach(function (h) {
+        fbox.appendChild(el('label', {}, [el('input', { type: 'checkbox', name: f.id, value: h.id }), ' ' + h.name]));
+      });
+      var fw = el('div', { class: 'feld' }, [el('span', { id: id + '-l', class: 'feldtitel', style: 'display:block;font-weight:600;font-size:.92rem;margin-bottom:.25rem', text: f.label }), fbox]);
+      if (f.hilfe) fw.appendChild(el('small', { class: 'hilfe', text: f.hilfe }));
+      return fw;
     } else if (f.typ === 'monate') {
       var box = el('div', { class: 'wahl', role: 'group', 'aria-labelledby': id + '-l' });
       var mon = ['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -775,12 +843,13 @@
     var letzte = null;
     function aktualisiere() {
       var v = werte(form), land = v.land || 'AT';
-      $all('[data-nur]', form).forEach(function (n) { n.hidden = n.getAttribute('data-nur') !== land; });
+      $all('[data-nur]', form).forEach(function (n) { n.hidden = n.getAttribute('data-nur').split(',').indexOf(land) === -1; });
       var b = briefDaten(id, land, v); letzte = b;
       var fh = fristenHtml(id, land, b.fr);
       fristBox.hidden = !fh;
       fristBox.innerHTML = fh ? '<h3>Fristen für ' + ({ AT: 'Österreich', DE: 'Deutschland', CH: 'die Schweiz' })[land] + '</h3>' + fh : '';
       var ve = versandEmpfehlung(land, vor.versandArt, b.fr && typeof b.fr.puffer === 'number' ? b.fr.puffer : null);
+      if (b.sperre) ve.warnung = b.sperre;
       versandBox.innerHTML = '<h3>Versand: ' + esc(ve.titel) + '</h3>' + (ve.warnung ? '<p class="nok">' + esc(ve.warnung) + '</p>' : '') + '<ol>' + ve.schritte.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
       blatt.className = 'blatt' + (b.fensterRechts ? ' fenster-rechts' : '');
       blatt.innerHTML = blattHtml(b);
@@ -805,7 +874,8 @@
     });
     bText.addEventListener('click', function () {
       if (!letzte) return;
-      var t = [letzte.betreff, '', letzte.anrede].concat(erstAbsatz(letzte)).concat(['', letzte.gruss, '', letzte.signatur]).join('\n');
+      var t = (letzte.sperre ? [letzte.sperre, ''] : []).concat([letzte.betreff, '', letzte.anrede]).concat(erstAbsatz(letzte)).concat(['', letzte.gruss, '', letzte.signatur])
+        .concat(letzte.unterschriftZeilen.map(function (z) { return '\n______________________________\n' + z; })).join('\n');
       if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { status.textContent = 'Text in die Zwischenablage kopiert.'; }, function () { status.textContent = 'Kopieren nicht möglich.'; });
     });
     bLoesch.addEventListener('click', function () {
@@ -873,10 +943,10 @@
               '<div class="fristzeile"><span>Mietende</span><b class="mark">' + esc(datum(r.termin, x[1])) + '</b></div>' +
               '<div class="fristzeile"><span>Spätester Zugang</span><b>' + esc(datum(r.spaetesterZugang, x[1])) + '</b></div>' +
               '<div class="fristzeile"><span>Puffer</span><b>' + (r.puffer >= 0 ? r.puffer + ' Tage' : '–') + '</b></div>' +
-              (r.hinweis ? '<p class="fristquelle">' + esc(r.hinweis) + '</p>' : '') +
+              (r.hinweis ? '<p class="fristquelle">' + esc(r.hinweis.replace(/\d{4}-\d{2}-\d{2}/g, function (d) { return datum(d, x[1]); })) + '</p>' : '') +
               '<p class="fristquelle">' + quelleHtml(r.regel) + '</p></section>';
           });
-          aus.innerHTML = '<h3 style="margin-top:0">Zugang am ' + esc(datum(z, 'DE')) + ' (' + F.weekdayDE(z) + ')</h3><div class="vergleich">' + karten + '</div><p class="fristquelle">Gesetzliche Mindestregeln für Mieterinnen und Mieter. Verträge können längere Fristen oder andere Termine vorsehen. Keine Rechtsberatung.</p>';
+          aus.innerHTML = '<h3 style="margin-top:0">Zugang am ' + esc(datum(z, 'DE')) + ' (' + F.weekdayDE(z) + ')</h3><div class="vergleich">' + karten + '</div><p class="fristquelle">Gesetzliche Mindestregeln für Mieterinnen und Mieter. Deutschland: nur bundesweite Feiertage – Landesfeiertage können den dritten Werktag verschieben; sie lassen sich im Brief-Assistenten auf der Seite „Wohnung kündigen“ anhaken. Verträge können längere Fristen oder andere Termine vorsehen. Keine Rechtsberatung.</p>';
         } else {
           var land = v.land || 'AT';
           var jahre = [F.parse(v.ereignis || HEUTE).getUTCFullYear(), F.parse(v.ereignis || HEUTE).getUTCFullYear() + 1, F.parse(v.ereignis || HEUTE).getUTCFullYear() + 2];
@@ -992,5 +1062,6 @@
   });
 
   // für Tests
-  window.VFBrief = { versandEmpfehlung: versandEmpfehlung, VORLAGEN: VORLAGEN, crc32: crc32 };
+  window.VFBrief = { versandEmpfehlung: versandEmpfehlung, VORLAGEN: VORLAGEN, crc32: crc32, briefDaten: briefDaten, blattHtml: blattHtml,
+    fristenHtml: fristenHtml, setzeFeiertage: function (d) { FT = d; } };
 })();

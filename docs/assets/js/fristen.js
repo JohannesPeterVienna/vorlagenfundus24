@@ -202,13 +202,25 @@
       var t3 = endOfMonthOffset(z, mon);
       out = { termin: iso(t3), spaetesterZugang: spaetesterZugangFuerTermin(iso(t3), mon),
         regel: v === 'befristet' ? 'AT-29-2-MRG' : 'AT-560-ZPO', hinweis: null };
-      if (v === 'befristet' && opts.mietbeginn) {
-        var frueh = addMonths(parse(opts.mietbeginn), 12);
-        if (z.getTime() < frueh.getTime()) {
-          out.hinweis = 'Das erste Mietjahr ist am Zugangstag noch nicht abgelaufen (Ende: ' + iso(addDays(frueh, -1)) + '). Das Kündigungsrecht nach § 29 Abs. 2 MRG besteht erst danach.';
-          out.fruehesterZugang = iso(frueh);
-          var t4 = endOfMonthOffset(frueh, 3);
-          out.termin = iso(t4); out.spaetesterZugang = spaetesterZugangFuerTermin(iso(t4), 3);
+      /*
+       * § 29 Abs. 2 MRG: Kündigungsrecht erst "nach Ablauf eines Jahres" der (verlängerten) Dauer.
+       * jahrStatus: "abgelaufen" (geprüft), "laeuft" (Zugang zu früh → Brief nur als Entwurf ab
+       * fruehesterZugang verwendbar), "unbekannt" (Mietbeginn fehlt → nicht prüfbar, kein Versand).
+       */
+      if (v === 'befristet') {
+        if (!opts.mietbeginn) {
+          out.jahrStatus = 'unbekannt';
+          out.hinweis = 'Ohne Beginn der Vertragsdauer lässt sich nicht prüfen, ob das erste Jahr abgelaufen ist. Erst danach besteht das Kündigungsrecht nach § 29 Abs. 2 MRG.';
+        } else {
+          var frueh = addMonths(parse(opts.mietbeginn), 12);
+          out.jahrEnde = iso(addDays(frueh, -1));
+          if (z.getTime() < frueh.getTime()) {
+            out.jahrStatus = 'laeuft';
+            out.hinweis = 'Das erste Vertragsjahr ist am Zugangstag noch nicht abgelaufen (Ende: ' + out.jahrEnde + '). Das Kündigungsrecht nach § 29 Abs. 2 MRG besteht erst danach; der Brief darf frühestens am ' + iso(frueh) + ' zugehen.';
+            out.fruehesterZugang = iso(frueh);
+            var t4 = endOfMonthOffset(frueh, 3);
+            out.termin = iso(t4); out.spaetesterZugang = spaetesterZugangFuerTermin(iso(t4), 3);
+          } else out.jahrStatus = 'abgelaufen';
         }
       }
     } else if (land === 'CH' && v === 'ortsueblich') {
@@ -258,11 +270,64 @@
    * DE § 438 Abs. 1 Nr. 3, Abs. 2 BGB: zwei Jahre ab Ablieferung; § 477 Abs. 1 BGB: Vermutung 1 Jahr.
    * CH Art. 210 Abs. 1 OR: zwei Jahre ab Ablieferung; Art. 201 OR: Rüge sofort nach Entdeckung.
    */
+  /*
+   * Erweiterungen (Stand 31.10.2026, an den Primärquellen geprüft):
+   * DE § 475e Abs. 3 BGB: Zeigt sich der Mangel innerhalb der Verjährungsfrist, keine Verjährung vor
+   *     Ablauf von vier Monaten ab dem ersten Zeigen (Ablaufhemmung).
+   * DE § 475e Abs. 4 BGB: Ware zur Nacherfüllung/Garantie übergeben → keine Verjährung (für diesen
+   *     Mangel) vor Ablauf von zwei Monaten nach Rückgabe der nachgebesserten/ersetzten Ware.
+   * DE § 475e Abs. 5 BGB: Nacherfüllung durch Nachbesserung → ursprüngliche Verjährungsfrist einmalig
+   *     +12 Monate; nur für Kaufverträge ab 31.07.2026 (Art. 229 § 72 EGBGB).
+   * AT § 10 Abs. 2a VGG: Verbesserung nach § 12 Abs. 2 → Gewährleistungsfrist einmal +1 Jahr; nur für
+   *     Verträge nach dem 30.09.2026 (§ 29 Abs. 4 VGG). § 28 Abs. 1 VGG: Verjährung 3 Monate danach.
+   * Nicht erfasst (deshalb nie "endgültiges" Ende): Hemmung durch Verhandlungen/Klage (§§ 203, 204
+   * BGB), Arglist, Garantien, vertraglich verkürzte Fristen bei gebrauchten Waren, Rechtsmängel,
+   * digitale Elemente (§ 475e Abs. 1, 2 BGB; § 10 Abs. 2 VGG), Bauwerke/Werkverträge.
+   * opts: land, uebergabe, vertrag (Kaufdatum, optional), entdeckt (optional),
+   *       nachbesserung (bool), rueckerhalt (DE: Ware nach Nacherfüllung zurückerhalten, optional)
+   */
+  var STICHTAG_REPARATUR = { DE: '2026-07-31', AT: '2026-10-01' }; // Vertrag am/ab diesem Tag
   function gewaehrleistung(opts) {
-    var u = parse(opts.uebergabe), r = { land: opts.land, uebergabe: iso(u) };
-    r.vermutungBis = opts.land === 'CH' ? null : iso(addMonths(u, 12));
-    r.fristEnde = iso(addMonths(u, 24));
-    r.verjaehrung = opts.land === 'AT' ? iso(addMonths(u, 27)) : iso(addMonths(u, 24));
+    var land = opts.land, u = parse(opts.uebergabe), r = { land: land, uebergabe: iso(u), angewandt: [], hinweise: [] };
+    var grund = addMonths(u, 24);
+    r.vermutungBis = land === 'CH' ? null : iso(addMonths(u, 12));
+    r.grundfrist = iso(grund);
+    var verl = false;
+    if (opts.nachbesserung && STICHTAG_REPARATUR[land]) {
+      var stich = parse(STICHTAG_REPARATUR[land]);
+      var v = opts.vertrag ? parse(opts.vertrag) : null;
+      if (v && v.getTime() >= stich.getTime()) verl = true;
+      else if (!v && u.getTime() < stich.getTime()) r.hinweise.push('Die Verlängerung nach einer Reparatur gilt nur für Kaufverträge ab ' + STICHTAG_REPARATUR[land] + '; bei Übergabe vor diesem Tag ist der Vertrag älter.');
+      else if (!v) r.hinweise.push('Für die Verlängerung nach einer Reparatur bitte das Kaufdatum eintragen (Verträge ab ' + STICHTAG_REPARATUR[land] + ').');
+      else r.hinweise.push('Kaufvertrag vor ' + STICHTAG_REPARATUR[land] + ': keine Verlängerung nach Reparatur.');
+    }
+    var basis = verl ? addMonths(u, 36) : grund;
+    if (verl) r.angewandt.push(land === 'DE' ? 'DE-475e-5' : 'AT-10-2a');
+    var e = opts.entdeckt ? parse(opts.entdeckt) : null;
+    if (e && e.getTime() < u.getTime()) throw new Error('Das Entdeckungsdatum liegt vor der Übergabe');
+    if (land === 'DE') {
+      var ende = basis;
+      if (e) {
+        if (e.getTime() <= basis.getTime()) {
+          var h3 = addMonths(e, 4);
+          if (h3.getTime() > ende.getTime()) { ende = h3; r.angewandt.push('DE-475e-3'); }
+        } else r.hinweise.push('Der Mangel hat sich erst nach Ablauf der berechneten Verjährungsfrist gezeigt.');
+      }
+      if (opts.rueckerhalt) {
+        var h4 = addMonths(parse(opts.rueckerhalt), 2);
+        if (h4.getTime() > ende.getTime()) { ende = h4; r.angewandt.push('DE-475e-4'); }
+      }
+      r.fristEnde = iso(basis);      // Verjährungsfrist (ggf. verlängert), ohne Ablaufhemmung
+      r.verjaehrung = iso(ende);     // frühestes Verjährungsende nach den erfassten Regeln
+    } else if (land === 'AT') {
+      r.fristEnde = iso(basis);
+      r.verjaehrung = iso(addMonths(basis, 3));
+      if (e && e.getTime() > basis.getTime()) r.hinweise.push('Der Mangel ist erst nach Ablauf der Gewährleistungsfrist hervorgekommen.');
+    } else {
+      r.fristEnde = iso(grund);
+      r.verjaehrung = iso(grund);
+    }
+    r.nurGrundfrist = r.angewandt.length === 0;
     return r;
   }
 

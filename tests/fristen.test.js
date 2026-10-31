@@ -170,3 +170,88 @@ test('Mietkündigung DE: Samstag zählt als Werktag (BGH VIII ZR 206/04)', () =>
   const b = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2027-07-05', feiertage: FT });
   assert.equal(b.termin, '2027-10-31');
 });
+
+/* ---------- Codex-Gegencheck 31.10.2026: Grenzfälle ---------- */
+test('Gewährleistung DE: Ablaufhemmung § 475e Abs. 3 BGB (Codex-Beispiel)', () => {
+  const r = F.gewaehrleistung({ land: 'DE', uebergabe: '2024-11-04', entdeckt: '2026-10-15' });
+  assert.equal(r.grundfrist, '2026-11-04');
+  assert.equal(r.verjaehrung, '2027-02-15');
+  assert.deepEqual(r.angewandt, ['DE-475e-3']);
+  assert.equal(r.nurGrundfrist, false);
+});
+test('Gewährleistung DE: Entdeckung früh → Hemmung wirkt nicht über Grundfrist hinaus', () => {
+  const r = F.gewaehrleistung({ land: 'DE', uebergabe: '2025-01-10', entdeckt: '2025-03-01' });
+  assert.equal(r.verjaehrung, '2027-01-10');
+  assert.equal(r.nurGrundfrist, true);
+});
+test('Gewährleistung DE: Entdeckung am letzten Tag der Frist zählt noch (§ 475e Abs. 3)', () => {
+  const r = F.gewaehrleistung({ land: 'DE', uebergabe: '2024-11-04', entdeckt: '2026-11-04' });
+  assert.equal(r.verjaehrung, '2027-03-04');
+  const s = F.gewaehrleistung({ land: 'DE', uebergabe: '2024-11-04', entdeckt: '2026-11-05' });
+  assert.equal(s.verjaehrung, '2026-11-04');
+  assert.ok(s.hinweise.some(h => /nach Ablauf/.test(h)));
+});
+test('Gewährleistung DE: Rückerhalt nach Nacherfüllung § 475e Abs. 4 BGB', () => {
+  const r = F.gewaehrleistung({ land: 'DE', uebergabe: '2024-11-04', entdeckt: '2026-08-01', rueckerhalt: '2026-10-20' });
+  assert.equal(r.verjaehrung, '2026-12-20');
+  assert.ok(r.angewandt.includes('DE-475e-4'));
+});
+test('Gewährleistung DE: Nachbesserung § 475e Abs. 5 nur für Verträge ab 31.07.2026 (Art. 229 § 72 EGBGB)', () => {
+  const neu = F.gewaehrleistung({ land: 'DE', uebergabe: '2026-08-05', vertrag: '2026-07-31', nachbesserung: true });
+  assert.equal(neu.fristEnde, '2029-08-05');
+  assert.ok(neu.angewandt.includes('DE-475e-5'));
+  const alt = F.gewaehrleistung({ land: 'DE', uebergabe: '2026-08-05', vertrag: '2026-07-30', nachbesserung: true });
+  assert.equal(alt.fristEnde, '2028-08-05');
+  assert.equal(alt.nurGrundfrist, true);
+  const ohne = F.gewaehrleistung({ land: 'DE', uebergabe: '2026-08-05', nachbesserung: true });
+  assert.equal(ohne.fristEnde, '2028-08-05', 'ohne Kaufdatum keine Verlängerung');
+  assert.ok(ohne.hinweise.length);
+  const vorher = F.gewaehrleistung({ land: 'DE', uebergabe: '2026-07-20', nachbesserung: true });
+  assert.equal(vorher.fristEnde, '2028-07-20');
+});
+test('Gewährleistung DE: Abs. 5 und Abs. 3 zusammen', () => {
+  const r = F.gewaehrleistung({ land: 'DE', uebergabe: '2026-08-05', vertrag: '2026-08-01', nachbesserung: true, entdeckt: '2029-07-20' });
+  assert.equal(r.verjaehrung, '2029-11-20');
+});
+test('Gewährleistung AT: § 10 Abs. 2a VGG nur für Verträge nach 30.09.2026 (§ 29 Abs. 4 VGG)', () => {
+  const neu = F.gewaehrleistung({ land: 'AT', uebergabe: '2026-10-05', vertrag: '2026-10-01', nachbesserung: true });
+  assert.equal(neu.fristEnde, '2029-10-05');
+  assert.equal(neu.verjaehrung, '2030-01-05');
+  const alt = F.gewaehrleistung({ land: 'AT', uebergabe: '2026-10-05', vertrag: '2026-09-30', nachbesserung: true });
+  assert.equal(alt.fristEnde, '2028-10-05');
+  assert.equal(alt.verjaehrung, '2029-01-05');
+  const spaet = F.gewaehrleistung({ land: 'AT', uebergabe: '2024-01-10', entdeckt: '2026-02-01' });
+  assert.ok(spaet.hinweise.some(h => /hervorgekommen/.test(h)));
+});
+test('Gewährleistung: Entdeckung vor Übergabe ist ein Eingabefehler', () => {
+  assert.throws(() => F.gewaehrleistung({ land: 'DE', uebergabe: '2026-05-10', entdeckt: '2026-05-01' }));
+});
+test('Gewährleistung CH: nur Grundfrist, keine Reparaturverlängerung', () => {
+  const r = F.gewaehrleistung({ land: 'CH', uebergabe: '2026-10-05', vertrag: '2026-10-01', nachbesserung: true });
+  assert.equal(r.fristEnde, '2028-10-05');
+  assert.equal(r.nurGrundfrist, true);
+});
+test('Mietkündigung AT befristet: Status des ersten Jahres (Codex-Beispiel)', () => {
+  const a = F.mietKuendigung({ land: 'AT', variante: 'befristet', zugang: '2026-10-31', mietbeginn: '2026-01-01', feiertage: FT });
+  assert.equal(a.jahrStatus, 'laeuft');
+  assert.equal(a.jahrEnde, '2026-12-31');
+  assert.equal(a.fruehesterZugang, '2027-01-01');
+  assert.equal(a.termin, '2027-04-30');
+  const b = F.mietKuendigung({ land: 'AT', variante: 'befristet', zugang: '2027-01-01', mietbeginn: '2026-01-01', feiertage: FT });
+  assert.equal(b.jahrStatus, 'abgelaufen', 'am ersten Tag nach dem Jahr zulässig');
+  assert.equal(b.termin, '2027-04-30');
+  const c = F.mietKuendigung({ land: 'AT', variante: 'befristet', zugang: '2026-12-31', mietbeginn: '2026-01-01', feiertage: FT });
+  assert.equal(c.jahrStatus, 'laeuft', 'letzter Tag des Jahres noch zu früh');
+  const d = F.mietKuendigung({ land: 'AT', variante: 'befristet', zugang: '2026-11-10', feiertage: FT });
+  assert.equal(d.jahrStatus, 'unbekannt');
+});
+test('Mietkündigung DE: Landesfeiertag Allerheiligen 2027 (NRW/BY/BW/RP/SL) verschiebt den 3. Werktag', () => {
+  // Codex nannte Fronleichnam 03.06.2027 – Fronleichnam 2027 ist aber der 27.05. (Ostern 28.03. + 60 Tage).
+  assert.equal(F.iso(F.addDays(F.easter(2027), 60)), '2027-05-27');
+  const ohne = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2027-11-04', feiertage: FT });
+  assert.equal(ohne.termin, '2028-02-29');
+  const extra = F.expandOptional('DE', [2027, 2028], FT, ['allerheiligen']);
+  const mit = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2027-11-04', feiertage: FT, eigeneFeiertage: extra });
+  assert.equal(mit.termin, '2028-01-31');
+  assert.equal(mit.spaetesterZugang, '2027-11-04');
+});

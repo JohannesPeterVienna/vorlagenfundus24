@@ -144,6 +144,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:2px soli
 .blatt .info{right:20mm;top:50mm;width:70mm;text-align:right;font:9.5pt/1.4 var(--sans)}
 .blatt .text{left:25mm;right:20mm;top:103.4mm;bottom:20mm;overflow:hidden}
 .blatt .betreff{font-weight:600;margin:0 0 6mm}
+.blatt .sperre{font-weight:700;color:#8A1F11;border:2px solid #8A1F11;padding:2mm 3mm;margin:0 0 5mm}
 .blatt p{margin:0 0 3.5mm}
 .blatt .gruss{margin-top:6mm}
 .blatt .unterschrift{height:14mm}
