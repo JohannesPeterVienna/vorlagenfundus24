@@ -1,0 +1,71 @@
+{
+  "stand": "2026-10",
+  "hinweis": "Bundesweit geltende Feiertage. Landes-, Kantons- und Ortsfeiertage bitte im Rechner zusätzlich anhaken oder als eigenes Datum eintragen.",
+  "AT": {
+    "quelle": "Feiertagsruhegesetz 1957, § 1 Abs. 1",
+    "quelleUrl": "https://www.ris.bka.gv.at/eli/bgbl/1957/153/A1P1/NOR40213432",
+    "fix": [
+      {"datum": "01-01", "name": "Neujahr"},
+      {"datum": "01-06", "name": "Heilige Drei Könige"},
+      {"datum": "05-01", "name": "Staatsfeiertag"},
+      {"datum": "08-15", "name": "Mariä Himmelfahrt"},
+      {"datum": "10-26", "name": "Nationalfeiertag"},
+      {"datum": "11-01", "name": "Allerheiligen"},
+      {"datum": "12-08", "name": "Mariä Empfängnis"},
+      {"datum": "12-25", "name": "Christtag"},
+      {"datum": "12-26", "name": "Stefanitag"}
+    ],
+    "ostern": [
+      {"offset": -2, "name": "Karfreitag (Fristhemmung nach BGBl. Nr. 37/1961)"},
+      {"offset": 1, "name": "Ostermontag"},
+      {"offset": 39, "name": "Christi Himmelfahrt"},
+      {"offset": 50, "name": "Pfingstmontag"},
+      {"offset": 60, "name": "Fronleichnam"}
+    ],
+    "optional": []
+  },
+  "DE": {
+    "quelle": "Feiertagsgesetze der Länder; 3. Oktober: Art. 2 Abs. 2 Einigungsvertrag",
+    "quelleUrl": "https://www.gesetze-im-internet.de/einigvtr/art_2.html",
+    "fix": [
+      {"datum": "01-01", "name": "Neujahr"},
+      {"datum": "05-01", "name": "Tag der Arbeit"},
+      {"datum": "10-03", "name": "Tag der Deutschen Einheit"},
+      {"datum": "12-25", "name": "1. Weihnachtstag"},
+      {"datum": "12-26", "name": "2. Weihnachtstag"}
+    ],
+    "ostern": [
+      {"offset": -2, "name": "Karfreitag"},
+      {"offset": 1, "name": "Ostermontag"},
+      {"offset": 39, "name": "Christi Himmelfahrt"},
+      {"offset": 50, "name": "Pfingstmontag"}
+    ],
+    "optional": [
+      {"id": "hl3k", "datum": "01-06", "name": "Heilige Drei Könige (nur einige Länder)"},
+      {"id": "frauentag", "datum": "03-08", "name": "Internationaler Frauentag (nur einige Länder)"},
+      {"id": "fronleichnam", "offset": 60, "name": "Fronleichnam (nur einige Länder)"},
+      {"id": "mariae", "datum": "08-15", "name": "Mariä Himmelfahrt (nur teilweise)"},
+      {"id": "weltkind", "datum": "09-20", "name": "Weltkindertag (nur einige Länder)"},
+      {"id": "reform", "datum": "10-31", "name": "Reformationstag (nur einige Länder)"},
+      {"id": "allerheiligen", "datum": "11-01", "name": "Allerheiligen (nur einige Länder)"}
+    ]
+  },
+  "CH": {
+    "quelle": "Bundesfeiertag: Art. 110 Abs. 3 BV; weitere Feiertage regeln die Kantone",
+    "quelleUrl": "https://www.fedlex.admin.ch/eli/cc/1999/404/de#art_110",
+    "fix": [
+      {"datum": "08-01", "name": "Bundesfeiertag"}
+    ],
+    "ostern": [],
+    "optional": [
+      {"id": "neujahr", "datum": "01-01", "name": "Neujahr"},
+      {"id": "berchtold", "datum": "01-02", "name": "Berchtoldstag (kantonal)"},
+      {"id": "karfreitag", "offset": -2, "name": "Karfreitag (kantonal)"},
+      {"id": "ostermontag", "offset": 1, "name": "Ostermontag (kantonal)"},
+      {"id": "auffahrt", "offset": 39, "name": "Auffahrt"},
+      {"id": "pfingstmontag", "offset": 50, "name": "Pfingstmontag (kantonal)"},
+      {"id": "weihnacht", "datum": "12-25", "name": "Weihnachten"},
+      {"id": "stephan", "datum": "12-26", "name": "Stephanstag (kantonal)"}
+    ]
+  }
+}

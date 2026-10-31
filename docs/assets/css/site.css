@@ -1,0 +1,263 @@
+/* Vorlagenfundus 24 – Amtsregister. Eigenständiges Stylesheet, Stand Oktober 2026. */
+@font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-400-italic.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-600-normal.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Public Sans";src:url("../fonts/public-sans-latin-400-normal.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Public Sans";src:url("../fonts/public-sans-latin-600-normal.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Public Sans";src:url("../fonts/public-sans-latin-700-normal.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");font-weight:500;font-display:swap}
+
+:root{
+  --ink:#1F2A44;--ink-2:#36415C;--muted:#4A5468;--green:#2F6B4F;--green-d:#24543E;--green-l:#E4EFE8;
+  --marker:#F2D64B;--marker-soft:#FBF0B4;--paper:#FBF9F4;--sheet:#FFFFFF;--rule:#D9D3C7;--rule-2:#ECE7DC;
+  --danger:#8A2A1E;--focus:#1F5FBF;
+  --serif:"Spectral",Georgia,"Times New Roman",serif;--sans:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --wrap:1180px;--gut:clamp(16px,4vw,32px);--r:4px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:16px}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.0625rem/1.65 var(--sans);overflow-wrap:break-word}
+img,svg{max-width:100%;height:auto}
+a{color:var(--green-d);text-decoration-thickness:1px;text-underline-offset:.18em}
+a:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:2px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:.6rem 1rem;z-index:50}
+.skip:focus{left:8px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gut)}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2;color:var(--ink);margin:0 0 .6em}
+h1{font-size:clamp(2rem,1.4rem + 2.6vw,3.1rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.45rem,1.2rem + 1vw,1.9rem);margin-top:2.2em}
+h3{font-size:1.25rem;margin-top:1.6em}
+p,ul,ol,dl,table{margin:0 0 1.1em}
+li{margin:.25em 0}
+small{font-size:.875rem}
+.mono{font-family:var(--mono)}
+mark,.mark{background:linear-gradient(transparent 12%,var(--marker) 12%,var(--marker) 88%,transparent 88%);color:var(--ink);padding:0 .15em}
+
+/* Kopf */
+.kopf{background:var(--ink);color:#fff;border-bottom:4px solid var(--green)}
+.kopf .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:68px}
+.marke{display:flex;align-items:center;gap:.7rem;color:#fff;text-decoration:none}
+.marke svg{flex:none}
+.marke b{font:600 1.2rem/1.1 var(--serif);display:block}
+.marke .unter{display:block;font:400 .72rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#C9D1E3}
+.marke:hover{color:#fff}
+.nav-btn{display:none;background:transparent;border:1px solid #6C7896;color:#fff;font:500 .8rem var(--mono);padding:.55rem .8rem;border-radius:var(--r);cursor:pointer;letter-spacing:.05em}
+.hauptnav ul{list-style:none;margin:0;padding:0;display:flex;gap:.25rem;flex-wrap:wrap}
+.hauptnav a{display:block;color:#E7EBF4;text-decoration:none;font:500 .8rem/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:.7rem .7rem;border-radius:var(--r)}
+.hauptnav a:hover,.hauptnav a[aria-current="page"]{background:#2C3A5C;color:#fff}
+@media (max-width:900px){
+  .nav-btn{display:inline-block}
+  .hauptnav{display:none;position:absolute;left:0;right:0;top:72px;background:var(--ink);padding:.5rem var(--gut) 1rem;z-index:20;border-bottom:4px solid var(--green)}
+  .hauptnav.offen{display:block}
+  .hauptnav ul{flex-direction:column}
+  .kopf{position:relative}
+}
+
+/* Registerlaschen-Leiste */
+.register{border-bottom:1px solid var(--rule);background:linear-gradient(var(--paper),#F4F0E6)}
+.register ol{list-style:none;margin:0;padding:.7rem 0 0;display:flex;gap:.35rem;overflow-x:auto;scrollbar-width:thin}
+.register li{margin:0;flex:none}
+.register a{display:block;font:500 .74rem/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);text-decoration:none;background:#EFEADF;border:1px solid var(--rule);border-bottom:0;border-radius:6px 6px 0 0;padding:.6rem .8rem .55rem}
+.register a:hover{background:#fff}
+.register a[aria-current="page"]{background:var(--sheet);color:var(--ink);box-shadow:inset 0 3px 0 var(--green)}
+
+/* Brotkrumen und Seitenkopf */
+.krumen{font:400 .82rem/1.4 var(--mono);color:var(--muted);margin:1.2rem 0 .6rem}
+.krumen ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem}
+.krumen li{margin:0}
+.krumen li+li::before{content:"/";margin-right:.3rem;color:#8A8F9C}
+.seitenkopf{padding:1.2rem 0 1.4rem;border-bottom:1px solid var(--rule)}
+.seitenkopf .lead{font:400 1.2rem/1.55 var(--serif);max-width:52rem;color:var(--ink-2)}
+.stempel{display:inline-flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;font:500 .78rem/1.3 var(--mono);color:var(--ink);border:1.5px solid var(--ink);border-radius:3px;padding:.4rem .7rem;transform:rotate(-.4deg);background:#fff}
+.stempel .rot{color:var(--danger)}
+.laender{display:inline-flex;gap:.3rem;margin-left:.2rem}
+.land{font:500 .72rem/1 var(--mono);border:1px solid var(--ink);padding:.2rem .35rem;border-radius:2px}
+
+/* Hinweisboxen */
+.hinweis{border-left:4px solid var(--green);background:var(--green-l);padding:1rem 1.1rem;margin:1.4rem 0;border-radius:0 var(--r) var(--r) 0}
+.hinweis.warn{border-color:var(--danger);background:#F8ECE9}
+.hinweis p:last-child{margin-bottom:0}
+.hinweis strong:first-child{display:block;font:600 .8rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem}
+
+/* Werkzeug */
+.werkzeug{margin:1.8rem 0 2.4rem;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;box-shadow:0 1px 0 var(--rule-2),0 12px 28px -18px rgba(31,42,68,.35)}
+.wz-kopf{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.8rem;padding:1rem 1.2rem;border-bottom:1px solid var(--rule);background:#F7F4EC;border-radius:6px 6px 0 0}
+.wz-kopf h2{margin:0;font-size:1.3rem}
+.wz-raster{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+@media (min-width:1000px){.wz-raster{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
+.wz-eingabe{padding:1.2rem;border-bottom:1px solid var(--rule)}
+@media (min-width:1000px){.wz-eingabe{border-bottom:0;border-right:1px solid var(--rule)}}
+.wz-ausgabe{padding:1.2rem;background:#F1EEE6;min-width:0}
+fieldset{border:0;margin:0 0 1.2rem;padding:0;min-width:0}
+legend{font:600 .76rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--green-d);margin-bottom:.6rem;padding:0}
+.feld{margin-bottom:.85rem}
+.feld label{display:block;font-weight:600;font-size:.92rem;margin-bottom:.25rem}
+.feld .hilfe{display:block;font-size:.82rem;color:var(--muted);margin-top:.2rem}
+input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{width:100%;font:400 1rem/1.4 var(--sans);color:var(--ink);background:#fff;border:1px solid #9AA1AF;border-radius:var(--r);padding:.6rem .7rem;min-height:44px}
+textarea{min-height:96px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:2px solid var(--focus);outline-offset:1px}
+.zwei{display:grid;grid-template-columns:1fr;gap:0 .8rem}
+@media (min-width:560px){.zwei{grid-template-columns:1fr 1fr}}
+.wahl{display:flex;flex-wrap:wrap;gap:.4rem}
+.wahl label{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #9AA1AF;border-radius:var(--r);padding:.5rem .75rem;background:#fff;cursor:pointer;font-size:.95rem;min-height:44px}
+.wahl input{accent-color:var(--green);width:1.05rem;height:1.05rem}
+.wahl label:has(input:checked){border-color:var(--green);background:var(--green-l);box-shadow:inset 0 0 0 1px var(--green)}
+.check{display:flex;gap:.5rem;align-items:flex-start;font-size:.95rem;margin:.4rem 0}
+.check input{margin-top:.3rem;accent-color:var(--green);width:1.05rem;height:1.05rem;flex:none}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;font:600 .95rem/1 var(--sans);border-radius:var(--r);padding:.8rem 1.1rem;min-height:44px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;text-decoration:none}
+.knopf:hover{background:#2C3A5C;color:#fff}
+.knopf.leise{background:#fff;color:var(--ink)}
+.knopf.leise:hover{background:#F1EEE6;color:var(--ink)}
+.knopf.gruen{background:var(--green);border-color:var(--green)}
+.knopf.gruen:hover{background:var(--green-d)}
+.knopfreihe{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.status{font-size:.88rem;color:var(--muted);min-height:1.4em;margin:.5rem 0 0}
+
+/* Fristenkarte */
+.fristkarte{background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:1rem}
+.fristkarte h3{margin:0 0 .5rem;font-size:1.05rem;font-family:var(--sans);font-weight:700}
+.fristzeile{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.2rem 1rem;align-items:baseline;padding:.45rem 0;border-top:1px dashed var(--rule)}
+.fristzeile:first-of-type{border-top:0}
+.fristzeile span{font-size:.9rem;color:var(--muted)}
+.fristzeile b{font:600 1rem/1.3 var(--mono);text-align:right}
+@media (max-width:520px){.fristzeile{grid-template-columns:1fr}.fristzeile b{text-align:left}}
+.fristzeile b.mark{padding:0 .3rem}
+.fristquelle{font-size:.8rem;color:var(--muted);margin:.6rem 0 0}
+.vergleich{display:grid;grid-template-columns:1fr;gap:.6rem}
+@media (min-width:640px){.vergleich{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.vergleich .fristkarte{margin:0}
+.vergleich .fristkarte.aktiv{border-color:var(--green);box-shadow:inset 0 3px 0 var(--green)}
+.versand{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--ink);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:1rem}
+.versand h3{margin:0 0 .4rem;font:700 1.05rem var(--sans)}
+.versand ol{margin:.3rem 0 0;padding-left:1.2rem}
+
+/* A4-Vorschau */
+.vorschau-rahmen{position:relative;width:100%;overflow:hidden;border-radius:2px}
+.blatt{width:210mm;height:297mm;background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.15),0 12px 30px -12px rgba(31,42,68,.45);position:relative;transform-origin:top left;font:11pt/1.42 var(--serif)}
+.blatt .zone{position:absolute}
+.blatt .absender{left:25mm;top:15mm;width:85mm;font:9pt/1.35 var(--sans);color:#333}
+.blatt .ruecksende{font:7pt/1.2 var(--sans);color:#333;border-bottom:.2mm solid #999;padding-bottom:.6mm;margin-bottom:1.6mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blatt .anschrift{left:20mm;top:45mm;width:85mm;height:45mm;padding:0 5mm;font:10.5pt/1.3 var(--sans)}
+.blatt .anschrift .vermerk{font:8pt/1.2 var(--sans);text-transform:uppercase;letter-spacing:.03em;min-height:12.7mm;display:flex;flex-direction:column;justify-content:flex-end}
+.blatt .info{right:20mm;top:50mm;width:70mm;text-align:right;font:9.5pt/1.4 var(--sans)}
+.blatt .text{left:25mm;right:20mm;top:103.4mm;bottom:20mm;overflow:hidden}
+.blatt .betreff{font-weight:600;margin:0 0 6mm}
+.blatt p{margin:0 0 3.5mm}
+.blatt .gruss{margin-top:6mm}
+.blatt .unterschrift{height:14mm}
+.blatt .anlagen{margin-top:6mm;font-size:9.5pt}
+.blatt .marke-falz{position:absolute;left:3mm;width:5mm;border-top:.25mm solid #888}
+.blatt .marke-loch{position:absolute;left:3mm;width:7mm;border-top:.25mm solid #888;top:148.5mm}
+.blatt.fenster-rechts .anschrift{left:auto;right:20mm}
+.blatt.fenster-rechts .info{right:auto;left:25mm;text-align:left}
+.blatt.zeigeraster .anschrift{outline:.3mm dashed #2F6B4F;background:rgba(47,107,79,.05)}
+.blatt .fensterlage{position:absolute;border:.5mm solid #C43B2B;border-radius:2mm;pointer-events:none;display:none}
+.blatt.zeigeraster .fensterlage{display:block}
+.blatt .ueberlauf{position:absolute;left:25mm;right:20mm;bottom:12mm;font:8pt var(--sans);color:#8A2A1E;display:none}
+.blatt.zu-lang .ueberlauf{display:block}
+.vorschau-leiste{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-bottom:.7rem}
+.vorschau-leiste .mono{font-size:.78rem;color:var(--muted)}
+
+/* Kuvertprüfung */
+.kuvert-grafik{background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.6rem}
+.kuvert-ergebnis li{margin:.35rem 0}
+.ok{color:var(--green-d);font-weight:700}
+.nok{color:var(--danger);font-weight:700}
+
+/* Inhalt mit Seitenleiste */
+.inhalt{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem;padding:1rem 0 3rem}
+@media (min-width:1024px){.inhalt.mit-leiste{grid-template-columns:minmax(0,1fr) 180px}}
+@media (min-width:1280px){.inhalt.mit-leiste{grid-template-columns:minmax(0,1fr) 300px}}
+.text-spalte{max-width:46rem;min-width:0}
+.text-spalte>h2:first-child{margin-top:.6em}
+.leiste{display:none}
+@media (min-width:1024px){.leiste{display:block}}
+.toc{border:1px solid var(--rule);background:#fff;border-radius:var(--r);padding:1rem;font-size:.9rem}
+.toc b{display:block;font:600 .74rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--green-d);margin-bottom:.5rem}
+.toc ol{margin:0;padding-left:1.1rem}
+.toc a{text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+table{border-collapse:collapse;width:100%;font-size:.95rem;background:#fff}
+.tabelle{overflow-x:auto;margin:0 0 1.4rem;border:1px solid var(--rule);border-radius:var(--r)}
+.tabelle table{margin:0;min-width:540px}
+th,td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule-2)}
+th{font:600 .78rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.04em;background:#F4F0E6}
+caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:var(--muted)}
+
+.faq details{border:1px solid var(--rule);background:#fff;border-radius:var(--r);margin:.6rem 0}
+.faq summary{cursor:pointer;font-weight:600;padding:.85rem 1rem;list-style-position:outside}
+.faq summary::marker{color:var(--green)}
+.faq details>div{padding:0 1rem .4rem}
+.quellen{font-size:.92rem}
+.quellen li{margin:.45rem 0}
+.quellen .stand{font:400 .8rem var(--mono);color:var(--muted)}
+
+/* Kartenraster Startseite */
+.karten{display:grid;grid-template-columns:1fr;gap:1rem;margin:1rem 0 2rem;padding:0;list-style:none}
+@media (min-width:620px){.karten{grid-template-columns:1fr 1fr}}
+@media (min-width:980px){.karten{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.karte{margin:0;position:relative;background:#fff;border:1px solid var(--rule);border-radius:0 6px 6px 6px;padding:1.1rem 1.1rem 1rem;display:flex;flex-direction:column;gap:.4rem}
+.karte::before{content:attr(data-lasche);position:absolute;top:-1.55rem;left:-1px;font:500 .7rem/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;background:#EFEADF;border:1px solid var(--rule);border-bottom:0;padding:.45rem .65rem;border-radius:5px 5px 0 0;color:var(--ink-2)}
+.karten{row-gap:2.4rem;margin-top:2.2rem}
+.karte h3{margin:0;font-size:1.15rem}
+.karte h3 a{text-decoration:none;color:var(--ink)}
+.karte h3 a::after{content:"";position:absolute;inset:0}
+.karte:hover{border-color:var(--ink)}
+.karte p{margin:0;font-size:.95rem;color:var(--ink-2)}
+.karte .laender{margin:0}
+.held{padding:2.2rem 0 1rem}
+.held-raster{display:grid;gap:1.6rem;grid-template-columns:minmax(0,1fr)}
+@media (min-width:960px){.held-raster{grid-template-columns:minmax(0,7fr) minmax(0,5fr);align-items:center}}
+.held .lead{font:400 1.25rem/1.55 var(--serif);color:var(--ink-2);max-width:40rem}
+.kennzahlen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:1.4rem 0 0;padding:0;list-style:none}
+.kennzahlen li{margin:0;background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:.7rem}
+.kennzahlen b{display:block;font:600 1.5rem/1 var(--serif)}
+.kennzahlen span{font-size:.8rem;color:var(--muted)}
+
+/* Anzeigenplätze */
+.anzeige{margin:32px auto;text-align:center;clear:both}
+.anzeige[hidden]{display:none!important}
+.anzeige .anz-label{display:block;font:500 .68rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.anzeige ins{display:block;margin:0 auto}
+.anzeige[data-format="banner"] .anz-platz{min-height:100px;max-width:320px;margin:0 auto}
+@media (min-width:768px){.anzeige[data-format="banner"] .anz-platz{min-height:90px;max-width:728px}}
+.anzeige[data-format="rectangle"] .anz-platz{min-height:250px;max-width:300px;margin:0 auto}
+.anzeige[data-format="seite"] .anz-platz{min-height:600px;width:160px;margin:0 auto}
+@media (min-width:1280px){.anzeige[data-format="seite"] .anz-platz{width:300px}}
+.leiste .anzeige{margin-top:32px}
+
+/* Fuß */
+.fuss{background:var(--ink);color:#DCE2EE;margin-top:3rem;padding:2.4rem 0 2rem;font-size:.92rem}
+.fuss a{color:#fff}
+.fuss-raster{display:grid;gap:1.6rem;grid-template-columns:1fr}
+@media (min-width:760px){.fuss-raster{grid-template-columns:2fr 1fr 1fr}}
+.fuss h2{color:#fff;font:600 .78rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;margin:0 0 .6rem}
+.fuss ul{list-style:none;margin:0;padding:0}
+.fuss li{margin:.35rem 0}
+.fuss .klein{color:#B9C2D6;font-size:.82rem;margin-top:1.6rem;border-top:1px solid #34405F;padding-top:1rem}
+.linkknopf{background:none;border:0;padding:0;font:inherit;color:#fff;text-decoration:underline;cursor:pointer;text-underline-offset:.18em}
+
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.noscript{background:#F8ECE9;padding:.8rem 1rem;border-radius:var(--r)}
+
+/* Druck: nur der Brief */
+@media print{
+  @page{size:A4;margin:0}
+  html,body{background:#fff!important}
+  body.druck-brief>*:not(.druckbereich){display:none!important}
+  body.druck-brief .druckbereich{display:block!important}
+  .druckbereich{display:none}
+  .druckbereich .blatt{transform:none!important;box-shadow:none;margin:0;page-break-after:avoid}
+  .druckbereich .blatt.zeigeraster .anschrift{outline:0;background:none}
+  .druckbereich .fensterlage,.druckbereich .ueberlauf{display:none!important}
+  body:not(.druck-brief) .kopf,body:not(.druck-brief) .register,body:not(.druck-brief) .fuss,body:not(.druck-brief) .anzeige,body:not(.druck-brief) .werkzeug,body:not(.druck-brief) .leiste{display:none!important}
+  body:not(.druck-brief) .inhalt{display:block}
+  a{color:#000}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* Seiten ohne Seitenleiste: Karten nutzen die volle Breite, Fließtext bleibt lesbar schmal */
+.inhalt:not(.mit-leiste) .text-spalte{max-width:none}
+.inhalt:not(.mit-leiste) .text-spalte>:not(.karten):not(.anzeige){max-width:46rem}
