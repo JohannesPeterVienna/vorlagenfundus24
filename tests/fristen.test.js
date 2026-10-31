@@ -161,3 +161,12 @@ test('Puffer in Tagen', () => {
   const a = F.mietKuendigung({ land: 'AT', variante: 'unbefristet-monatlich', zugang: '2026-11-20', feiertage: FT });
   assert.equal(a.puffer, 10);
 });
+
+test('Mietkündigung DE: Samstag zählt als Werktag (BGH VIII ZR 206/04)', () => {
+  // Juli 2027: Do 1., Fr 2., Sa 3. → dritter Werktag ist Samstag, 3. Juli 2027
+  const a = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2027-07-03', feiertage: FT });
+  assert.equal(a.spaetesterZugang, '2027-07-03');
+  assert.equal(a.termin, '2027-09-30');
+  const b = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2027-07-05', feiertage: FT });
+  assert.equal(b.termin, '2027-10-31');
+});

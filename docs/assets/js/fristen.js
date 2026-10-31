@@ -89,9 +89,10 @@
 
   /*
    * Verschiebung des Fristendes auf den nächsten Werktag.
-   * AT: § 903 ABGB (Sonntag, anerkannter Feiertag) – erweitert durch das Bundesgesetz über die
-   *     Hemmung des Fristenlaufes durch Samstage und den Karfreitag (BGBl. Nr. 37/1961) auf Samstag
-   *     und Karfreitag, soweit bundesgesetzliche Vorschriften die Hemmung vorsehen.
+   * AT: § 903 ABGB (Sonntag, anerkannter Feiertag) – für gesetzliche Fristen erweitert durch Art. 5
+   *     Europäisches Übereinkommen über die Berechnung von Fristen (BGBl. Nr. 254/1983) auf Samstag;
+   *     Karfreitag von Österreich als Feiertag notifiziert. (Das Fristenhemmungsgesetz 1961 ist seit
+   *     1.1.2012 aufgehoben.)
    * DE: § 193 BGB (Sonntag, am Erklärungsort staatlich anerkannter Feiertag, Sonnabend).
    * CH: Art. 78 OR (Sonntag, anerkannter Feiertag); Samstag gleichgestellt für gesetzliche Fristen
    *     des Bundesrechts nach SR 173.110.3.
