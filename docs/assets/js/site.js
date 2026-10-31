@@ -32,21 +32,27 @@
 
   /* ---------- Einwilligung: Google Consent Mode v2 + Google-CMP (TCF) ---------- */
   /*
-   * Der Seitenkopf setzt vor jedem Google-Skript gtag('consent','default', alles 'denied').
-   * GA4 wird nur geladen bzw. aktiviert, wenn BEIDES von der Google-CMP gemeldet wird:
-   *  1. TCF: gdprApplies, eventStatus tcloaded/useractioncomplete, Zweck 1 und Anbieter 755 (Google);
-   *  2. Consent-Mode-Wert der CMP: analyticsStoragePurposeConsentStatus === GRANTED (1).
-   * UNKNOWN (0), DENIED (2), NOT_APPLICABLE (3), NOT_CONFIGURED (4) oder fehlende Daten bleiben
-   * "nicht erteilt". Fällt die Zustimmung weg (Ablehnen, Widerruf, Änderung), folgt sofort
+   * Der Seitenkopf setzt vor jedem Google-Skript gtag('consent','default', alles 'denied');
+   * hier wird zusätzlich window['ga-disable-<ID>'] = true gesetzt. GA4 wird nur geladen bzw. aktiviert,
+   *  a) wenn die DSGVO gilt (gdprApplies nicht false): TCF eventStatus tcloaded/useractioncomplete,
+   *     Zweck 1 und Anbieter 755 (Google) zugestimmt UND analyticsStoragePurposeConsentStatus === GRANTED (1);
+   *  b) wenn die DSGVO laut CMP nicht gilt (gdprApplies === false): Analyticswert GRANTED (1) oder
+   *     NOT_APPLICABLE (3) UND die CMP meldet ausdrücklich keinen US-Opt-out
+   *     (usstatesoptout.getInitialUsStatesOptOutStatus(): DOES_NOT_APPLY 1 oder NOT_OPTED_OUT 2).
+   * Fehlend, UNKNOWN (0), DENIED (2), NOT_CONFIGURED (4) oder ein Fehler einer CMP-Schnittstelle bleiben
+   * "nicht erteilt". Ein eindeutiges TCF-Nein sperrt sofort, ohne vorher weitere CMP-Schnittstellen
+   * aufzurufen. Fällt die Zustimmung weg (Ablehnen, Widerruf, Änderung), folgt sofort
    * consent update 'denied' und window['ga-disable-<ID>'] = true.
    * Quellen: developers.google.com/funding-choices/fc-api-docs,
    *          developers.google.com/tag-platform/security/guides/consent
    */
-  var CM_GRANTED = 1;
-  var zustand = { tcf: false, cm: null };   // cm: letzter gemeldeter analyticsStorage-Status
+  var CM_GRANTED = 1, CM_NOT_APPLICABLE = 3;
+  // tcf: 'ja' | 'nein' | 'ausserhalb' (DSGVO gilt nicht); cm: letzter gemeldeter analyticsStorage-Status
+  var zustand = { tcf: 'nein', cm: null };
   var gaAktiv = false, gaGeladen = false;
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  window['ga-disable-' + GA_ID] = true;
   window.googlefc = window.googlefc || {};
   window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
 
@@ -59,7 +65,19 @@
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID);
     document.head.appendChild(s);
   }
-  function erteilt() { return zustand.tcf === true && zustand.cm === CM_GRANTED; }
+  function ohneUsOptOut() {
+    try {
+      var u = window.googlefc && window.googlefc.usstatesoptout;
+      if (!u || typeof u.getInitialUsStatesOptOutStatus !== 'function') return false;
+      var st = u.getInitialUsStatesOptOutStatus();
+      return st === 1 || st === 2;
+    } catch (e) { return false; }
+  }
+  function erteilt() {
+    if (zustand.tcf === 'ja') return zustand.cm === CM_GRANTED;
+    if (zustand.tcf === 'ausserhalb') return (zustand.cm === CM_GRANTED || zustand.cm === CM_NOT_APPLICABLE) && ohneUsOptOut();
+    return false;
+  }
   function anwenden() {
     if (erteilt()) {
       window['ga-disable-' + GA_ID] = false;
@@ -84,18 +102,22 @@
     } catch (e) { zustand.cm = null; }
   }
   function pruefeTCF(tc) {
-    var ok = false;
-    if (tc && tc.gdprApplies === true && (tc.eventStatus === 'tcloaded' || tc.eventStatus === 'useractioncomplete')) {
-      ok = !!(tc.purpose && tc.purpose.consents && tc.purpose.consents[1] === true &&
-              tc.vendor && tc.vendor.consents && tc.vendor.consents[755] === true);
-    } else if (tc && tc.eventStatus === 'cmpuishown') ok = false;
-    else if (tc && tc.gdprApplies === true) return;   // Zwischenstände ändern nichts
-    zustand.tcf = ok;
+    if (!tc) return;
+    if (tc.gdprApplies === false) zustand.tcf = 'ausserhalb';
+    else if (tc.eventStatus === 'tcloaded' || tc.eventStatus === 'useractioncomplete') {
+      var ok = !!(tc.purpose && tc.purpose.consents && tc.purpose.consents[1] === true &&
+                  tc.vendor && tc.vendor.consents && tc.vendor.consents[755] === true);
+      zustand.tcf = ok ? 'ja' : 'nein';
+    } else if (tc.eventStatus === 'cmpuishown' || tc.gdprApplies !== true) zustand.tcf = 'nein';
+    else return;   // Zwischenstände ändern nichts
+    if (zustand.tcf === 'nein') { zustand.cm = null; anwenden(); return; }   // sofort sperren, keine CMP-Abfrage
     leseCM();
     anwenden();
   }
+  function neuLesen() { if (zustand.tcf !== 'nein') leseCM(); anwenden(); }
   window.googlefc.callbackQueue.push({
-    CONSENT_MODE_DATA_READY: function () { leseCM(); anwenden(); }
+    CONSENT_MODE_DATA_READY: neuLesen,
+    INITIAL_US_STATES_OPT_OUT_DATA_READY: neuLesen
   });
   var versuche = 0;
   (function warteAufCMP() {
@@ -110,7 +132,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-cmp-widerruf]'), function (el) {
     el.addEventListener('click', function (e) {
       e.preventDefault();
-      zustand.tcf = false; zustand.cm = null; sperreGA();
+      zustand.tcf = 'nein'; zustand.cm = null; sperreGA();
       window.googlefc.callbackQueue.push(function () {
         if (window.googlefc && typeof window.googlefc.showRevocationMessage === 'function') window.googlefc.showRevocationMessage();
       });
