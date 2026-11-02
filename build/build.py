@@ -14,9 +14,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'build' / 'content'
 OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
-STAND = 'Oktober 2026'
-LASTMOD = '2026-10-31'
-ASSETV = '2026-10-31d'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+STAND = '2. November 2026'
+LASTMOD = '2026-11-02'
+ASSETV = '2026-11-02a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -325,9 +325,6 @@ def weiterleitung(alt, ziel, titel):
 
 
 WEITERLEITUNGEN = [
-    ('wochenplan-ausfuellen.html', '/', 'Startseite'),
-    ('projektcheckliste.html', '/', 'Startseite'),
-    ('einkaufsliste.html', '/', 'Startseite'),
     ('druckvorlage-pruefen.html', '/oenorm-a-1080-din-5008/', 'Briefnormen und Fensterkuvert-Prüfung'),
     ('advertise.html', '/kontakt/', 'Kontakt'),
     ('imprint.html', '/impressum/', 'Impressum'),

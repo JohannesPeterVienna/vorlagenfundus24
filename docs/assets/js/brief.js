@@ -996,9 +996,9 @@
       '<div class="check"><input type="checkbox" id="kv-rechts" name="rechts"><label for="kv-rechts">Fenster rechts statt links (Abstand dann vom rechten Rand)</label></div></fieldset>' +
       '<fieldset><legend>Anschrift auf dem Blatt</legend><div class="zwei">' +
       '<div class="feld"><label for="kv-ax">Abstand vom linken Blattrand (mm)</label><input type="number" step="0.5" id="kv-ax" name="ax" value="25"><small class="hilfe">Beginn des Textes, nicht des Feldes</small></div>' +
-      '<div class="feld"><label for="kv-ay">Erste Zeile ab oberem Blattrand (mm)</label><input type="number" step="0.5" id="kv-ay" name="ay" value="50"></div>' +
+      '<div class="feld"><label for="kv-ay">Erste Zeile ab oberem Blattrand (mm)</label><input type="number" step="0.1" id="kv-ay" name="ay" value="62.7"><small class="hilfe">DIN 5008 Form B: Anschriftzone ab 62,7 mm (45 mm Feldbeginn + 17,7 mm Zusatz- und Vermerkzone)</small></div>' +
       '<div class="feld"><label for="kv-aw">Breite der längsten Zeile (mm)</label><input type="number" step="0.5" id="kv-aw" name="aw" value="70"></div>' +
-      '<div class="feld"><label for="kv-ah">Höhe des Anschriftblocks (mm)</label><input type="number" step="0.5" id="kv-ah" name="ah" value="27"><small class="hilfe">Rücksendezeile mitzählen, wenn sie sichtbar sein soll</small></div></div></fieldset>';
+      '<div class="feld"><label for="kv-ah">Höhe des Anschriftblocks (mm)</label><input type="number" step="0.5" id="kv-ah" name="ah" value="20"><small class="hilfe">Vierzeilige Anschrift ≈ 20 mm. Rücksendezeile und Vermerk mitzählen (und erste Zeile entsprechend höher), wenn sie sichtbar sein sollen</small></div></div></fieldset>';
     var aus = el('div', { class: 'wz-ausgabe', 'aria-live': 'polite' });
     root.innerHTML = ''; root.appendChild(el('div', { class: 'wz-raster' }, [form, aus]));
     function vorbelegen() {
