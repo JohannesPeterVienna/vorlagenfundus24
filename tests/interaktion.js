@@ -11,6 +11,7 @@ const assert = require('assert');
   await page.route(/googlesyndication|googletagmanager/, r => r.abort());
   await page.goto(`http://127.0.0.1:${port}/wohnung-kuendigen/`, { waitUntil: 'networkidle' });
   await page.check('input[name=land][value=DE]');
+  await page.fill('#b-miete-kuendigung-datum', '2026-11-03');   // fester Tag: Zugang liegt nicht vor dem Datum des Schreibens
   await page.fill('#b-miete-kuendigung-zugang', '2026-11-04');
   await page.fill('#b-miete-kuendigung-objekt', 'Musterstraße 1, 10115 Berlin');
   await page.fill('#b-miete-kuendigung-abs_name', 'Erika Muster');
@@ -27,6 +28,7 @@ const assert = require('assert');
   await page.check('input[name=land][value=AT]');
   await page.selectOption('#b-miete-kuendigung-variante_AT', 'befristet');
   await page.fill('#b-miete-kuendigung-mietbeginn', '2026-01-01');
+  await page.fill('#b-miete-kuendigung-datum', '2026-10-28');   // Zugang darf nicht vor dem Datum des Schreibens liegen
   await page.fill('#b-miete-kuendigung-zugang', '2026-10-31');
   const at = await page.textContent('.blatt');
   assert(at.includes('ENTWURF – erst ab 1. Jänner 2027 verwendbar') && !at.includes('abgelaufen'), at.slice(0, 400));

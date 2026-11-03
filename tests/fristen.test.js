@@ -43,6 +43,19 @@ test('Feiertagslisten', () => {
   assert.deepEqual(opt.sort(), ['2026-06-04', '2026-10-31']);
 });
 
+test('Sachsen: Buß- und Bettag (Mittwoch vor dem 23. November)', () => {
+  assert.deepEqual(F.expandOptional('DE', [2026], FT, ['busstag']), ['2026-11-18']);
+  // 22. November selbst ist ein Mittwoch (2023) → dieser Tag; 23. November ein Mittwoch (2022) → 16. November
+  assert.deepEqual(F.expandOptional('DE', [2022, 2023, 2024, 2025, 2027, 2040], FT, ['busstag']),
+    ['2022-11-16', '2023-11-22', '2024-11-20', '2025-11-19', '2027-11-17', '2040-11-21']);
+  const sn = FT.DE.optional.find(h => h.id === 'busstag');
+  assert.ok(sn && /Sachsen/.test(sn.name));
+  assert.equal(F.holidaysFor('DE', 2026, FT)['2026-11-18'], undefined, 'kein bundesweiter Feiertag');
+  // als Landesfeiertag in SN: Frist mit Ende am 18.11.2026 verschiebt sich auf Donnerstag, 19.11.
+  assert.equal(F.fristEnde({ ereignis: '2026-11-04', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: FT }).ende, '2026-11-18');
+  assert.equal(F.fristEnde({ ereignis: '2026-11-04', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: FT, optional: ['busstag'] }).ende, '2026-11-19');
+});
+
 test('Fristende nach Tagen, Wochen, Monaten', () => {
   assert.equal(F.fristEnde({ ereignis: '2026-11-02', anzahl: 14, einheit: 'tage' }).ende, '2026-11-16');
   assert.equal(F.fristEnde({ ereignis: '2026-11-02', anzahl: 2, einheit: 'wochen' }).ende, '2026-11-16');

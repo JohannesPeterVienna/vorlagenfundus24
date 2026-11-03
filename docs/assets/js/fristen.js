@@ -70,6 +70,11 @@
     if (!extra) holidayCache[key] = set;
     return set;
   }
+  /* Buß- und Bettag (Sachsen, § 1 SächsSFG): Mittwoch vor dem 23. November, also 16.–22. November. */
+  function bussUndBettag(year) {
+    var d = new Date(Date.UTC(year, 10, 22));
+    return addDays(d, -((d.getUTCDay() - 3 + 7) % 7));
+  }
   /* Wählbare Zusatzfeiertage (Bundesland/Kanton) für mehrere Jahre in ISO-Daten auflösen. */
   function expandOptional(country, years, data, ids) {
     var def = data && data[country], out = [];
@@ -79,6 +84,7 @@
         if (ids.indexOf(h.id) === -1) return;
         if (h.datum) out.push(y + '-' + h.datum);
         else if (typeof h.offset === 'number') out.push(iso(addDays(easter(y), h.offset)));
+        else if (h.regel === 'mittwoch-vor-11-23') out.push(iso(bussUndBettag(y)));
       });
     });
     return out;

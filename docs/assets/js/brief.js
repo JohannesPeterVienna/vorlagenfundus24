@@ -71,6 +71,14 @@
     r.briefDatum = F.iso(b); r.postTage = post; r.zugangAnnahme = zug; r.fristTage = tage;
     return r;
   }
+  /*
+   * Kündigung/Austritt: Der Brief kann nicht zugehen, bevor er geschrieben ist. Sind Datum des
+   * Schreibens und Zugang beide eingetragen und liegt der Zugang davor, wird kein Termin berechnet.
+   */
+  function pruefeZugangNachBrief(land, v) {
+    if (leer(v.zugang) || leer(v.datum)) return;
+    if (F.parse(v.zugang).getTime() < F.parse(v.datum).getTime()) throw new Error('Der Zugang (' + datum(v.zugang, land) + ') liegt vor dem Datum des Schreibens (' + datum(v.datum, land) + '). Bitte einen Zugang am oder nach dem Datum des Schreibens eintragen.');
+  }
   function schreibFristHtml(land, r, z) {
     var h = z('Frist im Schreiben', datum(r.ende, land) + ' (' + F.weekdayDE(r.ende) + ')', true);
     if (r.eigen) h += '<p class="fristquelle">Von Ihnen eingetragenes Fristende. Achten Sie darauf, dass der Empfängerseite nach dem Zugang genug Zeit bleibt.</p>';
@@ -184,7 +192,7 @@
           variante: v['variante_' + land] || ({ AT: 'unbefristet-monatlich', DE: 'standard', CH: 'ortsueblich' })[land],
           terminMonate: String(v.termine_CH || '3,6,9').split(',') };
         if (land === 'DE') opts.eigeneFeiertage = landFeiertage('DE', opts.zugang, v.feiertage_DE);
-        try { return F.mietKuendigung(opts); } catch (e) { return { fehler: e.message }; }
+        try { pruefeZugangNachBrief(land, v); return F.mietKuendigung(opts); } catch (e) { return { fehler: e.message }; }
       },
       text: function (land, v, fr) {
         var termin = fr && fr.termin ? datum(fr.termin, land) : '[Termin]';
@@ -472,6 +480,7 @@
         { id: 'abbuchung', label: 'Einzugsermächtigung nach dem Austritt widerrufen', typ: 'check', def: true }
       ],
       fristen: function (land, v) {
+        try { pruefeZugangNachBrief(land, v); } catch (e) { return { fehler: e.message }; }
         if (land === 'CH' && !v.statuten) { try { return F.vereinAustrittCH({ zugang: v.zugang || HEUTE }); } catch (e) { return { fehler: e.message }; } }
         return null;
       },

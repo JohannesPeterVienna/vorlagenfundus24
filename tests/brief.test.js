@@ -152,3 +152,18 @@ test('VF03: Feiertagsdaten nicht geladen → kein Datum, Brief nicht versandfert
   } finally { B.setzeFeiertage(FT); }
   assert.equal(B.briefDaten('ruecktritt', 'DE', { erhalt: '2026-03-20' }).fr.ende, '2026-04-07');
 });
+test('Zugang vor dem Datum des Schreibens: Mietkündigung und Vereinsaustritt nicht versandfertig', () => {
+  for (const land of ['AT', 'DE', 'CH']) {
+    const m = B.briefDaten('miete-kuendigung', land, { variante_AT: 'unbefristet-monatlich', variante_DE: 'standard', variante_CH: 'ortsueblich', termine_CH: '3,6,9', zugang: '2026-11-02', datum: '2026-11-03' });
+    assert.ok(m.fr.fehler && /liegt vor dem Datum des Schreibens/.test(m.fr.fehler), land + ': ' + JSON.stringify(m.fr));
+    assert.match(m.sperre, /nicht versandfertig/);
+    assert.ok(!m.absaetze[0].includes('2027'), 'kein Termin im Brief');
+    const v = B.briefDaten('verein-austritt', land, { verein: 'TSV', zugang: '2026-11-02', datum: '2026-11-03' });
+    assert.ok(v.fr && /liegt vor dem Datum des Schreibens/.test(v.fr.fehler), land);
+    assert.match(v.sperre, /nicht versandfertig/);
+  }
+  // Zugang am selben Tag oder später bleibt zulässig
+  assert.equal(B.briefDaten('miete-kuendigung', 'AT', { variante_AT: 'unbefristet-monatlich', zugang: '2026-11-03', datum: '2026-11-03' }).fr.termin, '2026-12-31');
+  assert.equal(B.briefDaten('verein-austritt', 'CH', { zugang: '2026-11-04', datum: '2026-11-03' }).fr.austritt, '2027-12-31');
+  assert.equal(B.briefDaten('verein-austritt', 'DE', { zugang: '2026-11-04', datum: '2026-11-03' }).fr, null);
+});

@@ -1,7 +1,7 @@
 {
   "stand": "2026-10",
   "hinweis": "Bundesweit geltende Feiertage. Landes-, Kantons- und Ortsfeiertage bitte im Rechner zusätzlich anhaken oder als eigenes Datum eintragen.",
-  "gueltig": { "von": 2020, "bis": 2040, "hinweis": "Regeln (feste Daten und Abstand zum Ostersonntag) geprüft für 2020 bis 2040. Außerhalb dieses Zeitraums gibt der Rechner kein endgültiges Fristende aus." },
+  "gueltig": { "von": 2020, "bis": 2040, "hinweis": "Regeln (feste Daten, Abstand zum Ostersonntag, Buß- und Bettag als Mittwoch vor dem 23. November) geprüft für 2020 bis 2040. Außerhalb dieses Zeitraums gibt der Rechner kein endgültiges Fristende aus." },
   "AT": {
     "quelle": "Feiertagsruhegesetz 1957, § 1 Abs. 1",
     "quelleUrl": "https://www.ris.bka.gv.at/eli/bgbl/1957/153/A1P1/NOR40213432",
@@ -48,7 +48,8 @@
       {"id": "mariae", "datum": "08-15", "name": "Mariä Himmelfahrt (nur teilweise)"},
       {"id": "weltkind", "datum": "09-20", "name": "Weltkindertag (nur einige Länder)"},
       {"id": "reform", "datum": "10-31", "name": "Reformationstag (nur einige Länder)"},
-      {"id": "allerheiligen", "datum": "11-01", "name": "Allerheiligen (nur einige Länder)"}
+      {"id": "allerheiligen", "datum": "11-01", "name": "Allerheiligen (nur einige Länder)"},
+      {"id": "busstag", "regel": "mittwoch-vor-11-23", "name": "Buß- und Bettag (nur Sachsen)"}
     ]
   },
   "CH": {
