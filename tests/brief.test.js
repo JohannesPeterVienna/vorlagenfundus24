@@ -78,3 +78,77 @@ test('Reklamation AT: Verlängerung nach Verbesserung wird angezeigt', () => {
   const h = B.fristenHtml('reklamation', 'AT', b.fr);
   assert.ok(h.includes('5. Oktober 2029') && h.includes('§ 10 Abs. 2a VGG'), h);
 });
+
+// ---- Codex-Befunde VF01–VF03 (3.11.2026) ----
+test('VF01: Mietkündigung CH ohne Ortsgebrauch und ohne Mietbeginn ist nicht versandfertig', () => {
+  const b = B.briefDaten('miete-kuendigung', 'CH', { variante_CH: 'mietdauer', zugang: '2026-11-03', datum: '2026-11-03' });
+  assert.ok(b.fr.fehler && /Mietbeginn fehlt/.test(b.fr.fehler));
+  assert.match(b.sperre || '', /ENTWURF – nicht versandfertig: Mietbeginn fehlt/);
+  assert.ok(!/2\. März 2027/.test(text(b)));
+  assert.ok(B.blattHtml(b).includes('class="sperre"'));
+  const mit = B.briefDaten('miete-kuendigung', 'CH', { variante_CH: 'mietdauer', zugang: '2026-11-03', datum: '2026-11-03', mietbeginn: '2025-01-01' });
+  assert.equal(mit.sperre, null);
+  assert.ok(text(mit).includes('31. März 2027'));
+});
+test('VF02: Frist im Schreiben hängt am Datum des Schreibens (Kaution DE)', () => {
+  const a = B.briefDaten('kaution', 'DE', { datum: '2026-11-03', fristTage: '14' });
+  assert.equal(a.fr.zugangAnnahme, '2026-11-06');
+  assert.equal(a.fr.ende, '2026-11-20');
+  assert.ok(text(a).includes('bis 20. November 2026'));
+  const b = B.briefDaten('kaution', 'DE', { datum: '2026-12-15', fristTage: '14' });
+  // 15.12. + 3 Tage = 18.12.; + 14 Tage = 1.1.2027 (Neujahr, Freitag) → Montag 4.1.2027 (§ 193 BGB)
+  assert.equal(b.fr.ende, '2027-01-04');
+  assert.ok(text(b).includes('bis 4. Januar 2027'));
+  const h = B.fristenHtml('kaution', 'DE', b.fr);
+  assert.ok(h.includes('Annahme: Datum des Schreibens 15. Dezember 2026 + 3 Tage Postlaufzeit = Zugang am 18. Dezember 2026'), h);
+  // eigene Postlaufzeit
+  assert.equal(B.briefDaten('kaution', 'DE', { datum: '2026-11-03', fristTage: '14', postTage: '1' }).fr.ende, '2026-11-18');
+});
+test('VF02: Mängelanzeige und Reklamation folgen dem Briefdatum; eigenes Fristende vor dem Briefdatum wird abgelehnt', () => {
+  assert.equal(B.briefDaten('maengel', 'AT', { datum: '2026-12-15', fristTage: '14' }).fr.ende, '2027-01-04');
+  const r = B.briefDaten('reklamation', 'DE', { datum: '2026-12-15', uebergabe: '2026-10-01', fristTage: '14' });
+  assert.equal(r.fr.antwortBis, '2027-01-04');
+  const eigen = B.briefDaten('kaution', 'DE', { datum: '2026-12-15', fristBis: '2027-01-15' });
+  assert.equal(eigen.fr.ende, '2027-01-15');
+  assert.equal(eigen.sperre, null);
+  const falsch = B.briefDaten('kaution', 'DE', { datum: '2026-12-15', fristBis: '2026-11-20' });
+  assert.match(falsch.fr.fehler, /liegt vor dem Datum des Schreibens/);
+  assert.match(falsch.sperre, /ENTWURF – nicht versandfertig/);
+  assert.ok(text(falsch).includes('[Datum]') && !text(falsch).includes('20. November 2026, '));
+  const rf = B.briefDaten('reklamation', 'DE', { datum: '2026-12-15', uebergabe: '2026-10-01', fristBis: '2026-12-01' });
+  assert.ok(rf.fr.fristFehler && /ENTWURF/.test(rf.sperre));
+  assert.ok(B.fristenHtml('reklamation', 'DE', rf.fr).includes('Grundfrist'), 'Gewährleistung bleibt sichtbar');
+});
+test('VF02: Wiederherstellen rechnet Fristen nicht still neu', () => {
+  const v = { land: 'DE', datum: '2026-11-03', fristTage: '14', postTage: '3', fristBis: '' };
+  v.__frist = B.fristKern(B.briefDaten('kaution', 'DE', v).fr);
+  assert.equal(v.__frist.ende, '2026-11-20');
+  // Später (15.12.) geladen: gleiches Ergebnis, Briefdatum unverändert, aber markiert
+  const p = B.wiederherstellPruefung('kaution', 'DE', v, '2026-12-15');
+  assert.equal(p.fristBis, null);
+  assert.ok(p.hinweise.some(t => /unverändert übernommen/.test(t)), p.hinweise.join('|'));
+  // Gespeicherte Frist weicht ab (z. B. alter Stand): gespeicherter Wert bleibt, Hinweis
+  const alt = Object.assign({}, v, { __frist: { ende: '2026-11-23' } });
+  const q = B.wiederherstellPruefung('kaution', 'DE', alt, '2026-11-03');
+  assert.equal(q.fristBis, '2026-11-23');
+  assert.ok(q.hinweise.some(t => /Gespeicherte Frist beibehalten: 23\. November 2026/.test(t)));
+  // Mietkündigung: Abweichung wird gemeldet
+  const m = { land: 'DE', variante_DE: 'standard', zugang: '2026-11-04', datum: '2026-11-03', __frist: { termin: '2027-02-28' } };
+  assert.ok(B.wiederherstellPruefung('miete-kuendigung', 'DE', m, '2026-11-03').hinweise.some(t => /Achtung/.test(t)));
+});
+test('VF03: Feiertagsdaten nicht geladen → kein Datum, Brief nicht versandfertig', () => {
+  try {
+    B.setzeFeiertage(null);
+    const r = B.briefDaten('ruecktritt', 'DE', { erhalt: '2026-03-20' });
+    assert.ok(r.fr.fehler && /Feiertagsdaten/.test(r.fr.fehler));
+    assert.match(r.sperre, /nicht versandfertig/);
+    assert.ok(!B.fristenHtml('ruecktritt', 'DE', r.fr).includes('3. April 2026'));
+    const k = B.briefDaten('kaution', 'DE', { datum: '2026-11-03' });
+    assert.ok(k.fr.fehler && /ENTWURF/.test(k.sperre));
+    const m = B.briefDaten('miete-kuendigung', 'DE', { variante_DE: 'standard', zugang: '2026-11-04' });
+    assert.ok(m.fr.fehler && /ENTWURF/.test(m.sperre));
+    // AT-Mietkündigung braucht keine Feiertage und bleibt berechenbar
+    assert.equal(B.briefDaten('miete-kuendigung', 'AT', { variante_AT: 'unbefristet-monatlich', zugang: '2026-11-04' }).fr.termin, '2026-12-31');
+  } finally { B.setzeFeiertage(FT); }
+  assert.equal(B.briefDaten('ruecktritt', 'DE', { erhalt: '2026-03-20' }).fr.ende, '2026-04-07');
+});

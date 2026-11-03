@@ -255,3 +255,45 @@ test('Mietkündigung DE: Landesfeiertag Allerheiligen 2027 (NRW/BY/BW/RP/SL) ver
   assert.equal(mit.termin, '2028-01-31');
   assert.equal(mit.spaetesterZugang, '2027-11-04');
 });
+
+// ---- Codex-Befunde VF01/VF03 (3.11.2026) ----
+test('VF03: ohne Feiertagsdaten kein scheinbar vollständiges Fristende (§ 193 BGB)', () => {
+  // Vorher: 20.3.2026 + 14 Tage DE → 3. April (Karfreitag) ohne Verschiebung
+  assert.throws(() => F.fristEnde({ ereignis: '2026-03-20', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: {} }), /Feiertagsdaten konnten nicht geladen/);
+  assert.throws(() => F.fristEnde({ ereignis: '2026-03-20', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: null }), /Feiertagsdaten/);
+  assert.throws(() => F.ruecktrittsfrist({ land: 'DE', erhalt: '2026-03-20', feiertage: {} }), /Feiertagsdaten/);
+  assert.throws(() => F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2026-11-03', feiertage: {} }), /Feiertagsdaten/);
+  // Mit Daten: 7. April 2026
+  assert.equal(F.fristEnde({ ereignis: '2026-03-20', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: FT }).ende, '2026-04-07');
+  // Ohne Verschiebung werden keine Feiertage gebraucht
+  assert.equal(F.fristEnde({ ereignis: '2026-03-20', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: {}, verschieben: false }).ende, '2026-04-03');
+});
+test('VF03: regionale Feiertage im Jahr des Fristendes (1.11.2026 + 4 Jahre, Allerheiligen → 4.11.2030)', () => {
+  const r = F.fristEnde({ ereignis: '2026-11-01', anzahl: 4, einheit: 'jahre', land: 'DE', feiertage: FT, optional: ['allerheiligen'] });
+  assert.equal(r.rohEnde, '2030-11-01');
+  assert.equal(r.ende, '2030-11-04');
+  assert.equal(r.verschoben[0].datum, '2030-11-01');
+  // Fronleichnam (u. a. Bayern, Art. 1 BayFTG) 2031 am 12.6. – fünf Jahre nach dem 12.6.2026
+  assert.equal(F.fristEnde({ ereignis: '2026-06-12', anzahl: 5, einheit: 'jahre', land: 'DE', feiertage: FT, optional: ['fronleichnam'] }).ende, '2031-06-13');
+});
+test('VF03: außerhalb der geprüften Abdeckung kein endgültiges Datum', () => {
+  assert.deepEqual(F.abdeckung(FT), { von: 2020, bis: 2040 });
+  assert.throws(() => F.fristEnde({ ereignis: '2026-11-01', anzahl: 20, einheit: 'jahre', land: 'DE', feiertage: FT }),
+    e => /keine geprüften Feiertagsdaten/.test(e.message) && /2046-11-01/.test(e.message) && e.code === 'ausserhalb');
+  assert.throws(() => F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: '2041-01-02', feiertage: FT }), /2041/);
+  // Verschiebung über den Jahreswechsel in ein nicht abgedecktes Jahr
+  // (Prüfdaten mit Abdeckung bis 2028: 31.12.2028 ist ein Sonntag, 1.1.2029 Neujahr → 2.1.2029)
+  const bis2028 = Object.assign({}, FT, { gueltig: { von: 2020, bis: 2028 } });
+  assert.throws(() => F.fristEnde({ ereignis: '2028-12-17', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: bis2028 }), /2029/);
+  assert.equal(F.fristEnde({ ereignis: '2028-12-17', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: FT }).ende, '2029-01-02');
+});
+test('Ostersonntag 2020–2040 (Grundlage der beweglichen Feiertage im Abdeckungszeitraum)', () => {
+  const soll = ['2020-04-12', '2021-04-04', '2022-04-17', '2023-04-09', '2024-03-31', '2025-04-20', '2026-04-05', '2027-03-28', '2028-04-16', '2029-04-01',
+    '2030-04-21', '2031-04-13', '2032-03-28', '2033-04-17', '2034-04-09', '2035-03-25', '2036-04-13', '2037-04-05', '2038-04-25', '2039-04-10', '2040-04-01'];
+  soll.forEach((d, i) => assert.equal(F.iso(F.easter(2020 + i)), d));
+});
+test('VF01: CH ohne Ortsgebrauch und ohne Mietbeginn – kein erfundener Beginn', () => {
+  assert.throws(() => F.mietKuendigung({ land: 'CH', variante: 'mietdauer', zugang: '2026-11-03', feiertage: FT }), e => e.code === 'mietbeginn-fehlt');
+  const r = F.mietKuendigung({ land: 'CH', variante: 'mietdauer', zugang: '2026-11-03', mietbeginn: '2025-01-01', feiertage: FT });
+  assert.equal(r.termin, '2027-03-31');
+});

@@ -28,6 +28,7 @@
   function L(land, o) { return o[land] != null ? o[land] : o.DE; }
   function ch(land, s) { return land === 'CH' ? s.replace(/ß/g, 'ss') : s; }
   function datum(s, land) { try { return F.formatDE(s, land); } catch (e) { return '[Datum]'; } }
+  function isoText(t, land) { return String(t).replace(/\d{4}-\d{2}-\d{2}/g, function (d) { return datum(d, land); }); }
   function leer(v) { return v == null || String(v).trim() === ''; }
   var SCHUTZ = '\uE000';
   function roh(v) { return String(v || '').trim().replace(/ß/g, SCHUTZ); }
@@ -36,12 +37,54 @@
   function zeilen(v) { return String(v || '').split(/\n+/).map(function (s) { return roh(s); }).filter(Boolean); }
   var speicherOk = (function () { try { var k = '__vf'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; } catch (e) { return false; } }());
 
+  /*
+   * Feiertagsdaten laden. Schlägt das fehl, bleibt FT = null: Der Rechenkern gibt dann für alle
+   * feiertagsabhängigen Fristen einen Fehler statt eines scheinbar vollständigen Datums aus.
+   */
   function ladeFeiertage(cb) {
     if (FT) return cb(FT);
-    fetch('/assets/data/feiertage.json', { credentials: 'omit' }).then(function (r) { return r.json(); })
-      .then(function (d) { FT = d; cb(d); })
-      .catch(function () { FT = {}; cb(FT); });
+    fetch('/assets/data/feiertage.json', { credentials: 'omit' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { FT = d && F.abdeckung(d) ? d : null; cb(FT); })
+      .catch(function () { FT = null; cb(FT); });
   }
+
+  /*
+   * Frist im Schreiben (Kaution, Mängelanzeige, Reklamation): an das Datum des Schreibens gebunden.
+   * Annahme offengelegt: Datum des Schreibens + Postlaufzeit (Tage) = Zugang; ab dem Tag nach dem
+   * Zugang laufen die Fristtage; Ende auf Wochenende/Feiertag → nächster Werktag. Alternativ trägt
+   * die Nutzerin das Fristende selbst ein. Ein Fristende vor dem Datum des Schreibens wird abgelehnt.
+   */
+  function schreibFrist(land, v) {
+    var brief = v.datum || HEUTE, b = F.parse(brief);
+    if (!leer(v.fristBis)) {
+      var e = F.parse(v.fristBis);
+      if (e.getTime() < b.getTime()) throw new Error('Das Fristende (' + datum(v.fristBis, land) + ') liegt vor dem Datum des Schreibens (' + datum(brief, land) + '). Bitte ein späteres Fristende eintragen.');
+      return { ende: F.iso(e), eigen: true, briefDatum: F.iso(b), verschoben: [] };
+    }
+    var post = leer(v.postTage) ? 3 : Number(v.postTage);
+    if (!(post >= 0 && post <= 30 && Math.floor(post) === post)) throw new Error('Postlaufzeit bitte als ganze Zahl von 0 bis 30 Tagen eintragen.');
+    var tage = leer(v.fristTage) ? 14 : Number(v.fristTage);
+    if (!(tage >= 1 && tage <= 365 && Math.floor(tage) === tage)) throw new Error('Frist bitte als ganze Zahl von 1 bis 365 Tagen eintragen.');
+    var zug = F.iso(F.addDays(b, post));
+    var r = F.fristEnde({ ereignis: zug, anzahl: tage, einheit: 'tage', land: land, feiertage: FT });
+    r.briefDatum = F.iso(b); r.postTage = post; r.zugangAnnahme = zug; r.fristTage = tage;
+    return r;
+  }
+  function schreibFristHtml(land, r, z) {
+    var h = z('Frist im Schreiben', datum(r.ende, land) + ' (' + F.weekdayDE(r.ende) + ')', true);
+    if (r.eigen) h += '<p class="fristquelle">Von Ihnen eingetragenes Fristende. Achten Sie darauf, dass der Empfängerseite nach dem Zugang genug Zeit bleibt.</p>';
+    else {
+      h += '<p class="fristquelle">Annahme: Datum des Schreibens ' + esc(datum(r.briefDatum, land)) + ' + ' + r.postTage + ' Tage Postlaufzeit = Zugang am ' + esc(datum(r.zugangAnnahme, land)) + '; + ' + r.fristTage + ' Tage = ' + esc(datum(r.rohEnde, land)) + '.' +
+        (r.verschoben.length ? ' Verschoben auf den nächsten Werktag, weil ' + r.verschoben.map(function (x) { return esc(datum(x.datum, land) + ' (' + x.grund + ')'); }).join(', ') + ' kein Werktag ist.' : '') +
+        ' Ändern Sie das Datum des Schreibens, verschiebt sich die Frist mit. Sie können das Fristende auch selbst eintragen.</p>';
+    }
+    return h;
+  }
+  var SCHREIBFRIST_FELDER = [
+    { id: 'postTage', label: 'Postlaufzeit bis zum Zugang (Tage ab Datum des Schreibens)', typ: 'number', def: '3', hilfe: 'Annahme für die Berechnung: Zugang = Datum des Schreibens + diese Tage.' },
+    { id: 'fristBis', label: 'Oder Fristende selbst festlegen (optional)', typ: 'date', hilfe: 'Ersetzt die Berechnung. Darf nicht vor dem Datum des Schreibens liegen.' }
+  ];
 
   /* ================= Quellen ================= */
   var Q = {
@@ -50,6 +93,7 @@
     'AT-29-2-MRG': ['§ 29 Abs. 2 MRG', 'https://ris.bka.gv.at/eli/bgbl/1981/520/P29/NOR40273695'],
     'DE-573c-1': ['§ 573c Abs. 1 BGB', 'https://www.gesetze-im-internet.de/bgb/__573c.html'],
     'DE-573c-3': ['§ 573c Abs. 3 BGB', 'https://www.gesetze-im-internet.de/bgb/__573c.html'],
+    'DE-573c-4': ['§ 573c Abs. 4 BGB', 'https://www.gesetze-im-internet.de/bgb/__573c.html'],
     'DE-568': ['§ 568 Abs. 1 BGB', 'https://www.gesetze-im-internet.de/bgb/__568.html'],
     'CH-266c': ['Art. 266c OR', 'https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_c'],
     'CH-266l': ['Art. 266l OR', 'https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_l'],
@@ -129,7 +173,7 @@
         { id: 'termine_CH', nur: 'CH', label: 'Ortsübliche Termine (Monatsende)', typ: 'monate', hilfe: 'Häufig sind es mehrere Monatsenden im Jahr. Den Mietvertrag oder die Gemeinde fragen.' , def: '3,6,9' },
         { id: 'zugang', label: 'Wann geht der Brief voraussichtlich zu?', typ: 'date', hilfe: 'Postlaufzeit einrechnen. Maßgeblich ist der Zugang, nicht das Absendedatum.' },
         { id: 'feiertage_DE', nur: 'DE', label: 'Feiertage am Ort, an dem der Brief zugeht', typ: 'feiertage', land: 'DE', hilfe: 'Landesfeiertage (z. B. Fronleichnam, Reformationstag, Allerheiligen) zählen nicht als Werktag und verschieben den dritten Werktag.' },
-        { id: 'vertrag_frist', label: 'Steht im Vertrag eine längere Frist oder ein anderer Termin?', typ: 'check', hilfe: 'Dann gilt der Vertrag, soweit er für Sie nicht ungünstiger ist als das Gesetz. Der Rechner zeigt nur die gesetzliche Frist.' },
+        { id: 'vertrag_frist', label: 'Steht im Vertrag eine längere Frist oder ein anderer Termin?', typ: 'check', hilfe: 'Österreich und Schweiz: Dann gilt grundsätzlich der Vertrag, soweit er zulässig ist. Deutschland: Eine Abweichung zu Ihrem Nachteil ist nach § 573c Abs. 4 BGB unwirksam; ein vereinbarter Kündigungsverzicht kann die Kündigung aber zeitweise ausschließen. Der Rechner zeigt nur die gesetzliche Frist.' },
         { id: 'uebergabe', label: 'Terminvorschlag für die Wohnungsübergabe (optional)', typ: 'text' },
         { id: 'iban', label: 'Konto für die Rückzahlung der Kaution (optional)', typ: 'text', hilfe: 'IBAN und Kontoinhaber' },
         { id: 'mitmieter', label: 'Weitere Mieterinnen/Mieter, die mitunterschreiben', typ: 'text', hilfe: 'Alle im Vertrag genannten Personen sollten unterschreiben.' },
@@ -179,12 +223,12 @@
         { id: 'rueckgabe', label: 'Tag der Rückgabe (Schlüsselübergabe)', typ: 'date' },
         { id: 'betrag', label: 'Höhe der Kaution', typ: 'text', hilfe: 'z. B. EUR 2.400,– oder CHF 4\'200.–' },
         { id: 'protokoll', label: 'Es gibt ein Übergabeprotokoll ohne offene Mängel', typ: 'check' },
-        { id: 'fristTage', label: 'Frist für die Rückzahlung (Tage ab Zugang)', typ: 'number', def: '14' },
+        { id: 'fristTage', label: 'Frist für die Rückzahlung (Tage ab Zugang)', typ: 'number', def: '14' }
+      ].concat(SCHREIBFRIST_FELDER, [
         { id: 'iban', label: 'Konto für die Rückzahlung', typ: 'text', hilfe: 'IBAN und Kontoinhaber' }
-      ],
+      ]),
       fristen: function (land, v) {
-        var z = v.zugang || HEUTE;
-        try { return F.fristEnde({ ereignis: F.iso(F.addDays(F.parse(HEUTE), 3)), anzahl: +v.fristTage || 14, einheit: 'tage', land: land, feiertage: FT }); } catch (e) { return { fehler: e.message }; }
+        try { return schreibFrist(land, v); } catch (e) { return { fehler: e.message }; }
       },
       text: function (land, v, fr) {
         var a = [];
@@ -203,13 +247,14 @@
         { id: 'objekt', label: 'Adresse der Wohnung', typ: 'text' },
         { id: 'mangel', label: 'Was ist kaputt? (sachlich, mit Ort)', typ: 'textarea', hilfe: 'z. B. „Heizkörper im Schlafzimmer bleibt kalt, Thermostat auf Stufe 5“' },
         { id: 'seit', label: 'Seit wann besteht der Mangel?', typ: 'date' },
-        { id: 'fristTage', label: 'Frist zur Behebung (Tage)', typ: 'number', def: '14' },
+        { id: 'fristTage', label: 'Frist zur Behebung (Tage ab Zugang)', typ: 'number', def: '14' }
+      ].concat(SCHREIBFRIST_FELDER, [
         { id: 'zugang_info', label: 'Zugang für Handwerker: erreichbar unter', typ: 'text' },
         { id: 'minderung', label: 'Mietzinsminderung bzw. Zinsbefreiung ausdrücklich vorbehalten', typ: 'check', def: true },
         { id: 'hinterlegung_CH', nur: 'CH', label: 'Hinterlegung künftiger Mietzinse androhen (Art. 259g OR)', typ: 'check' }
-      ],
+      ]),
       fristen: function (land, v) {
-        try { return F.fristEnde({ ereignis: F.iso(F.addDays(F.parse(HEUTE), 3)), anzahl: +v.fristTage || 14, einheit: 'tage', land: land, feiertage: FT }); } catch (e) { return { fehler: e.message }; }
+        try { return schreibFrist(land, v); } catch (e) { return { fehler: e.message }; }
       },
       text: function (land, v, fr) {
         var a = [], bis = fr && fr.ende ? datum(fr.ende, land) : '[Datum]';
@@ -269,13 +314,13 @@
         { id: 'nachbesserung', nur: 'AT,DE', label: 'Der Verkäufer hat den Mangel bereits im Rahmen der Gewährleistung repariert', typ: 'check', hilfe: 'DE: § 475e Abs. 5 BGB, AT: § 10 Abs. 2a VGG – einmalige Verlängerung um ein Jahr.' },
         { id: 'rueckerhalt', nur: 'DE', label: 'Ware nach Reparatur oder Austausch zurückerhalten am (optional)', typ: 'date', hilfe: '§ 475e Abs. 4 BGB: frühestens zwei Monate danach verjähren die Ansprüche wegen dieses Mangels.' },
         { id: 'wunsch', label: 'Was verlangen Sie zuerst?', typ: 'select', optionen: [['reparatur', 'Reparatur'], ['austausch', 'Austausch gegen eine mangelfreie Sache']] },
-        { id: 'fristTage', label: 'Frist (Tage)', typ: 'number', def: '14' }
-      ],
+        { id: 'fristTage', label: 'Frist (Tage ab Zugang)', typ: 'number', def: '14' }
+      ].concat(SCHREIBFRIST_FELDER),
       fristen: function (land, v) {
         try {
           var g = F.gewaehrleistung({ land: land, uebergabe: v.uebergabe || HEUTE, vertrag: v.vertrag || null, entdeckt: v.entdeckt || null,
             nachbesserung: land !== 'CH' && !!v.nachbesserung, rueckerhalt: land === 'DE' ? v.rueckerhalt || null : null });
-          g.antwortBis = F.fristEnde({ ereignis: F.iso(F.addDays(F.parse(HEUTE), 3)), anzahl: +v.fristTage || 14, einheit: 'tage', land: land, feiertage: FT }).ende;
+          try { g.antwort = schreibFrist(land, v); g.antwortBis = g.antwort.ende; } catch (e2) { g.fristFehler = e2.message; }
           return g;
         } catch (e) { return { fehler: e.message }; }
       },
@@ -311,8 +356,7 @@
           var ende = F.addDays(F.addMonths(F.parse(v.beginn), +v.mindest || 24), -1);
           var r = { mindestEnde: F.iso(ende) };
           if (land === 'DE' || land === 'AT') {
-            var heute = F.parse(HEUTE);
-            var zugang = F.addDays(heute, 3);
+            var zugang = F.addDays(F.parse(v.datum || HEUTE), 3); // Annahme: Zugang 3 Tage nach dem Datum des Schreibens
             r.fruehestens = F.iso(zugang.getTime() > ende.getTime() ? F.addMonths(zugang, 1) : ende);
           }
           return r;
@@ -484,7 +528,7 @@
   /* ================= Fristen-Anzeige im Brief-Assistenten ================= */
   function fristenHtml(id, land, fr) {
     if (!fr) return '';
-    if (fr.fehler) return '<p class="nok">' + esc(fr.fehler) + '</p>';
+    if (fr.fehler) return '<p class="nok">' + esc(isoText(fr.fehler, land)) + '</p>';
     var z = function (label, wert, mark) { return '<div class="fristzeile"><span>' + esc(label) + '</span><b' + (mark ? ' class="mark"' : '') + '>' + esc(wert) + '</b></div>'; };
     var h = '';
     if (id === 'miete-kuendigung') {
@@ -501,14 +545,15 @@
       h += '<p class="fristquelle">Grundlage: ' + quelleHtml(fr.regel) + '. Es genügt, die Erklärung innerhalb der Frist abzusenden.</p>';
     } else if (id === 'reklamation') {
       h += gewaehrleistungHtml(land, fr, z);
-      h += z('Frist im Schreiben', datum(fr.antwortBis, land));
+      if (fr.fristFehler) h += '<p class="nok">' + esc(fr.fristFehler) + '</p>';
+      else h += schreibFristHtml(land, fr.antwort, z);
     } else if (id === 'kaution' || id === 'maengel') {
-      h += z('Frist im Schreiben (bei Zugang in etwa 3 Tagen)', datum(fr.ende, land), true);
+      h += schreibFristHtml(land, fr, z);
       h += '<p class="fristquelle">Eine angemessene Frist setzen Sie selbst; sie ist im Gesetz nicht in Tagen festgelegt. Fristende auf Wochenende oder Feiertag wird auf den nächsten Werktag gelegt.</p>';
     } else if (id === 'handy') {
       if (fr.leer) return '<p>Tragen Sie den Vertragsbeginn ein, um das Ende der Mindestlaufzeit zu sehen.</p>';
       h += z('Ende der Mindestlaufzeit', datum(fr.mindestEnde, land), true);
-      if (fr.fruehestens) h += z('Frühestmögliches Vertragsende bei Zugang in 3 Tagen', datum(fr.fruehestens, land), true);
+      if (fr.fruehestens) h += z('Frühestmögliches Vertragsende bei Zugang 3 Tage nach dem Datum des Schreibens', datum(fr.fruehestens, land), true);
       h += '<p class="fristquelle">' + (land === 'DE' ? 'Nach der Mindestlaufzeit: Kündigung jederzeit mit einem Monat Frist (<a href="https://www.gesetze-im-internet.de/tkg_2021/__56.html" rel="noopener" target="_blank">§ 56 Abs. 3 TKG</a>).' : land === 'AT' ? 'Kündigungsfrist ein Monat, Mindestvertragsdauer bleibt unberührt (<a href="https://www.ris.bka.gv.at/eli/bgbl/i/2021/190/P135/NOR40238593" rel="noopener" target="_blank">§ 135 Abs. 5 TKG 2021</a>).' : 'In der Schweiz regeln die Vertragsbedingungen des Anbieters Laufzeit und Frist.') + '</p>';
     } else if (id === 'versicherung') {
       if (fr.leer) return '<p>Tragen Sie das Ende der Versicherungsperiode ein.</p>';
@@ -565,6 +610,9 @@
   function briefDaten(id, land, v) {
     var vor = VORLAGEN[id], fr = vor.fristen ? vor.fristen(land, v) : null;
     var t = vor.text(land, v, fr);
+    // Fehlt eine Eingabe oder ist eine Frist nicht sicher berechenbar, ist der Brief nicht versandfertig.
+    var grund = fr && (fr.fehler || fr.fristFehler);
+    if (grund && !t.sperre) t.sperre = ch(land, 'ENTWURF – nicht versandfertig: ' + isoText(grund, land));
     var abs = [v.abs_name, v.abs_strasse, v.abs_ort].map(function (s) { return (s || '').trim(); }).filter(Boolean);
     var emp = [v.emp_name, v.emp_zusatz, v.emp_strasse, v.emp_ort, v.emp_land ? String(v.emp_land).toUpperCase() : ''].map(function (s) { return (s || '').trim(); }).filter(Boolean);
     return {
@@ -575,6 +623,44 @@
       unterschriftZeilen: t.unterschriftZeilen || (t.unterschriften > 1 ? ['weitere Unterschrift(en)'] : []), sperre: t.sperre || null,
       fensterRechts: !!v.fenster_rechts
     };
+  }
+
+  /*
+   * Gespeicherte Entwürfe: Beim Speichern wird der Kern der berechneten Fristen mitgespeichert.
+   * Beim Wiederherstellen wird nichts still neu berechnet: Weicht das Ergebnis ab, bleibt bei
+   * Schreiben mit eigener Frist das gespeicherte Fristende (als eigenes Datum eingetragen),
+   * sonst wird die Abweichung deutlich angezeigt. Ein vergangenes Datum des Schreibens wird
+   * unverändert übernommen und markiert.
+   */
+  var KERN = [['ende', 'Fristende'], ['antwortBis', 'Frist im Schreiben'], ['termin', 'Termin'], ['spaetesterZugang', 'spätester Zugang'],
+    ['fruehesterZugang', 'frühester Zugang'], ['austritt', 'Austritt'], ['fruehestens', 'frühestes Vertragsende'], ['mindestEnde', 'Ende der Mindestlaufzeit'],
+    ['fristEnde', 'Gewährleistungsfrist'], ['verjaehrung', 'Verjährung']];
+  function fristKern(fr) {
+    if (!fr || fr.fehler) return null;
+    var k = {}, n = 0;
+    KERN.forEach(function (x) { if (typeof fr[x[0]] === 'string') { k[x[0]] = fr[x[0]]; n++; } });
+    return n ? k : null;
+  }
+  function kernText(k, land) {
+    return KERN.filter(function (x) { return k && k[x[0]]; }).map(function (x) { return x[1] + ' ' + datum(k[x[0]], land); }).join(', ');
+  }
+  function wiederherstellPruefung(id, land, v, heute) {
+    var out = { fristBis: null, hinweise: [] }, alt = v.__frist || null;
+    var jetzt = fristKern(briefDaten(id, land, v).fr);
+    if (alt && jetzt && JSON.stringify(alt) !== JSON.stringify(jetzt)) {
+      var eigen = VORLAGEN[id].felder.some(function (f) { return f.id === 'fristBis'; });
+      var altEnde = alt.antwortBis || alt.ende;
+      if (eigen && leer(v.fristBis) && altEnde) {
+        out.fristBis = altEnde;
+        out.hinweise.push('Gespeicherte Frist beibehalten: ' + datum(altEnde, land) + ' (als eigenes Fristende eingetragen). Nach den aktuellen Angaben ergäbe sich ' + kernText(jetzt, land) + '. Bitte prüfen, welches Datum gelten soll.');
+      } else {
+        out.hinweise.push('Achtung: Beim Speichern des Entwurfs ergab sich ' + kernText(alt, land) + ', jetzt ' + kernText(jetzt, land) + '. Bitte die Angaben prüfen.');
+      }
+    } else if (!alt && jetzt) {
+      out.hinweise.push('Entwurf aus einer früheren Version ohne gespeicherte Frist: Die angezeigten Fristen sind aus den gespeicherten Angaben neu berechnet. Bitte prüfen.');
+    }
+    if (v.datum && v.datum < heute) out.hinweise.push('Das Datum des Schreibens aus dem Entwurf (' + datum(v.datum, land) + ') wurde unverändert übernommen; die Fristen beziehen sich darauf. Wenn Sie später versenden, passen Sie das Datum an.');
+    return out;
   }
 
   function erstAbsatz(b) {
@@ -598,7 +684,7 @@
     h += '<p>' + esc(b.signatur || '') + '</p>';
     b.unterschriftZeilen.forEach(function (t) { h += '<p class="weitere-unterschrift" style="margin-top:12mm">______________________________<br><small>' + esc(t) + '</small></p>'; });
     if (b.anlagen.length) h += '<p class="anlagen">Anlage' + (b.anlagen.length > 1 ? 'n' : '') + ':<br>' + b.anlagen.map(esc).join('<br>') + '</p>';
-    h += '</div><div class="ueberlauf">Der Text ist länger als eine Seite. Bitte kürzen oder in einem Textprogramm weiterbearbeiten.</div><div class="fensterlage" aria-hidden="true"></div>';
+    h += '</div><div class="ueberlauf">Der Text ist länger als eine Seite. Die Vorschau zeigt nur Seite 1; beim Drucken und in der Word-Datei läuft er vollständig auf Seite 2 weiter.</div><div class="fensterlage" aria-hidden="true"></div>';
     return h;
   }
 
@@ -829,16 +915,24 @@
     root.innerHTML = '';
     root.appendChild(raster);
 
-    var dKey = 'vf24-entwurf-' + id;
+    var dKey = 'vf24-entwurf-' + id, gespeichert = null, ladeHinweise = [];
     if (speicherOk) {
       try {
         var alt = localStorage.getItem(dKey);
-        if (alt) { setzeWerte(form, JSON.parse(alt)); $('#' + prefix + 'merken').checked = true; }
-      } catch (e) { /* nichts */ }
+        if (alt) { gespeichert = JSON.parse(alt); setzeWerte(form, gespeichert); $('#' + prefix + 'merken').checked = true; }
+      } catch (e) { gespeichert = null; }
     }
     if (!$('#' + prefix + 'datum').value) $('#' + prefix + 'datum').value = HEUTE;
     var zf = $('#' + prefix + 'zugang');
     if (zf && !zf.value) zf.value = F.iso(F.addDays(F.parse(HEUTE), 3));
+    if (gespeichert) {
+      try {
+        var gv = werte(form); gv.__frist = gespeichert.__frist || null;
+        var wp = wiederherstellPruefung(id, gv.land || 'AT', gv, HEUTE);
+        if (wp.fristBis && $('#' + prefix + 'fristBis')) $('#' + prefix + 'fristBis').value = wp.fristBis;
+        ladeHinweise = wp.hinweise;
+      } catch (e) { ladeHinweise = []; }
+    }
 
     var letzte = null;
     function aktualisiere() {
@@ -846,6 +940,7 @@
       $all('[data-nur]', form).forEach(function (n) { n.hidden = n.getAttribute('data-nur').split(',').indexOf(land) === -1; });
       var b = briefDaten(id, land, v); letzte = b;
       var fh = fristenHtml(id, land, b.fr);
+      if (ladeHinweise.length) fh = ladeHinweise.map(function (t) { return '<p class="nok" data-entwurf-hinweis>' + esc(t) + '</p>'; }).join('') + fh;
       fristBox.hidden = !fh;
       fristBox.innerHTML = fh ? '<h3>Fristen für ' + ({ AT: 'Österreich', DE: 'Deutschland', CH: 'die Schweiz' })[land] + '</h3>' + fh : '';
       var ve = versandEmpfehlung(land, vor.versandArt, b.fr && typeof b.fr.puffer === 'number' ? b.fr.puffer : null);
@@ -856,12 +951,14 @@
       skaliere(rahmen, blatt);
       var text = $('.text', blatt);
       blatt.classList.toggle('zu-lang', text.scrollHeight > text.clientHeight + 2);
-      if (speicherOk && $('#' + prefix + 'merken') && $('#' + prefix + 'merken').checked) {
-        try { localStorage.setItem(dKey, JSON.stringify(v)); } catch (e) { /* voll */ }
+      // Solange Hinweise zum geladenen Entwurf offen sind, wird der Entwurf nicht still überschrieben.
+      if (speicherOk && !ladeHinweise.length && $('#' + prefix + 'merken') && $('#' + prefix + 'merken').checked) {
+        try { v.__frist = fristKern(b.fr); localStorage.setItem(dKey, JSON.stringify(v)); } catch (e) { /* voll */ }
       }
     }
-    form.addEventListener('input', aktualisiere);
+    form.addEventListener('input', function () { ladeHinweise = []; aktualisiere(); });
     form.addEventListener('change', function (e) {
+      if (e.isTrusted) ladeHinweise = [];
       if (e.target.id === prefix + 'merken' && !e.target.checked) { try { localStorage.removeItem(dKey); } catch (x) { /* */ } status.textContent = 'Gespeicherter Entwurf gelöscht.'; }
       aktualisiere();
     });
@@ -879,7 +976,7 @@
       if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { status.textContent = 'Text in die Zwischenablage kopiert.'; }, function () { status.textContent = 'Kopieren nicht möglich.'; });
     });
     bLoesch.addEventListener('click', function () {
-      form.reset();
+      form.reset(); ladeHinweise = [];
       try { localStorage.removeItem(dKey); } catch (e) { /* */ }
       $('#' + prefix + 'datum').value = HEUTE;
       if (zf) zf.value = F.iso(F.addDays(F.parse(HEUTE), 3));
@@ -934,11 +1031,16 @@
       try {
         if (modus === 'vergleich') {
           var z = v.zugang || startDatum, karten = '';
-          var at = F.mietKuendigung({ land: 'AT', variante: v.at, zugang: z, mietbeginn: v.beginn || null, feiertage: FT });
-          var de = F.mietKuendigung({ land: 'DE', variante: 'standard', zugang: z, feiertage: FT });
-          var chx = F.mietKuendigung({ land: 'CH', variante: v.ch, zugang: z, terminMonate: [3, 6, 9], mietbeginn: v.beginn || F.iso(F.addMonths(F.parse(z), -14)), feiertage: FT });
+          F.parse(z);
+          // Jede Karte einzeln: Fehlt eine Angabe (z. B. Mietbeginn für CH ohne Ortsgebrauch), wird
+          // nichts erfunden – die Karte nennt die fehlende Angabe und zeigt kein Datum.
+          var rechneKarte = function (o) { try { return F.mietKuendigung(o); } catch (e) { return { fehler: e.message }; } };
+          var at = rechneKarte({ land: 'AT', variante: v.at, zugang: z, mietbeginn: v.beginn || null, feiertage: FT });
+          var de = rechneKarte({ land: 'DE', variante: 'standard', zugang: z, feiertage: FT });
+          var chx = rechneKarte({ land: 'CH', variante: v.ch, zugang: z, terminMonate: [3, 6, 9], mietbeginn: v.beginn || null, feiertage: FT });
           [['Österreich', 'AT', at], ['Deutschland', 'DE', de], ['Schweiz', 'CH', chx]].forEach(function (x) {
             var r = x[2];
+            if (r.fehler) { karten += '<section class="fristkarte"><h3>' + x[0] + '</h3><p class="nok">' + esc(r.fehler) + '</p></section>'; return; }
             karten += '<section class="fristkarte"><h3>' + x[0] + '</h3>' +
               '<div class="fristzeile"><span>Mietende</span><b class="mark">' + esc(datum(r.termin, x[1])) + '</b></div>' +
               '<div class="fristzeile"><span>Spätester Zugang</span><b>' + esc(datum(r.spaetesterZugang, x[1])) + '</b></div>' +
@@ -946,13 +1048,13 @@
               (r.hinweis ? '<p class="fristquelle">' + esc(r.hinweis.replace(/\d{4}-\d{2}-\d{2}/g, function (d) { return datum(d, x[1]); })) + '</p>' : '') +
               '<p class="fristquelle">' + quelleHtml(r.regel) + '</p></section>';
           });
-          aus.innerHTML = '<h3 style="margin-top:0">Zugang am ' + esc(datum(z, 'DE')) + ' (' + F.weekdayDE(z) + ')</h3><div class="vergleich">' + karten + '</div><p class="fristquelle">Gesetzliche Mindestregeln für Mieterinnen und Mieter. Deutschland: nur bundesweite Feiertage – Landesfeiertage können den dritten Werktag verschieben; sie lassen sich im Brief-Assistenten auf der Seite „Wohnung kündigen“ anhaken. Verträge können längere Fristen oder andere Termine vorsehen. Keine Rechtsberatung.</p>';
+          aus.innerHTML = '<h3 style="margin-top:0">Zugang am ' + esc(datum(z, 'DE')) + ' (' + F.weekdayDE(z) + ')</h3><div class="vergleich">' + karten + '</div><p class="fristquelle">Gesetzliche Mindestregeln für Mieterinnen und Mieter. Deutschland: nur bundesweite Feiertage – Landesfeiertage können den dritten Werktag verschieben; sie lassen sich im Brief-Assistenten auf der Seite „Wohnung kündigen“ anhaken. Vertragliche Abweichungen: In Österreich und der Schweiz können Verträge längere Fristen oder weitere Termine vorsehen, soweit zulässig. In Deutschland ist eine Vereinbarung, die von der gesetzlichen Frist zum Nachteil der Mieterin oder des Mieters abweicht, nach ' + quelleHtml('DE-573c-4') + ' unwirksam; ein vereinbarter Kündigungsverzicht oder ein Zeitmietvertrag kann die Kündigung aber zeitweise ausschließen, und für ältere Verträge gelten Übergangsregeln – Vertrag prüfen. Keine Rechtsberatung.</p>';
         } else {
           var land = v.land || 'AT';
-          var jahre = [F.parse(v.ereignis || HEUTE).getUTCFullYear(), F.parse(v.ereignis || HEUTE).getUTCFullYear() + 1, F.parse(v.ereignis || HEUTE).getUTCFullYear() + 2];
           var eigene = String(v.eigene || '').split(/[,;\s]+/).filter(function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s); });
-          eigene = eigene.concat(F.expandOptional(land, jahre, FT, v.opt || []));
-          var r = F.fristEnde({ ereignis: v.ereignis || HEUTE, anzahl: +v.anzahl, einheit: v.einheit, land: land, feiertage: FT, verschieben: !!v.verschieben, eigeneFeiertage: eigene });
+          // Regionale Feiertage löst der Rechenkern für das Jahr des Fristendes auf (nicht nur für die
+          // ersten Jahre ab dem Ereignis) und prüft die Abdeckung der Feiertagsdaten.
+          var r = F.fristEnde({ ereignis: v.ereignis || HEUTE, anzahl: +v.anzahl, einheit: v.einheit, land: land, feiertage: FT, verschieben: !!v.verschieben, eigeneFeiertage: eigene, optional: v.opt || [] });
           var q = land === 'AT' ? 'AT-902' : land === 'DE' ? 'DE-187' : 'CH-77';
           aus.innerHTML = '<section class="fristkarte"><h3>Ergebnis</h3>' +
             '<div class="fristzeile"><span>Ereignis</span><b>' + esc(datum(r.ereignis, land)) + ' (' + F.weekdayDE(r.ereignis) + ')</b></div>' +
@@ -962,7 +1064,7 @@
             '<p class="fristquelle">Der Tag des Ereignisses zählt nicht mit. Grundlage: ' + quelleHtml(q) + (land === 'AT' ? ', Samstag und Karfreitag nach <a href="https://www.ris.bka.gv.at/eli/bgbl/1983/254/A5/NOR12010626" rel="noopener" target="_blank">Art. 5 Europäisches Fristenübereinkommen</a>' : land === 'CH' ? ', Samstag nach <a href="https://www.fedlex.admin.ch/eli/cc/1963/819_815_843/de" rel="noopener" target="_blank">SR 173.110.3</a>' : '') + '.</p></section>' +
             '<div class="hinweis"><strong>Wichtig</strong><p>Kündigungsfristen und -termine werden nicht verschoben: Wer zu einem Monatsende kündigt, muss rechtzeitig vorher zugehen lassen. Für Kündigungen nutzen Sie die Rechner auf den jeweiligen Vorlagenseiten.</p></div>';
         }
-      } catch (e) { aus.innerHTML = '<p class="nok">' + esc(e.message) + '</p>'; }
+      } catch (e) { aus.innerHTML = '<p class="nok">' + esc(isoText(e.message, v.land || 'DE')) + '</p>'; }
     }
     form.addEventListener('input', rechne);
     form.addEventListener('change', function (e) { if (e.target.name === 'land') optionalBauen(e.target.value); rechne(); });
@@ -1063,5 +1165,5 @@
 
   // für Tests
   window.VFBrief = { versandEmpfehlung: versandEmpfehlung, VORLAGEN: VORLAGEN, crc32: crc32, briefDaten: briefDaten, blattHtml: blattHtml,
-    fristenHtml: fristenHtml, setzeFeiertage: function (d) { FT = d; } };
+    fristenHtml: fristenHtml, wiederherstellPruefung: wiederherstellPruefung, fristKern: fristKern, setzeFeiertage: function (d) { FT = d; } };
 })();

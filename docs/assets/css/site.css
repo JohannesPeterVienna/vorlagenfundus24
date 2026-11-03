@@ -128,6 +128,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:2px soli
 .vergleich{display:grid;grid-template-columns:1fr;gap:.6rem}
 @media (min-width:640px){.vergleich{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .vergleich .fristkarte{margin:0}
+.vergleich .fristzeile{grid-template-columns:1fr}.vergleich .fristzeile b{text-align:left}
 .vergleich .fristkarte.aktiv{border-color:var(--green);box-shadow:inset 0 3px 0 var(--green)}
 .versand{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--ink);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:1rem}
 .versand h3{margin:0 0 .4rem;font:700 1.05rem var(--sans)}
@@ -246,12 +247,17 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 
 /* Druck: nur der Brief */
 @media print{
-  @page{size:A4;margin:0}
+  /* Seite 1 randlos (Zonen nach DIN 5008 absolut), Folgeseiten mit oberem Rand; unten überall 20 mm */
+  @page{size:A4;margin:20mm 0 20mm 0}
+  @page :first{margin:0 0 20mm 0}
   html,body{background:#fff!important}
   body.druck-brief>*:not(.druckbereich){display:none!important}
   body.druck-brief .druckbereich{display:block!important}
   .druckbereich{display:none}
-  .druckbereich .blatt{transform:none!important;box-shadow:none;margin:0;page-break-after:avoid}
+  .druckbereich .blatt{transform:none!important;box-shadow:none;margin:0;page-break-after:avoid;height:auto;min-height:277mm;display:flow-root;overflow:visible}
+  /* Brieftext fließt im Druck mehrseitig weiter statt im festen Kasten abgeschnitten zu werden */
+  .druckbereich .blatt .text{position:static;margin:103.4mm 20mm 0 25mm;overflow:visible}
+  .druckbereich .blatt .text p{orphans:2;widows:2}
   .druckbereich .blatt.zeigeraster .anschrift{outline:0;background:none}
   .druckbereich .fensterlage,.druckbereich .ueberlauf{display:none!important}
   body:not(.druck-brief) .kopf,body:not(.druck-brief) .register,body:not(.druck-brief) .fuss,body:not(.druck-brief) .anzeige,body:not(.druck-brief) .werkzeug,body:not(.druck-brief) .leiste{display:none!important}

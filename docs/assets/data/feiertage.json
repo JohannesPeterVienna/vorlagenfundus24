@@ -1,6 +1,7 @@
 {
   "stand": "2026-10",
   "hinweis": "Bundesweit geltende Feiertage. Landes-, Kantons- und Ortsfeiertage bitte im Rechner zusätzlich anhaken oder als eigenes Datum eintragen.",
+  "gueltig": { "von": 2020, "bis": 2040, "hinweis": "Regeln (feste Daten und Abstand zum Ostersonntag) geprüft für 2020 bis 2040. Außerhalb dieses Zeitraums gibt der Rechner kein endgültiges Fristende aus." },
   "AT": {
     "quelle": "Feiertagsruhegesetz 1957, § 1 Abs. 1",
     "quelleUrl": "https://www.ris.bka.gv.at/eli/bgbl/1957/153/A1P1/NOR40213432",

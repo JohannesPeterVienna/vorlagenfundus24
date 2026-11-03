@@ -83,6 +83,29 @@
     });
     return out;
   }
+  /*
+   * Abdeckung der Feiertagsdaten: Die Datei enthält Regeln (feste Daten, Abstand zu Ostern), keine
+   * Jahreslisten. Geprüft und freigegeben sind sie für data.gueltig.von–bis. Außerhalb dieses
+   * Zeitraums (Gesetzesänderungen möglich) und ohne geladene Daten gibt der Rechner kein
+   * Fristende aus, sondern einen Fehler mit Begründung.
+   */
+  function abdeckung(data) {
+    var g = data && data.gueltig;
+    return g && typeof g.von === 'number' && typeof g.bis === 'number' ? { von: g.von, bis: g.bis } : null;
+  }
+  function pruefeFeiertage(data, country, years) {
+    var a = abdeckung(data), def = data && data[country];
+    if (!a || !def || !Array.isArray(def.fix)) {
+      var e1 = new Error('Die Feiertagsdaten konnten nicht geladen werden. Ohne sie lässt sich nicht prüfen, ob ein Tag ein Feiertag ist – es wird kein Datum ausgegeben. Bitte die Seite neu laden.');
+      e1.code = 'feiertage-fehlen'; throw e1;
+    }
+    (years || []).forEach(function (y) {
+      if (y < a.von || y > a.bis) {
+        var e2 = new Error('Für das Jahr ' + y + ' sind keine geprüften Feiertagsdaten hinterlegt (abgedeckt: ' + a.von + ' bis ' + a.bis + '). Ob der Tag ein Feiertag ist, lässt sich nicht sicher sagen – es wird kein endgültiges Datum ausgegeben.');
+        e2.code = 'ausserhalb'; e2.jahr = y; throw e2;
+      }
+    });
+  }
   function holidayName(d, country, data, extra) {
     return holidaysFor(country, d.getUTCFullYear(), data, extra)[iso(d)] || null;
   }
@@ -136,7 +159,17 @@
     else throw new Error('Unbekannte Einheit');
     var res = { ereignis: iso(start), rohEnde: iso(raw), ende: iso(raw), verschoben: [] };
     if (opts.verschieben !== false && opts.land) {
-      var s = shiftToWorkday(raw, opts.land, opts.feiertage, opts.eigeneFeiertage);
+      /*
+       * § 193 BGB, § 903 ABGB, Art. 78 OR: maßgeblich sind die Feiertage im Jahr des Fristendes
+       * (und im Folgejahr, falls die Verschiebung über den Jahreswechsel läuft). Regionale
+       * Feiertage (opts.optional: IDs aus feiertage.json) werden genau für diese Jahre aufgelöst.
+       */
+      var y = raw.getUTCFullYear(), jahre = [y, y + 1];
+      try { pruefeFeiertage(opts.feiertage, opts.land, [y]); }
+      catch (e) { if (e.code === 'ausserhalb') e.message += ' Rechnerisches Fristende ohne Feiertagsprüfung: ' + iso(raw) + '.'; throw e; }
+      var extra = (opts.eigeneFeiertage || []).concat(expandOptional(opts.land, jahre, opts.feiertage, opts.optional || []));
+      var s = shiftToWorkday(raw, opts.land, opts.feiertage, extra.length ? extra : null);
+      if (s.datum.getUTCFullYear() !== y) pruefeFeiertage(opts.feiertage, opts.land, [s.datum.getUTCFullYear()]);
       res.ende = iso(s.datum); res.verschoben = s.verschoben;
     }
     return res;
@@ -185,6 +218,8 @@
   function mietKuendigung(opts) {
     var z = parse(opts.zugang), land = opts.land, v = opts.variante, data = opts.feiertage, out;
     if (land === 'DE' && v === 'standard') {
+      // Der dritte Werktag hängt an den Feiertagen des Zugangsmonats bzw. des Folgemonats.
+      pruefeFeiertage(data, 'DE', [z.getUTCFullYear(), z.getUTCMonth() === 11 ? z.getUTCFullYear() + 1 : z.getUTCFullYear()]);
       var samstag = opts.samstagIstWerktag !== false;
       var w3 = nthWerktag(z.getUTCFullYear(), z.getUTCMonth(), 3, 'DE', data, samstag, opts.eigeneFeiertage);
       var rechtzeitig = z.getTime() <= w3.getTime();
@@ -234,7 +269,7 @@
       }
       out = { termin: iso(found), spaetesterZugang: spaetesterZugangFuerTermin(iso(found), 3), regel: 'CH-266c', hinweis: null };
     } else if (land === 'CH' && v === 'mietdauer') {
-      if (!opts.mietbeginn) throw new Error('Mietbeginn fehlt');
+      if (!opts.mietbeginn) { var em = new Error('Mietbeginn fehlt: Ohne Ortsgebrauch endet die Miete zum Ende einer dreimonatigen Mietdauer, gerechnet ab Mietbeginn. Bitte den Mietbeginn laut Vertrag eintragen – vorher lässt sich kein Termin berechnen.'); em.code = 'mietbeginn-fehlt'; throw em; }
       var b = parse(opts.mietbeginn), f = null;
       for (var j = 1; j < 400 && !f; j++) {
         var end = addDays(addMonths(b, 3 * j), -1);
@@ -354,7 +389,7 @@
 
   return {
     parse: parse, iso: iso, addDays: addDays, addMonths: addMonths, easter: easter,
-    holidaysFor: holidaysFor, expandOptional: expandOptional, shiftToWorkday: shiftToWorkday, fristEnde: fristEnde,
+    holidaysFor: holidaysFor, expandOptional: expandOptional, abdeckung: abdeckung, pruefeFeiertage: pruefeFeiertage, shiftToWorkday: shiftToWorkday, fristEnde: fristEnde,
     nthWerktag: nthWerktag, spaetesterZugangFuerTermin: spaetesterZugangFuerTermin,
     mietKuendigung: mietKuendigung, ruecktrittsfrist: ruecktrittsfrist,
     gewaehrleistung: gewaehrleistung, vereinAustrittCH: vereinAustrittCH,
