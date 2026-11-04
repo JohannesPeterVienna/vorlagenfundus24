@@ -16,7 +16,7 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = '2. November 2026'
 LASTMOD = '2026-11-02'
-ASSETV = '2026-11-03b'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+ASSETV = '2026-11-04a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -351,7 +351,8 @@ def main():
     eintraege = [s for s in seiten if not s.get('noindex') and s['url'] != '/404/']
     xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for s in sorted(eintraege, key=lambda x: (x['url'] != '/', x['url'])):
-        xml.append(f'  <url><loc>{BASE}{s["url"]}</loc><lastmod>{LASTMOD}</lastmod></url>')
+        # "geaendert" im Meta-Kopf: Seite nach dem Stand der Rechtsangaben inhaltlich geändert
+        xml.append(f'  <url><loc>{BASE}{s["url"]}</loc><lastmod>{s.get("geaendert", LASTMOD)}</lastmod></url>')
     xml.append('</urlset>')
     (OUT / 'sitemap.xml').write_text('\n'.join(xml) + '\n', encoding='utf-8')
     (OUT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n', encoding='utf-8')
