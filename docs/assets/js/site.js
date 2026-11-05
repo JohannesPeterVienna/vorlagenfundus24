@@ -1,6 +1,7 @@
 /*
  * Vorlagenfundus 24 – Seitenskript: Navigation, Anzeigenplätze, Einwilligung, Statistik, Laufzettel Statistik.
- * Eigenständige Umsetzung für diese Website. Stand: 5. November 2026.
+ * Eigenständige Umsetzung für diese Website. Stand: 5. November 2026 (Statistik außerhalb der DSGVO nur nach
+ * ausdrücklicher Zustimmung; Anzeigenplätze ohne vorab gesetzte Höhe).
  */
 (function () {
   'use strict';
@@ -30,11 +31,20 @@
       if (typeof e.zeit !== 'number' || !isFinite(e.zeit) || e.zeit > jetzt + ZETTEL.KULANZ_MS) return null;
       return jetzt < ZETTEL.ablauf(e.zeit) ? e.wahl : null;
     },
+    // Außerhalb der DSGVO (gdprApplies === false): ausdrückliche Entscheidung der Google-CMP aus Consent-Mode-Wert (cm)
+    // und US-Status (us). 'ja' nur bei GRANTED (1) und bestätigt ohne US-Opt-out (1/2); 'nein' bei DENIED (2) oder
+    // gemeldetem US-Opt-out (3); sonst null – NOT_APPLICABLE (3) ist keine Einwilligung, dann fragt der Laufzettel.
+    aussenWert: function (cm, us) {
+      if (us === 3 || cm === 2) return 'nein';
+      if (cm === 1 && (us === 1 || us === 2)) return 'ja';
+      return null;
+    },
     // 'gpc' | 'google' (CMP-Logik gilt) | 'warten' (Google-Dialog sichtbar) | 'ja' | 'nein' | 'fragen'
+    // o.aussen: aussenWert bei gdprApplies === false (null → eigene Wahl oder fragen)
     befund: function (o) {
       if (o.gpc) return 'gpc';
       var tc = o.tc;
-      if (tc && tc.gdprApplies === false) return 'google';
+      if (tc && tc.gdprApplies === false) return o.aussen ? 'google' : (ZETTEL.gueltigeWahl(o.eintrag, o.jetzt) || 'fragen');
       if (ZETTEL.entschieden(tc)) return 'google';
       if (ZETTEL.googleFragt(tc)) return 'warten';
       return ZETTEL.gueltigeWahl(o.eintrag, o.jetzt) || 'fragen';
@@ -92,9 +102,11 @@
    * hier wird zusätzlich window['ga-disable-<ID>'] = true gesetzt. GA4 wird nur geladen bzw. aktiviert,
    *  a) wenn die DSGVO gilt (gdprApplies nicht false): TCF eventStatus tcloaded/useractioncomplete,
    *     Zweck 1 und Anbieter 755 (Google) zugestimmt UND analyticsStoragePurposeConsentStatus === GRANTED (1);
-   *  b) wenn die DSGVO laut CMP nicht gilt (gdprApplies === false): Analyticswert GRANTED (1) oder
-   *     NOT_APPLICABLE (3) UND die CMP meldet ausdrücklich keinen US-Opt-out
-   *     (usstatesoptout.getInitialUsStatesOptOutStatus(): DOES_NOT_APPLY 1 oder NOT_OPTED_OUT 2);
+   *  b) wenn die DSGVO laut CMP nicht gilt (gdprApplies === false): nur nach ausdrücklicher Zustimmung –
+   *     Analyticswert GRANTED (1) UND die CMP meldet ausdrücklich keinen US-Opt-out
+   *     (usstatesoptout.getInitialUsStatesOptOutStatus(): DOES_NOT_APPLY 1 oder NOT_OPTED_OUT 2) – oder
+   *     „Zustimmen“ im Laufzettel (c). NOT_APPLICABLE (3) ist keine Einwilligung: dann fragt der Laufzettel
+   *     (seit 5.11.2026). DENIED (2) oder gemeldeter US-Opt-out (3) = Nein ohne Laufzettel;
    *  c) im Übergang über den „Laufzettel Statistik“ (siehe unten), solange die Google-CMP nichts entscheidet.
    * Fehlend, UNKNOWN (0), DENIED (2), NOT_CONFIGURED (4) oder ein Fehler einer CMP-Schnittstelle bleiben
    * "nicht erteilt". Ein eindeutiges TCF-Nein sperrt sofort, ohne vorher weitere CMP-Schnittstellen
@@ -103,7 +115,7 @@
    * Quellen: developers.google.com/funding-choices/fc-api-docs,
    *          developers.google.com/tag-platform/security/guides/consent
    */
-  var CM_GRANTED = 1, CM_NOT_APPLICABLE = 3;
+  var CM_GRANTED = 1;
   // tcf: 'ja' | 'nein' | 'ausserhalb' (DSGVO gilt nicht); cm: letzter gemeldeter analyticsStorage-Status
   var zustand = { tcf: 'nein', cm: null };
   var gaAktiv = false, gaGeladen = false;
@@ -130,22 +142,33 @@
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID);
     document.head.appendChild(s);
   }
-  function ohneUsOptOut() {
+  // US-Bundesstaaten-Status der CMP: 0 UNKNOWN, 1 DOES_NOT_APPLY, 2 NOT_OPTED_OUT, 3 OPTED_OUT; fehlt/Fehler → 0
+  function usStatus() {
     try {
       var u = window.googlefc && window.googlefc.usstatesoptout;
-      if (!u || typeof u.getInitialUsStatesOptOutStatus !== 'function') return false;
+      if (!u || typeof u.getInitialUsStatesOptOutStatus !== 'function') return 0;
       var st = u.getInitialUsStatesOptOutStatus();
-      return st === 1 || st === 2;
-    } catch (e) { return false; }
+      return typeof st === 'number' ? st : 0;
+    } catch (e) { return 0; }
   }
-  // ausdrücklich gemeldeter US-Opt-out (OPTED_OUT 3); „noch nicht gemeldet“ zählt hier nicht
-  function usOptOutGemeldet() {
+  // Außerhalb der DSGVO: 'ja' | 'nein' | null (dann entscheidet der Laufzettel); liest die CMP-Werte live
+  function aussen() {
+    var cm = null;
     try {
-      var u = window.googlefc && window.googlefc.usstatesoptout;
-      return !!u && typeof u.getInitialUsStatesOptOutStatus === 'function' && u.getInitialUsStatesOptOutStatus() === 3;
-    } catch (e) { return false; }
+      var gfc = window.googlefc, w = gfc && typeof gfc.getGoogleConsentModeValues === 'function' ? gfc.getGoogleConsentModeValues() : null;
+      cm = w && typeof w.analyticsStoragePurposeConsentStatus === 'number' ? w.analyticsStoragePurposeConsentStatus : null;
+    } catch (e) { cm = null; }
+    return ZETTEL.aussenWert(cm, usStatus());
   }
-  function zettelBefund() { return ZETTEL.befund({ tc: letzteTC, gpc: gpc, eintrag: ablage.lesen(), jetzt: Date.now() }); }
+  // Google hat Vorrang vor dem Laufzettel: echte Entscheidung oder – außerhalb der DSGVO – eine ausdrückliche Statistik-Entscheidung
+  function googleVorrang(tc) {
+    if (!tc) return false;
+    if (tc.gdprApplies === false) return aussen() !== null;
+    return ZETTEL.entschieden(tc);
+  }
+  function zettelBefund() {
+    return ZETTEL.befund({ tc: letzteTC, gpc: gpc, eintrag: ablage.lesen(), jetzt: Date.now(), aussen: letzteTC && letzteTC.gdprApplies === false ? aussen() : null });
+  }
   // Der Laufzettel entscheidet nur, wenn die Google-CMP weder entschieden hat noch ihren Dialog zeigt.
   function zettelZustaendig() {
     if (ohneWerbung || !zettelBereit) return false;
@@ -156,7 +179,7 @@
     if (gpc || ohneWerbung) return false;
     if (zettelZustaendig()) return zettelBefund() === 'ja';
     if (zustand.tcf === 'ja') return zustand.cm === CM_GRANTED;
-    if (zustand.tcf === 'ausserhalb') return (zustand.cm === CM_GRANTED || zustand.cm === CM_NOT_APPLICABLE) && ohneUsOptOut();
+    if (zustand.tcf === 'ausserhalb') return aussen() === 'ja';   // nur ausdrückliche Zustimmung; sonst entscheidet der Laufzettel
     return false;
   }
   function anwenden() {
@@ -189,10 +212,10 @@
   // Google hat (auch beim Laden aus einer gespeicherten Entscheidung) die Statistik abgelehnt → _ga entfernen
   function googleNeinAufraeumen() {
     var tc = letzteTC;
-    if (!tc || !(tc.gdprApplies === false || ZETTEL.entschieden(tc)) || erteilt()) return;
-    var cmNein = zustand.cm !== null && zustand.cm !== CM_GRANTED && zustand.cm !== CM_NOT_APPLICABLE;
-    var usNein = zustand.tcf === 'ausserhalb' && usOptOutGemeldet();
-    if (zustand.tcf === 'nein' || cmNein || usNein) gaKekseWeg();
+    if (!tc || !googleVorrang(tc) || erteilt()) return;
+    if (tc.gdprApplies === false) { if (aussen() === 'nein') gaKekseWeg(); return; }
+    var cmNein = zustand.cm !== null && zustand.cm !== CM_GRANTED;
+    if (zustand.tcf === 'nein' || cmNein) gaKekseWeg();
   }
   function leseCM() {
     try {
@@ -216,17 +239,31 @@
     leseCM();
     anwenden();
   }
-  // Jede TCF-Meldung: Eine echte Google-Entscheidung (oder gdprApplies false) hat Vorrang vor dem Laufzettel.
+  // Jede TCF-Meldung: Eine echte Google-Entscheidung (außerhalb der DSGVO: eine ausdrückliche Statistik-Entscheidung)
+  // hat Vorrang vor dem Laufzettel; die eigene Wahl bleibt sonst erhalten.
   function tcfMeldung(tc) {
     if (!tc) return;
     letzteTC = tc;
-    if (tc.gdprApplies === false || ZETTEL.entschieden(tc)) ablage.loeschen();
+    if (googleVorrang(tc)) ablage.loeschen();
     pruefeTCF(tc);
-    var b = zettelBefund();
-    if ((b === 'google' || b === 'warten') && zettel.offen() && zettel.art !== 'gpc') zettel.schliessen(false);
+    zettelAbgleichen();
     googleNeinAufraeumen();
   }
-  function neuLesen() { if (zustand.tcf !== 'nein') leseCM(); anwenden(); googleNeinAufraeumen(); }
+  // Google hat (auch nachträglich, z. B. per CONSENT_MODE_DATA_READY) entschieden → offener Laufzettel schließt sich
+  function zettelAbgleichen() {
+    if (!zettel || !ablage || !zettel.offen()) return;   // Laufzettel noch nicht aufgebaut (Aufruf während der Initialisierung)
+    var b = zettelBefund();
+    if ((b === 'google' || b === 'warten') && zettel.art !== 'gpc') zettel.schliessen(false);
+  }
+  function neuLesen() {
+    if (zustand.tcf !== 'nein') leseCM();
+    anwenden(); googleNeinAufraeumen();
+    // Läuft die CMP (z. B. aus dem Cache) schon vor diesem Skript, ruft sie das hier sofort beim Einreihen auf –
+    // Laufzettel und Ablage (var, weiter unten) gibt es dann noch nicht.
+    if (!ablage || !zettel) return;
+    if (letzteTC && letzteTC.gdprApplies === false && googleVorrang(letzteTC)) ablage.loeschen();
+    zettelAbgleichen();
+  }
   window.googlefc.callbackQueue.push({
     CONSENT_MODE_DATA_READY: neuLesen,
     INITIAL_US_STATES_OPT_OUT_DATA_READY: neuLesen
@@ -440,7 +477,7 @@
      ihren Dialog erneut. Sonst öffnet sich der Laufzettel zum Ansehen, Ändern oder Widerrufen. */
   function googleAktiv() {
     var tc = letzteTC;
-    return !ohneWerbung && !!tc && (tc.gdprApplies === false || ZETTEL.entschieden(tc) || ZETTEL.googleFragt(tc));
+    return !ohneWerbung && !!tc && (googleVorrang(tc) || (tc.gdprApplies !== false && ZETTEL.googleFragt(tc)));
   }
   Array.prototype.forEach.call(document.querySelectorAll('[data-cmp-widerruf]'), function (el) {
     el.addEventListener('click', function (e) {
@@ -487,15 +524,17 @@
     if (g && format === 'banner' && g[0] === 320) slot = SLOT_MOBIL;
     if (g && format === 'seite' && g[0] === 160) slot = SLOT_SKY;
     if (!slot || !g) return;               // ohne Slot-ID kein reservierter Platz, kein Layoutsprung
+    // Kein vorab gesetztes height/min-height: Die Breite gibt der Platz (.anz-platz, site.css) vor, die Höhe bestimmt
+    // Google als responsives Format; Mindesthöhe, Etikett und Abstände erscheinen erst bei data-ad-status
+    // "filled"/"unfill-optimized" (site.css). Das <ins> wird nie versteckt – bis zur Antwort ist es nur 0 px hoch.
     var platz = box.querySelector('.anz-platz');
     var ins = document.createElement('ins');
     ins.className = 'adsbygoogle';
-    ins.style.display = 'inline-block';
-    ins.style.width = g[0] + 'px';
-    ins.style.height = g[1] + 'px';
+    ins.style.display = 'block';
     ins.setAttribute('data-ad-client', PUB);
     ins.setAttribute('data-ad-slot', slot);
-    platz.style.minHeight = g[1] + 'px';
+    ins.setAttribute('data-ad-format', format === 'seite' ? 'vertical' : 'auto');
+    ins.setAttribute('data-full-width-responsive', 'true');
     platz.appendChild(ins);
     box.hidden = false;
     erstGefuelltZeigen(box, ins);

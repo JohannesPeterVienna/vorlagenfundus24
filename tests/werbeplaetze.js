@@ -1,6 +1,7 @@
 // Leere Anzeigenplätze: adsbygoogle.js ist ein Stub, der nie eine Anzeige liefert.
 // Erwartet bei 390 und 1366 px (AdSense-Hilfe 10762946): ohne data-ad-status bleibt das <ins> sichtbar und
-// ungeschnitten (feste Größe, kein overflow:hidden), nur Etikett „Anzeige“, Mindesthöhe und Abstände fehlen.
+// ungeschnitten (display:block, Breite > 0, keine vorab gesetzte Höhe/min-height, kein overflow:hidden – ein Probe-
+// kind von 50 px lässt es wachsen), nur Etikett „Anzeige“, Mindesthöhe und Abstände fehlen (Endkontrolle 5.11.2026).
 // "unfilled" → ins display:none, kein Beiwerk; "filled"/"unfill-optimized" → Platz mit Etikett und Abstand.
 // Start: node tests/werbeplaetze.js
 const { chromium } = require('/opt/npm-tools/node_modules/playwright');
@@ -24,7 +25,11 @@ function inse(page) {
     const b = i.closest('.anzeige'), ci = getComputedStyle(i), ri = i.getBoundingClientRect(), et = b.querySelector('.anz-label');
     const zuschnitt = [b, i.parentElement].map(e => { const c = getComputedStyle(e); return c.overflowX + '/' + c.overflowY + '/' + c.visibility + '/' + c.display; });
     const cb = getComputedStyle(b);
-    return { format: b.dataset.format, display: ci.display, sicht: ci.visibility, breite: ri.width, hoehe: ri.height,
+    // Probe: wächst das <ins> mit einem 50 px hohen Kind? (nicht versteckt, keine feste Höhe, kein Zuschnitt)
+    const probe = document.createElement('div'); probe.style.height = '50px'; i.appendChild(probe);
+    const mitProbe = i.getBoundingClientRect().height, boxMitProbe = b.getBoundingClientRect().height; probe.remove();
+    return { format: b.dataset.format, display: ci.display, sicht: ci.visibility, breite: ri.width, hoehe: ri.height, mitProbe, boxMitProbe,
+             inlineHoehe: i.style.height, inlineMinH: i.parentElement.style.minHeight, adFormat: i.getAttribute('data-ad-format'),
              boxH: b.getBoundingClientRect().height, zuschnitt, etikett: !!et && getComputedStyle(et).display !== 'none',
              abstand: parseFloat(cb.marginTop) + parseFloat(cb.marginBottom) };
   }));
@@ -32,7 +37,9 @@ function inse(page) {
 function ungeschnitten(l, wo) {
   assert(l.length > 0, wo + ': keine aktiven Plätze');
   for (const x of l) {
-    assert(x.display !== 'none' && x.sicht === 'visible' && x.breite > 0 && x.hoehe > 0, wo + ': ins versteckt ' + JSON.stringify(x));
+    assert(x.display !== 'none' && x.sicht === 'visible' && x.breite > 0, wo + ': ins versteckt ' + JSON.stringify(x));
+    assert(x.inlineHoehe === '' && x.inlineMinH === '' && x.adFormat, wo + ': Höhe/min-height vorab gesetzt oder nicht responsiv ' + JSON.stringify(x));
+    assert(x.mitProbe >= 50 && x.boxMitProbe >= 50, wo + ': ins wächst nicht mit Inhalt (versteckt/zugeschnitten) ' + JSON.stringify(x));
     assert(x.zuschnitt.every(z => z.startsWith('visible/visible/visible/') && !z.endsWith('/none')), wo + ': Container schneidet ab ' + JSON.stringify(x));
     assert(x.boxH >= x.hoehe, wo + ': Platz niedriger als ins ' + JSON.stringify(x));
   }

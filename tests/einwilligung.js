@@ -1,6 +1,7 @@
 // Selbsttest Einwilligung (Consent Mode v2 + Google-CMP-Stub): Erstbesuch, Ablehnen, Zustimmen,
 // Analytics-Status DENIED trotz TCF-Zustimmung, Widerruf, Wiederbesuch; danach Laufzettel Statistik bei verborgenem
-// Google-Dialog (displayStatus hidden): Erscheinen nach 3 s, CLS, 320 px, Zustimmen/Ablehnen, späte Google-Entscheidung.
+// Google-Dialog (displayStatus hidden): Erscheinen nach 3 s, CLS, 320 px, Zustimmen/Ablehnen, späte Google-Entscheidung;
+// zuletzt gdprApplies=false (außerhalb der DSGVO): NOT_APPLICABLE → kein GA, Laufzettel fragt; GRANTED → GA ohne Zettel.
 // Protokolliert Google-Anfragen.
 // Start: node tests/einwilligung.js
 const { chromium } = require('/opt/npm-tools/node_modules/playwright');
@@ -180,6 +181,47 @@ const CMP_STUB = `(function(){
   assert.equal(await p2.evaluate(() => getComputedStyle(document.getElementById('vf-zettel')).display), 'none', 'Laufzettel im Druck sichtbar');
   assert.equal(await p2.evaluate(() => getComputedStyle(document.body).paddingBottom), '0px', 'Platzhalter des Laufzettels im Druck');
   await ctx2.close();
+
+  // 9. Außerhalb der DSGVO (gdprApplies false): ohne ausdrückliche Zustimmung kein GA; Laufzettel fragt.
+  //    stub-cm = Consent-Mode-Analyticswert, stub-us = US-Opt-out-Status (beide in localStorage).
+  const AUSSEN_STUB = `(function(){ var hoerer = [];
+    function tc(){ return { gdprApplies: false, eventStatus: 'tcloaded', displayStatus: 'hidden', tcString: '' }; }
+    window.__tcfapi = function(cmd, v, cb){ if (cmd === 'addEventListener') { hoerer.push(cb); cb(tc(), true); } };
+    var fc = window.googlefc = window.googlefc || {}; var q = fc.callbackQueue || [];
+    fc.getGoogleConsentModeValues = function(){ return { analyticsStoragePurposeConsentStatus: +(localStorage.getItem('stub-cm') || 3) }; };
+    fc.usstatesoptout = { getInitialUsStatesOptOutStatus: function(){ return +(localStorage.getItem('stub-us') || 1); } };
+    function lauf(i){ if (typeof i === 'function') i(); else if (i && i.CONSENT_MODE_DATA_READY) i.CONSENT_MODE_DATA_READY(); }
+    q.forEach(lauf); fc.callbackQueue = { push: lauf };
+  })();`;
+  const ctx3 = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const log3 = [];
+  await ctx3.route(/googlesyndication\.com|googletagmanager\.com|google-analytics\.com|fundingchoices/, r => {
+    const u = r.request().url(); log3.push(u);
+    return r.fulfill({ status: 200, contentType: 'text/javascript', body: /adsbygoogle\.js/.test(u) ? AUSSEN_STUB : '/* stub */' });
+  });
+  const p3 = await ctx3.newPage(); p3.on('pageerror', e => errs.push(e.message));
+  const ga3 = () => log3.filter(u => /googletagmanager\.com\/gtag\/js/.test(u)).length;
+  const sichtbar3 = () => p3.evaluate(() => { const z = document.getElementById('vf-zettel'); return !!(z && !z.hidden); });
+  const dl3 = () => p3.evaluate(() => window.dataLayer.map(a => Array.prototype.slice.call(a)).filter(a => a[0] === 'consent' && a[1] === 'update').map(a => a[2]));
+  await p3.goto(url + 'wohnung-kuendigen/', { waitUntil: 'networkidle' }); await p3.waitForTimeout(3400);
+  assert.equal(ga3(), 0, 'gdprApplies false + NOT_APPLICABLE: GA ohne Zustimmung geladen');
+  assert.equal(await sichtbar3(), true, 'gdprApplies false + NOT_APPLICABLE: Laufzettel fehlt');
+  await p3.click('.vf-zettel__knopf[data-vf-wahl="ja"]'); await p3.waitForTimeout(300);
+  assert.equal(ga3(), 1, 'Laufzettel-Zustimmen außerhalb der DSGVO lädt GA nicht genau einmal');
+  assert.deepEqual(await dl3(), [{ analytics_storage: 'granted' }], 'außerhalb: Zustimmen setzt mehr als analytics_storage');
+  bericht.push('gdprApplies false + NOT_APPLICABLE: 0 GA-Anfragen bis zum Klick, Laufzettel fragt, Zustimmen → 1 GA-Anfrage');
+  await p3.reload({ waitUntil: 'networkidle' }); await p3.waitForTimeout(3400);
+  assert.equal(await sichtbar3(), false, 'außerhalb: Laufzettel trotz gespeicherter Wahl'); assert.equal(ga3(), 2, 'außerhalb: gespeichertes Ja misst nicht');
+  await p3.evaluate(() => { localStorage.removeItem('vf24-statistik'); localStorage.setItem('stub-cm', '1'); localStorage.setItem('stub-us', '2'); });
+  await p3.reload({ waitUntil: 'networkidle' }); await p3.waitForTimeout(3400);
+  assert.equal(await sichtbar3(), false, 'außerhalb + GRANTED: Laufzettel trotz Google-Zustimmung'); assert.equal(ga3(), 3, 'außerhalb + GRANTED: GA fehlt');
+  bericht.push('gdprApplies false + GRANTED ohne US-Opt-out: GA laut Google, kein Laufzettel');
+  await p3.evaluate(() => { localStorage.setItem('vf24-statistik', JSON.stringify({ v: 1, wahl: 'ja', zeit: Date.now() })); localStorage.setItem('stub-cm', '2'); });
+  await p3.reload({ waitUntil: 'networkidle' }); await p3.waitForTimeout(3400);
+  assert.equal(await sichtbar3(), false, 'außerhalb + DENIED: Laufzettel'); assert.equal(ga3(), 3, 'außerhalb + DENIED: GA trotz Google-Nein');
+  assert.equal(await p3.evaluate(() => localStorage.getItem('vf24-statistik')), null, 'außerhalb + DENIED: eigenes Ja nicht verworfen');
+  bericht.push('gdprApplies false + DENIED: kein GA, kein Laufzettel, eigenes Ja verworfen');
+  await ctx3.close();
 
   assert(!errs.length, errs.join('|'));
   console.log(bericht.join('\n'));
