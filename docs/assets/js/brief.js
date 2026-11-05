@@ -916,10 +916,14 @@
     var bDocx = el('button', { type: 'button', class: 'knopf leise', text: 'Als Word-Datei (.docx)' });
     var bText = el('button', { type: 'button', class: 'knopf leise', text: 'Text kopieren' });
     var bLoesch = el('button', { type: 'button', class: 'knopf leise', text: 'Eingaben löschen' });
-    knoepfe.appendChild(bDruck); knoepfe.appendChild(bDocx); knoepfe.appendChild(bText); knoepfe.appendChild(bLoesch);
+    var bIcs = el('button', { type: 'button', class: 'knopf leise', text: 'Frist in den Kalender (.ics)' });
+    var bProt = el('button', { type: 'button', class: 'knopf leise', text: 'Versand-Protokoll drucken' });
+    knoepfe.appendChild(bDruck); knoepfe.appendChild(bDocx); knoepfe.appendChild(bIcs); knoepfe.appendChild(bProt); knoepfe.appendChild(bText); knoepfe.appendChild(bLoesch);
+    var stempel = el('div', { class: 'frist-stempel', 'aria-hidden': 'true' }); stempel.hidden = true;
     var status = el('p', { class: 'status', role: 'status' });
     aus.appendChild(fristBox); aus.appendChild(versandBox); aus.appendChild(leiste); aus.appendChild(rahmen); aus.appendChild(knoepfe); aus.appendChild(status);
 
+    rahmen.appendChild(stempel);
     var raster = el('div', { class: 'wz-raster' }, [form, aus]);
     root.innerHTML = '';
     root.appendChild(raster);
@@ -954,7 +958,17 @@
       fristBox.innerHTML = fh ? '<h3>Fristen für ' + ({ AT: 'Österreich', DE: 'Deutschland', CH: 'die Schweiz' })[land] + '</h3>' + fh : '';
       var ve = versandEmpfehlung(land, vor.versandArt, b.fr && typeof b.fr.puffer === 'number' ? b.fr.puffer : null);
       if (b.sperre) ve.warnung = b.sperre;
-      versandBox.innerHTML = '<h3>Versand: ' + esc(ve.titel) + '</h3>' + (ve.warnung ? '<p class="nok">' + esc(ve.warnung) + '</p>' : '') + '<ol>' + ve.schritte.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
+      var ziel = zielFrist(b.fr);
+      var strahl = '';
+      if (ziel) {
+        var tage = Math.round((F.parse(ziel.datum) - F.parse(HEUTE)) / 864e5);
+        strahl = '<div class="zeitstrahl" aria-label="Zeitstrahl bis zur Frist"><span class="etikett">Heute ' + esc(datum(HEUTE, land)) + '</span><span class="linie"></span>' +
+          '<span class="tage">' + (tage >= 0 ? tage + (tage === 1 ? ' Tag' : ' Tage') : 'überschritten') + '</span><span class="linie"></span>' +
+          '<span class="etikett ziel">' + esc(ziel.label) + ' ' + esc(datum(ziel.datum, land)) + '</span></div>';
+        stempel.innerHTML = esc(ziel.label) + '<b>' + esc(datum(ziel.datum, land)) + '</b>';
+      }
+      stempel.hidden = !ziel;
+      versandBox.innerHTML = '<h3>Versand: ' + esc(ve.titel) + '</h3>' + strahl + (ve.warnung ? '<p class="nok">' + esc(ve.warnung) + '</p>' : '') + '<ol>' + ve.schritte.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
       blatt.className = 'blatt' + (b.fensterRechts ? ' fenster-rechts' : '');
       blatt.innerHTML = blattHtml(b);
       skaliere(rahmen, blatt);
@@ -972,7 +986,38 @@
       aktualisiere();
     });
     window.addEventListener('resize', function () { skaliere(rahmen, blatt); });
-    bDruck.addEventListener('click', function () { drucke(blatt); });
+    bDruck.addEventListener('click', function () { zaehlen('brief_drucken', { vorlage: id }); drucke(blatt); });
+    bIcs.addEventListener('click', function () {
+      if (!letzte) return;
+      var k = fristKern(letzte.fr), n = 0;
+      var stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+      var L2 = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Vorlagenfundus 24//Fristen//DE', 'CALSCALE:GREGORIAN'];
+      KERN.forEach(function (x) {
+        var d = k && k[x[0]]; if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+        var tag = d.replace(/-/g, ''), nach = F.iso(F.addDays(F.parse(d), 1)).replace(/-/g, '');
+        L2.push('BEGIN:VEVENT', 'UID:' + id + '-' + x[0] + '-' + tag + '@vorlagenfundus24.de', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + nach,
+          'SUMMARY:' + icsText(x[1] + ': ' + letzte.betreff), 'DESCRIPTION:' + icsText('Berechnet mit vorlagenfundus24.de – ohne Gewähr, keine Rechtsberatung.'),
+          'BEGIN:VALARM', 'TRIGGER:-P2D', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText('In 2 Tagen: ' + x[1]), 'END:VALARM', 'END:VEVENT');
+        n++;
+      });
+      L2.push('END:VCALENDAR');
+      if (!n) { status.textContent = 'Für dieses Schreiben gibt es keine berechnete Frist.'; return; }
+      speichereDatei(new Blob([L2.join('\r\n')], { type: 'text/calendar' }), 'frist-' + id + '.ics');
+      status.textContent = n + (n === 1 ? ' Termin' : ' Termine') + ' als Kalenderdatei gespeichert – mit Erinnerung zwei Tage vorher.';
+      zaehlen('frist_kalender', { vorlage: id });
+    });
+    bProt.addEventListener('click', function () {
+      if (!letzte) return;
+      var k = fristKern(letzte.fr), zeilenF = KERN.filter(function (x) { return k && k[x[0]]; }).map(function (x) { return '<tr><td>' + esc(x[1]) + '</td><td class="frist">' + esc(datum(k[x[0]], letzte.land)) + '</td></tr>'; }).join('');
+      var leer = function (t) { return '<tr><td>' + esc(t) + '</td><td class="leer"></td></tr>'; };
+      var p = el('div', { class: 'protokoll' });
+      p.innerHTML = '<h1>Versand-Protokoll</h1><p class="meta">' + esc(letzte.betreff) + ' · Schreiben vom ' + esc(datum(letzte.datum, letzte.land)) + '</p>' +
+        '<table><tr><td>Absender</td><td>' + letzte.abs.map(esc).join('<br>') + '</td></tr><tr><td>Empfänger</td><td>' + (letzte.emp.length ? letzte.emp.map(esc).join('<br>') : '&nbsp;') + '</td></tr>' + zeilenF + '</table>' +
+        '<table>' + leer('Aufgegeben am (Datum, Uhrzeit)') + leer('Versandart (z. B. Einschreiben, Einwurf, Bote)') + leer('Einschreibe- bzw. Sendungsnummer') + leer('Postfiliale bzw. Ort des Einwurfs') + leer('Zeugin oder Zeuge (Name, Anschrift)') + leer('Zugang bestätigt am') + leer('Unterschrift') + '</table>' +
+        '<p class="klein">Bitte Aufgabeschein bzw. Einlieferungsbeleg an dieses Blatt heften und gemeinsam mit einer Kopie des Schreibens aufbewahren. Erstellt mit vorlagenfundus24.de – keine Rechtsberatung.</p>';
+      zaehlen('versand_protokoll', { vorlage: id });
+      drucke(p);
+    });
     bDocx.addEventListener('click', function () {
       if (!letzte) return;
       speichereDatei(docx(letzte), id + '-' + letzte.land.toLowerCase() + '.docx');
@@ -995,6 +1040,17 @@
     aktualisiere();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(aktualisiere);
   }
+
+  /* Wichtigste Frist für Stempel und Zeitstrahl: spätester Zugang > Absenden bis > Frist im Schreiben > Termin */
+  function zielFrist(fr) {
+    if (!fr || fr.fehler) return null;
+    var reihe = [['spaetesterZugang', 'Zugang bis'], ['ende', 'Frist bis'], ['antwortBis', 'Frist bis'], ['austritt', 'Austritt zum'], ['termin', 'Termin']];
+    for (var i = 0; i < reihe.length; i++) if (typeof fr[reihe[i][0]] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fr[reihe[i][0]])) return { label: reihe[i][1], datum: fr[reihe[i][0]] };
+    return null;
+  }
+  function icsText(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+  /* Ereignis an Google Analytics – wirkt nur nach Einwilligung (site.js) */
+  function zaehlen(name, p) { try { if (typeof window.gtag === 'function') window.gtag('event', name, p || {}); } catch (e) { /* */ } }
 
   /* ================= Fristenrechner (eigenständig) ================= */
   function fristenrechner(root) {

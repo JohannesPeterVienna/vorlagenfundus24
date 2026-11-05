@@ -9,11 +9,13 @@
   var PUB = 'ca-pub-7811071715414905';
   var GA_ID = 'G-T00HRG2YVF';
   // Slot-IDs aus AdSense eintragen, sobald die Website freigegeben ist. Leer = Platz bleibt unsichtbar.
+  // Gemeinsame AdSense-Blöcke „Themen-Websites – …“ (Konto pub-7811071715414905, angelegt 17.10. und 5.11.2026)
   var SLOTS = {
-    banner: '',      // 728×90 ab 768 px, mobil 320×100
-    rectangle: '',   // 300×250 zwischen Abschnitten
-    seite: ''        // 300×600 ab 1280 px, 160×600 ab 1024 px (nur Seitenleiste)
+    banner: '5774811012',      // 728×90 ab 768 px (Superbanner); mobil 320×100 → SLOT_MOBIL
+    rectangle: '9522484334',   // 300×250 zwischen Abschnitten
+    seite: '1292301217'        // 300×600 ab 1280 px (responsiver Block in fester Größe); 160×600 → SLOT_SKY
   };
+  var SLOT_MOBIL = '5396758258', SLOT_SKY = '5064364572';
 
   /* ---------- Navigation ---------- */
   var btn = document.querySelector('.nav-btn');
@@ -158,6 +160,8 @@
     var format = box.getAttribute('data-format');
     var slot = SLOTS[format];
     var g = groesse(format);
+    if (g && format === 'banner' && g[0] === 320) slot = SLOT_MOBIL;
+    if (g && format === 'seite' && g[0] === 160) slot = SLOT_SKY;
     if (!slot || !g) return;               // ohne Slot-ID kein reservierter Platz, kein Layoutsprung
     var platz = box.querySelector('.anz-platz');
     var ins = document.createElement('ins');

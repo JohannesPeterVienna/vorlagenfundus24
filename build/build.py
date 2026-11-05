@@ -16,7 +16,7 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = '2. November 2026'
 LASTMOD = '2026-11-02'
-ASSETV = '2026-11-04b'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+ASSETV = '2026-11-05a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -42,10 +42,17 @@ NAV = [
 
 LOGO = ('<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" focusable="false">'
         '<rect x="3" y="7" width="30" height="27" rx="2" fill="#FBF9F4"/>'
-        '<path d="M3 11h11l3-4h16" fill="none" stroke="#2F6B4F" stroke-width="3"/>'
-        '<rect x="8" y="15" width="16" height="3" fill="#1F2A44"/><rect x="8" y="21" width="20" height="2" fill="#9AA1AF"/>'
-        '<rect x="8" y="25" width="14" height="2" fill="#9AA1AF"/><rect x="25" y="26" width="10" height="8" fill="#F2D64B"/>'
-        '<path d="M27 30h6" stroke="#1F2A44" stroke-width="1.5"/></svg>')
+        '<path d="M3 11h11l3-4h16" fill="none" stroke="#1A1A1A" stroke-width="3"/>'
+        '<rect x="8" y="15" width="16" height="3" fill="#1A1A1A"/><rect x="8" y="21" width="20" height="2" fill="#A0A0A0"/>'
+        '<rect x="8" y="25" width="14" height="2" fill="#A0A0A0"/><rect x="25" y="26" width="10" height="8" fill="#F3D9D5"/>'
+        '<path d="M27 30h6" stroke="#1A1A1A" stroke-width="1.5"/></svg>')
+
+
+def kurz(d, n=160):
+    """Beschreibung für Suchergebnisse: hintere Zusätze nach „ – “ abschneiden, bis sie in ca. 160 Zeichen passt."""
+    while len(d) > n and ' – ' in d:
+        d = d.rsplit(' – ', 1)[0].rstrip('.') + '.'
+    return d
 
 
 def esc(s):
@@ -127,17 +134,21 @@ def kopf(s, canonical):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {CONSENT_DEFAULT}
 <title>{esc(s['title'])}</title>
-<meta name="description" content="{esc(s['description'])}">
+<meta name="description" content="{esc(kurz(s['description']))}">
 {"" if s["url"] == "/404/" else f'<link rel="canonical" href="{canonical}">'}
 <meta name="robots" content="{robots}">
 <meta name="google-adsense-account" content="{PUB}">
-<meta name="theme-color" content="#1F2A44">
+<meta name="theme-color" content="#1A1A1A">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_AT">
 <meta property="og:site_name" content="Vorlagenfundus 24">
 <meta property="og:title" content="{esc(s['title'])}">
-<meta property="og:description" content="{esc(s['description'])}">
+<meta property="og:description" content="{esc(kurz(s['description']))}">
 <meta property="og:url" content="{canonical}">
+<meta property="og:image" content="{BASE}/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/spectral-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/public-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -315,7 +326,7 @@ def weiterleitung(alt, ziel, titel):
 <meta name="google-adsense-account" content="{PUB}">
 <link rel="canonical" href="{z}">
 <meta http-equiv="refresh" content="0; url={ziel}">
-<style>body{{font:1rem/1.6 system-ui,sans-serif;background:#FBF9F4;color:#1F2A44;margin:0;padding:2rem 16px}}a{{color:#24543E}}</style>
+<style>body{{font:1rem/1.6 system-ui,sans-serif;background:#FBF9F4;color:#1A1A1A;margin:0;padding:2rem 16px}}a{{color:#1A1A1A}}</style>
 </head>
 <body>
 <main><h1>Diese Seite ist umgezogen</h1><p>Weiter zu <a href="{ziel}">{esc(titel)}</a>.</p></main>
@@ -359,7 +370,7 @@ def main():
     (OUT / 'ads.txt').write_text('google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0\n', encoding='utf-8')
     (OUT / 'CNAME').write_text('vorlagenfundus24.de', encoding='utf-8')
     (OUT / '.nojekyll').write_text('', encoding='utf-8')
-    (OUT / 'favicon.svg').write_text(LOGO.replace('aria-hidden="true" focusable="false"', 'xmlns="http://www.w3.org/2000/svg"').replace('<rect x="3" y="7"', '<rect width="40" height="40" rx="6" fill="#1F2A44"/><rect x="3" y="7"'), encoding='utf-8')
+    (OUT / 'favicon.svg').write_text(LOGO.replace('aria-hidden="true" focusable="false"', 'xmlns="http://www.w3.org/2000/svg"').replace('<rect x="3" y="7"', '<rect width="40" height="40" rx="6" fill="#1A1A1A"/><rect x="3" y="7"'), encoding='utf-8')
     print(f'{len(seiten)} Seiten, {len(WEITERLEITUNGEN)} Weiterleitungen gebaut.')
 
 

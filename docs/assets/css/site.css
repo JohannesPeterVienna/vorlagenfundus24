@@ -1,4 +1,4 @@
-/* Vorlagenfundus 24 – Amtsregister. Eigenständiges Stylesheet, Stand Oktober 2026. */
+/* Vorlagenfundus 24 – Briefbogen, Formular, Einschreiben: schwarz-weiß, Rot nur für Fristen (Stempel). Stand November 2026. */
 @font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-400-italic.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
 @font-face{font-family:"Spectral";src:url("../fonts/spectral-latin-600-normal.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
@@ -9,9 +9,9 @@
 @font-face{font-family:"IBM Plex Mono";src:url("../fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");font-weight:500;font-display:swap}
 
 :root{
-  --ink:#1F2A44;--ink-2:#36415C;--muted:#4A5468;--green:#2F6B4F;--green-d:#24543E;--green-l:#E4EFE8;
-  --marker:#F2D64B;--marker-soft:#FBF0B4;--paper:#FBF9F4;--sheet:#FFFFFF;--rule:#D9D3C7;--rule-2:#ECE7DC;
-  --danger:#8A2A1E;--focus:#1F5FBF;
+  --ink:#1A1A1A;--ink-2:#3A3A3A;--muted:#555555;--green:#1A1A1A;--green-d:#1A1A1A;--green-l:#EEEBE4;
+  --marker:#F3D9D5;--marker-soft:#F8E9E6;--paper:#FBF9F4;--sheet:#FFFFFF;--rule:#D9D3C7;--rule-2:#ECE7DC;
+  --danger:#8A2A1E;--stempel:#A32D2D;--focus:#1F5FBF;
   --serif:"Spectral",Georgia,"Times New Roman",serif;--sans:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   --wrap:1180px;--gut:clamp(16px,4vw,32px);--r:4px;
 }
@@ -36,17 +36,17 @@ small{font-size:.875rem}
 mark,.mark{background:linear-gradient(transparent 12%,var(--marker) 12%,var(--marker) 88%,transparent 88%);color:var(--ink);padding:0 .15em}
 
 /* Kopf */
-.kopf{background:var(--ink);color:#fff;border-bottom:4px solid var(--green)}
+.kopf{background:var(--ink);color:#fff;border-bottom:3px solid var(--stempel)}
 .kopf .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:68px}
 .marke{display:flex;align-items:center;gap:.7rem;color:#fff;text-decoration:none}
 .marke svg{flex:none}
 .marke b{font:600 1.2rem/1.1 var(--serif);display:block}
-.marke .unter{display:block;font:400 .72rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#C9D1E3}
+.marke .unter{display:block;font:400 .72rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#C8C8C8}
 .marke:hover{color:#fff}
-.nav-btn{display:none;background:transparent;border:1px solid #6C7896;color:#fff;font:500 .8rem var(--mono);padding:.55rem .8rem;border-radius:var(--r);cursor:pointer;letter-spacing:.05em}
+.nav-btn{display:none;background:transparent;border:1px solid #777777;color:#fff;font:500 .8rem var(--mono);padding:.55rem .8rem;border-radius:var(--r);cursor:pointer;letter-spacing:.05em}
 .hauptnav ul{list-style:none;margin:0;padding:0;display:flex;gap:.25rem;flex-wrap:wrap}
-.hauptnav a{display:block;color:#E7EBF4;text-decoration:none;font:500 .8rem/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:.7rem .7rem;border-radius:var(--r)}
-.hauptnav a:hover,.hauptnav a[aria-current="page"]{background:#2C3A5C;color:#fff}
+.hauptnav a{display:block;color:#EDEDED;text-decoration:none;font:500 .8rem/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:.7rem .7rem;border-radius:var(--r)}
+.hauptnav a:hover,.hauptnav a[aria-current="page"]{background:#333333;color:#fff}
 @media (max-width:900px){
   .nav-btn{display:inline-block}
   .hauptnav{display:none;position:absolute;left:0;right:0;top:72px;background:var(--ink);padding:.5rem var(--gut) 1rem;z-index:20;border-bottom:4px solid var(--green)}
@@ -67,7 +67,7 @@ mark,.mark{background:linear-gradient(transparent 12%,var(--marker) 12%,var(--ma
 .krumen{font:400 .82rem/1.4 var(--mono);color:var(--muted);margin:1.2rem 0 .6rem}
 .krumen ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem}
 .krumen li{margin:0}
-.krumen li+li::before{content:"/";margin-right:.3rem;color:#8A8F9C}
+.krumen li+li::before{content:"/";margin-right:.3rem;color:#8C8C8C}
 .seitenkopf{padding:1.2rem 0 1.4rem;border-bottom:1px solid var(--rule)}
 .seitenkopf .lead{font:400 1.2rem/1.55 var(--serif);max-width:52rem;color:var(--ink-2)}
 .stempel{display:inline-flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;font:500 .78rem/1.3 var(--mono);color:var(--ink);border:1.5px solid var(--ink);border-radius:3px;padding:.4rem .7rem;transform:rotate(-.4deg);background:#fff}
@@ -95,19 +95,19 @@ legend{font:600 .76rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.
 .feld{margin-bottom:.85rem}
 .feld label{display:block;font-weight:600;font-size:.92rem;margin-bottom:.25rem}
 .feld .hilfe{display:block;font-size:.82rem;color:var(--muted);margin-top:.2rem}
-input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{width:100%;font:400 1rem/1.4 var(--sans);color:var(--ink);background:#fff;border:1px solid #9AA1AF;border-radius:var(--r);padding:.6rem .7rem;min-height:44px}
+input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{width:100%;font:400 1rem/1.4 var(--sans);color:var(--ink);background:#fff;border:1px solid #A0A0A0;border-radius:var(--r);padding:.6rem .7rem;min-height:44px}
 textarea{min-height:96px;resize:vertical}
 input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:2px solid var(--focus);outline-offset:1px}
 .zwei{display:grid;grid-template-columns:1fr;gap:0 .8rem}
 @media (min-width:560px){.zwei{grid-template-columns:1fr 1fr}}
 .wahl{display:flex;flex-wrap:wrap;gap:.4rem}
-.wahl label{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #9AA1AF;border-radius:var(--r);padding:.5rem .75rem;background:#fff;cursor:pointer;font-size:.95rem;min-height:44px}
+.wahl label{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #A0A0A0;border-radius:var(--r);padding:.5rem .75rem;background:#fff;cursor:pointer;font-size:.95rem;min-height:44px}
 .wahl input{accent-color:var(--green);width:1.05rem;height:1.05rem}
 .wahl label:has(input:checked){border-color:var(--green);background:var(--green-l);box-shadow:inset 0 0 0 1px var(--green)}
 .check{display:flex;gap:.5rem;align-items:flex-start;font-size:.95rem;margin:.4rem 0}
 .check input{margin-top:.3rem;accent-color:var(--green);width:1.05rem;height:1.05rem;flex:none}
 .knopf{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;font:600 .95rem/1 var(--sans);border-radius:var(--r);padding:.8rem 1.1rem;min-height:44px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;text-decoration:none}
-.knopf:hover{background:#2C3A5C;color:#fff}
+.knopf:hover{background:#333333;color:#fff}
 .knopf.leise{background:#fff;color:var(--ink)}
 .knopf.leise:hover{background:#F1EEE6;color:var(--ink)}
 .knopf.gruen{background:var(--green);border-color:var(--green)}
@@ -154,7 +154,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:2px soli
 .blatt .marke-loch{position:absolute;left:3mm;width:7mm;border-top:.25mm solid #888;top:148.5mm}
 .blatt.fenster-rechts .anschrift{left:auto;right:20mm}
 .blatt.fenster-rechts .info{right:auto;left:25mm;text-align:left}
-.blatt.zeigeraster .anschrift{outline:.3mm dashed #2F6B4F;background:rgba(47,107,79,.05)}
+.blatt.zeigeraster .anschrift{outline:.3mm dashed #1A1A1A;background:rgba(47,107,79,.05)}
 .blatt .fensterlage{position:absolute;border:.5mm solid #C43B2B;border-radius:2mm;pointer-events:none;display:none}
 .blatt.zeigeraster .fensterlage{display:block}
 .blatt .ueberlauf{position:absolute;left:25mm;right:20mm;bottom:12mm;font:8pt var(--sans);color:#8A2A1E;display:none}
@@ -232,14 +232,14 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 .leiste .anzeige{margin-top:32px}
 
 /* Fuß */
-.fuss{background:var(--ink);color:#DCE2EE;margin-top:3rem;padding:2.4rem 0 2rem;font-size:.92rem}
+.fuss{background:var(--ink);color:#E4E4E4;margin-top:3rem;padding:2.4rem 0 2rem;font-size:.92rem}
 .fuss a{color:#fff}
 .fuss-raster{display:grid;gap:1.6rem;grid-template-columns:1fr}
 @media (min-width:760px){.fuss-raster{grid-template-columns:2fr 1fr 1fr}}
 .fuss h2{color:#fff;font:600 .78rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;margin:0 0 .6rem}
 .fuss ul{list-style:none;margin:0;padding:0}
 .fuss li{margin:.35rem 0}
-.fuss .klein{color:#B9C2D6;font-size:.82rem;margin-top:1.6rem;border-top:1px solid #34405F;padding-top:1rem}
+.fuss .klein{color:#BDBDBD;font-size:.82rem;margin-top:1.6rem;border-top:1px solid #3A3A3A;padding-top:1rem}
 .linkknopf{background:none;border:0;padding:0;font:inherit;color:#fff;text-decoration:underline;cursor:pointer;text-underline-offset:.18em}
 
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -268,3 +268,43 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 /* Seiten ohne Seitenleiste: Karten nutzen die volle Breite, Fließtext bleibt lesbar schmal */
 .inhalt:not(.mit-leiste) .text-spalte{max-width:none}
 .inhalt:not(.mit-leiste) .text-spalte>:not(.karten):not(.anzeige){max-width:46rem}
+
+/* B · Formular: nummerierte Kästchen wie ein Amtsformular */
+.wz-eingabe{counter-reset:schritt}
+.wz-eingabe fieldset{border:1.5px solid var(--ink);padding:.9rem 1rem 1rem;margin:0 0 -1.5px;background:#fff}
+.wz-eingabe fieldset legend{float:left;width:100%;margin:0 0 .7rem;color:var(--ink)}
+.wz-eingabe fieldset legend::before{counter-increment:schritt;content:counter(schritt) " · ";color:var(--stempel)}
+.wz-eingabe fieldset legend+*{clear:both}
+.wz-eingabe fieldset+.feld{margin-top:1rem}
+
+/* A · Briefbogen: Fristen-Stempel auf der Vorschau (nur Bildschirm, wird nie mitgedruckt) */
+.vorschau-rahmen .frist-stempel{position:absolute;right:6%;top:4.5%;z-index:3;font:500 .78rem/1.3 var(--mono);color:var(--stempel);border:2.5px solid var(--stempel);
+  padding:.35rem .6rem;text-align:center;letter-spacing:.06em;text-transform:uppercase;transform:rotate(-7deg);background:rgba(255,255,255,.88);pointer-events:none}
+.vorschau-rahmen .frist-stempel b{display:block;font-size:1.05rem;letter-spacing:.02em}
+
+/* C · Einschreiben: Zeitstrahl bis zum Zugang */
+.zeitstrahl{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.2rem 0 .8rem;font:500 .8rem/1.3 var(--mono)}
+.zeitstrahl .etikett{border:1.5px solid var(--ink);padding:.3rem .55rem;white-space:nowrap}
+.zeitstrahl .etikett.ziel{border-color:var(--stempel);color:var(--stempel)}
+.zeitstrahl .linie{flex:1 1 30px;min-width:24px;border-top:1.5px dashed var(--ink)}
+.zeitstrahl .tage{color:var(--muted);white-space:nowrap}
+
+/* Vorteile */
+.vorteile{margin:2rem 0 1rem}
+.vorteile ul{list-style:none;padding:0;margin:.6rem 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 1.5rem;border-top:2px solid var(--ink)}
+.vorteile li{display:flex;flex-direction:column;gap:2px;padding:.8rem 0;border-bottom:1px solid var(--rule);margin:0}
+.vorteile b{font:600 1.02rem var(--sans)}
+.vorteile b::before{content:"✓";color:var(--stempel);margin-right:.45rem}
+.vorteile span{color:var(--muted);font-size:.93rem}
+
+/* Versand-Protokoll (nur Druck) */
+.protokoll{font:11pt/1.5 var(--sans);color:#000;padding:22mm 22mm 0}
+.protokoll h1{font:600 18pt var(--serif);margin:0 0 2mm}
+.protokoll .meta{color:#444;margin:0 0 6mm}
+.protokoll table{width:100%;border-collapse:collapse;margin:0 0 6mm}
+.protokoll td{border:1px solid #000;padding:3mm 3mm;vertical-align:top}
+.protokoll td:first-child{width:38%;font-weight:600}
+.protokoll .leer{height:9mm}
+.protokoll .frist{color:#A32D2D;font-weight:700}
+.protokoll .klein{font-size:9pt;color:#444}
+@media print{.vorteile{display:none!important}}
