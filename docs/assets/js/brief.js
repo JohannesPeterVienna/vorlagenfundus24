@@ -1002,7 +1002,7 @@
       });
       L2.push('END:VCALENDAR');
       if (!n) { status.textContent = 'Für dieses Schreiben gibt es keine berechnete Frist.'; return; }
-      speichereDatei(new Blob([L2.join('\r\n')], { type: 'text/calendar' }), 'frist-' + id + '.ics');
+      speichereDatei(new Blob([L2.map(icsFalten).join('\r\n')], { type: 'text/calendar' }), 'frist-' + id + '.ics');
       status.textContent = n + (n === 1 ? ' Termin' : ' Termine') + ' als Kalenderdatei gespeichert – mit Erinnerung zwei Tage vorher.';
       zaehlen('frist_kalender', { vorlage: id });
     });
@@ -1048,9 +1048,13 @@
     for (var i = 0; i < reihe.length; i++) if (typeof fr[reihe[i][0]] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fr[reihe[i][0]])) return { label: reihe[i][1], datum: fr[reihe[i][0]] };
     return null;
   }
+  /* RFC 5545: Zeilen über 75 Oktette falten (UTF-8-sicher) */
+  function icsFalten(z) { var enc = new TextEncoder(); if (enc.encode(z).length <= 75) return z; var out = '', teil = '', n = 0;
+    Array.from(z).forEach(function (ch) { var b = enc.encode(ch).length; if (n + b > (out ? 74 : 75)) { out += (out ? '\r\n ' : '') + teil; teil = ''; n = 0; } teil += ch; n += b; });
+    return out + '\r\n ' + teil; }
   function icsText(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
   /* Ereignis an Google Analytics – wirkt nur nach Einwilligung (site.js) */
-  function zaehlen(name, p) { try { if (typeof window.gtag === 'function') window.gtag('event', name, p || {}); } catch (e) { /* */ } }
+  function zaehlen(name, p) { try { if (typeof window.gtag === 'function' && window['ga-disable-G-T00HRG2YVF'] === false) window.gtag('event', name, p || {}); } catch (e) { /* */ } }
 
   /* ================= Fristenrechner (eigenständig) ================= */
   function fristenrechner(root) {

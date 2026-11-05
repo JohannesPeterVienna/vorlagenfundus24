@@ -146,7 +146,7 @@
   /* ---------- Anzeigenplätze ---------- */
   function mq(q) { return window.matchMedia && window.matchMedia(q).matches; }
   function groesse(format) {
-    if (format === 'banner') return mq('(min-width: 768px)') ? [728, 90] : [320, 100];
+    if (format === 'banner') return mq('(min-width: 768px)') ? [728, 90] : (mq('(min-width: 360px)') ? [320, 100] : null); // 320 px Banner braucht Platz für den Seitenrand
     if (format === 'rectangle') return [300, 250];
     if (format === 'seite') {
       if (!mq('(min-width: 1024px)')) return null;
