@@ -466,11 +466,13 @@
     }
     return null;
   }
-  // Rückfall für Browser ohne :has(): Platz erst sichtbar, wenn Google data-ad-status="filled" meldet (site.css).
+  // Rückfall für Browser ohne :has(): Etikett, Mindesthöhe und Abstände erst, wenn Google data-ad-status="filled"
+  // oder "unfill-optimized" meldet (site.css). Das <ins> selbst bleibt immer sichtbar.
   function erstGefuelltZeigen(box, ins) {
     if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(a))'))) document.documentElement.classList.add('ohne-has');
     function pruefen() {
-      if (ins.getAttribute('data-ad-status') === 'filled') box.classList.add('anzeige--gefuellt');
+      var st = ins.getAttribute('data-ad-status');
+      if (st === 'filled' || st === 'unfill-optimized') box.classList.add('anzeige--gefuellt');
       else box.classList.remove('anzeige--gefuellt');
     }
     pruefen();

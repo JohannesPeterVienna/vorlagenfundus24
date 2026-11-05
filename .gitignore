@@ -1,2 +1,5 @@
 node_modules/
 *.log
+# Ausgaben des Interaktionstests (tests/interaktion.js) – nie einchecken, nie ausliefern
+test*.docx
+test*.pdf
