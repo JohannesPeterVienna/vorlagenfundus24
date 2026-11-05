@@ -48,17 +48,23 @@ function seite(o = {}) {
   if (ohneWerbung) body.setAttribute('data-ohne-werbung', '');
   const kinder = [];
   body.insertBefore = (k) => { k.parentNode = body; kinder.push(k); };
-  body.appendChild = (k) => { k.parentNode = body; kinder.push(k); };
+  body.appendChild = (k) => { k.parentNode = body; if (k.tagName === 'IFRAME') iframes.push(k); else kinder.push(k); };
   const skip = element('a'); skip.parentNode = body; skip.nextSibling = {};
   const knopf = element('button'); knopf.setAttribute('data-cmp-widerruf', '');
   const status = element('p');
+  const haupt = element('main'); haupt.id = 'inhalt';
+  const nav = element('nav'); const navKlassen = new Set(); nav.classList = { contains: k => navKlassen.has(k) };
+  const docHoerer = { keydown: [] };
+  const iframes = [];
   const doc = {
     body, head: { appendChild(s) { skripte.push(s.src); } },
     get activeElement() { return aktiv; },
     createElement: element,
-    querySelector: s => (s === '.skip' ? skip : null),
+    querySelector: s => (s === '.skip' ? skip : s === 'main' ? haupt : /^iframe/.test(s) ? (iframes[0] || null) : null),
     querySelectorAll: s => (s === '[data-cmp-widerruf]' ? [knopf] : []),
-    getElementById: id => (id === 'cmp-status' ? status : null),
+    getElementById: id => (id === 'cmp-status' ? status : id === 'inhalt' ? haupt : id === 'hauptnav' ? nav : null),
+    addEventListener: (t, f) => { (docHoerer[t] = docHoerer[t] || []).push(f); },
+    removeEventListener: (t, f) => { docHoerer[t] = (docHoerer[t] || []).filter(x => x !== f); },
     contains: x => x === knopf || kinder.includes(x),
     get cookie() { return [...jar].map(([k, v]) => k + '=' + v).join('; '); },
     set cookie(v) {
@@ -94,7 +100,8 @@ function seite(o = {}) {
   vm.runInContext(CODE, ctx, { filename: 'site.js' });
 
   const api = {
-    win, jar, speicher, skripte, knopf, status, tcfHoerer,
+    win, jar, speicher, skripte, knopf, status, tcfHoerer, haupt, navKlassen, iframes,
+    get aktiv() { return aktiv; }, setzeFokus(x) { aktiv = x; },
     zettel: () => kinder.find(k => k.attrs.class === undefined && k.className === 'vf-zettel'),
     offen() { const z = api.zettel(); return !!(z && !z.hidden); },
     vergeht(ms) {
@@ -113,7 +120,7 @@ function seite(o = {}) {
       const ziel = { closest: () => ({ getAttribute: () => wahl }) };
       z.hoerer.click.forEach(f => f({ target: ziel }));
     },
-    taste(key) { api.zettel().hoerer.keydown.forEach(f => f({ key, preventDefault() {} })); },
+    taste(key) { docHoerer.keydown.slice().forEach(f => f({ key, defaultPrevented: false, preventDefault() {} })); },
     einstellungen() { knopf.hoerer.click.forEach(f => f({ preventDefault() {} })); },
     consent() { return JSON.parse(JSON.stringify(win.dataLayer.map(a => Array.from(a)).filter(a => a[0] === 'consent'))); },
     gaLaden() { return skripte.filter(s => /googletagmanager\.com\/gtag\/js/.test(s)).length; },
@@ -357,6 +364,7 @@ test('Seiten ohne Werbung: Knopf „Google-Einstellungen für Werbung“ lädt n
   s.klick('google');
   assert.equal(s.offen(), false);
   assert.deepEqual(s.skripte, ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert.equal(s.iframes.length, 1); assert.equal(s.iframes[0].name, 'googlefcPresent'); assert.equal(s.iframes[0].style.display, 'none');
   assert(!s.skripte.some(u => /adsbygoogle/.test(u)));
   assert.equal(s.win.__widerrufGezeigt, 1);
   s.win.__tcfapi = (cmd, v, cb) => { if (cmd === 'addEventListener') cb(JA_TC, true); };
@@ -368,10 +376,18 @@ test('Seiten ohne Werbung: Knopf „Google-Einstellungen für Werbung“ lädt n
   assert.equal(s.skripte.length, 1);                        // nicht doppelt geladen
   assert.equal(s.win.__widerrufGezeigt, 2);
 });
-test('Werbe-Knopf nur auf Seiten ohne Werbung und nur im per Knopf geöffneten Laufzettel', () => {
+test('E2: Werbe-Knopf in jedem per Knopf geöffneten Laufzettel, nie im automatischen', () => {
   const s = seite({ tcf: HIDDEN });
   s.vergeht(3000);
   assert.doesNotMatch(s.zettel().innerHTML, /data-vf-wahl="google"/);
+  s.klick('zu'); s.einstellungen();
+  assert.match(s.zettel().innerHTML, /data-vf-wahl="google"/);
+  // CMP schon geladen (stumm): Klick lädt nichts nach, ruft nur den Widerruf von Google auf
+  s.klick('google');
+  assert.equal(s.skripte.length, 0);
+  assert.equal(s.iframes.length, 0);
+  assert.equal(s.win.__widerrufGezeigt, 1);
+  assert(!s.consent().some(a => a[1] === 'update' && ('ad_storage' in a[2])));
   const g = seite({ ohneWerbung: true, gpc: true });
   g.einstellungen();
   assert.match(g.zettel().innerHTML, /data-vf-wahl="google"/);
@@ -403,4 +419,41 @@ test('× bei schon gespeicherter Wahl ändert nichts; ohne Wahl wird beim nächs
   const wieder = seite({ tcf: HIDDEN });
   wieder.vergeht(3000);
   assert.equal(wieder.offen(), true);
+});
+test('E1: Werbeseite ohne CMP (blockiert/stumm ohne __tcfapi): Klick bildet Googles Snippet nach, einmalig', () => {
+  const s = seite();
+  s.einstellungen(); s.klick('google');
+  assert.deepEqual(s.skripte, ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert.equal(s.iframes.length, 1);
+  s.einstellungen(); s.klick('google');
+  assert.equal(s.skripte.length, 1); assert.equal(s.iframes.length, 1);
+});
+test('E3: Escape schließt auch ohne Fokus im Zettel, nicht bei offenem Menü; Listener nur solange offen', () => {
+  const s = seite({ tcf: HIDDEN });
+  s.vergeht(3000);
+  s.navKlassen.add('offen');
+  s.taste('Escape');
+  assert.equal(s.offen(), true);
+  s.navKlassen.delete('offen');
+  s.taste('Escape');
+  assert.equal(s.offen(), false);
+  assert.equal(s.gespeichert(), null);
+});
+test('E4: Schließen ohne Auslöser mit Fokus im Zettel → Fokus auf den Hauptinhalt', () => {
+  const s = seite({ tcf: HIDDEN });
+  s.vergeht(3000);
+  s.setzeFokus(s.zettel());
+  s.klick('zu');
+  assert.equal(s.aktiv, s.haupt);
+  assert.equal(s.haupt.getAttribute('tabindex'), '-1');
+});
+test('E5: in den ersten 3 s von Hand geöffnet und geschlossen → kein automatisches Wiedererscheinen', () => {
+  const s = seite({ tcf: HIDDEN });
+  s.vergeht(1000);
+  s.einstellungen(); s.klick('zu');
+  s.vergeht(3000);
+  assert.equal(s.offen(), false);
+  const t = seite({ tcf: HIDDEN });                         // automatisch erschienen, mit × geschlossen
+  t.vergeht(3000); t.klick('zu'); t.vergeht(10000);
+  assert.equal(t.offen(), false);
 });

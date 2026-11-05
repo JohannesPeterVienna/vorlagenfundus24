@@ -108,6 +108,7 @@
   var zustand = { tcf: 'nein', cm: null };
   var gaAktiv = false, gaGeladen = false;
   var letzteTC = null;            // letzte TCF-Meldung der Google-CMP (für den Laufzettel)
+  var zettelVonHand = false;      // Zettel in diesem Aufruf schon von Hand geöffnet oder geschlossen
   var zettelBereit = false;       // erst nach ZETTEL.FRIST_MS (oder einer eigenen Wahl) entscheidet der Laufzettel mit
   var gpc = false;
   try { gpc = navigator.globalPrivacyControl === true; } catch (e) { gpc = false; }
@@ -269,7 +270,14 @@
       el.setAttribute('aria-labelledby', 'vf-zettel-titel');
       el.setAttribute('aria-describedby', 'vf-zettel-text');
       var self = this;
-      el.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); self.schliessen(true); } });
+      // Escape schließt auch ohne Fokus im Zettel – außer ein anderes Element braucht Escape gerade selbst (offenes Menü)
+      this.escape = function (e) {
+        if (e.key !== 'Escape' || e.defaultPrevented || !self.offen()) return;
+        var menue = document.getElementById('hauptnav');
+        if (menue && menue.classList && menue.classList.contains('offen') && !self.el.contains(document.activeElement)) return;
+        e.preventDefault();
+        self.schliessen(true);
+      };
       el.addEventListener('click', function (e) {
         var k = e.target && e.target.closest ? e.target.closest('[data-vf-wahl]') : null;
         if (!k) return;
@@ -292,9 +300,9 @@
                  '<span class="vf-zettel__stempel" aria-hidden="true">nur Statistik</span>';
       var link = '<a href="/datenschutz/#statistik-fenster">Datenschutzerklärung</a>';
       // Seiten ohne Werbung: Widerruf der Werbe-Einwilligung erreichbar halten – Google-Skript erst auf Klick
-      var werbung = ohneWerbung && this.ausloeser
+      var werbung = this.ausloeser
         ? '<p class="vf-zettel__google"><button type="button" class="vf-zettel__textknopf" data-vf-wahl="google">Google-Einstellungen für Werbung öffnen</button>' +
-          '<span>Lädt dafür erst jetzt das Einwilligungsfenster von Google.</span></p>' : '';
+          '<span>' + (ohneWerbung ? 'Googles Einwilligungsskript lädt hier nur auf Ihren Klick.' : 'Werbe-Einwilligung widerrufen oder ändern im Dialog von Google.') + '</span></p>' : '';
       if (art === 'gpc') {
         return kopf + '<h2 id="vf-zettel-titel" tabindex="-1">Statistik bleibt aus</h2>' +
           '<div id="vf-zettel-text"><p>Ihr Browser sendet das Signal „Global Privacy Control“. Daran halten wir uns: Google Analytics bleibt ausgeschaltet, und wir fragen nicht nach. Mehr in der ' + link + '.</p></div>' +
@@ -315,14 +323,17 @@
         '<button type="button" class="vf-zettel__zu" data-vf-wahl="zu" aria-label="Schließen ohne Auswahl">×</button>';
     },
     offen: function () { return !!(this.el && !this.el.hidden); },
-    // nur auf Seiten ohne Werbung: Google-Einwilligungsskript (ohne adsbygoogle.js, also ohne Anzeigen) nachladen
+    // Google-Dialog öffnen: ist die CMP schon da, nur ihren Widerruf aufrufen; sonst Googles Snippet nachbilden
+    // (Callback einreihen, iframe „googlefcPresent“, Einwilligungsskript – nie adsbygoogle.js). Setzt nie eine Werbe-Einwilligung.
     googleOeffnen: function () {
       var knopf = this.ausloeser;
       this.schliessen(false);
-      googleCmpNachladen();
+      window.googlefc = window.googlefc || {};
+      window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
       window.googlefc.callbackQueue.push(function () {
         if (window.googlefc && typeof window.googlefc.showRevocationMessage === 'function') window.googlefc.showRevocationMessage();
       });
+      if (typeof window.__tcfapi !== 'function') googleCmpNachladen();
       if (knopf && document.contains(knopf)) knopf.focus();
       ansagen('Die Google-Einstellungen öffnen sich, sobald das Einwilligungsfenster geladen ist. Falls nichts erscheint, blockiert vermutlich ein Inhaltsblocker das Fenster.');
     },
@@ -337,6 +348,7 @@
     },
     zeigen: function (art, ausloeser) {
       if (!document.body) return;
+      if (ausloeser) zettelVonHand = true;          // nach manuellem Öffnen nie mehr automatisch in diesem Aufruf
       var el = this.bauen();
       this.art = art;
       this.ausloeser = ausloeser || null;
@@ -344,6 +356,7 @@
       el.innerHTML = this.inhalt(art);
       el.hidden = false;
       this.platz();
+      document.addEventListener('keydown', this.escape);
       if (this.ausloeser) {
         var t = el.querySelector('#vf-zettel-titel');
         if (t) { try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); } }
@@ -355,8 +368,16 @@
       if (!this.offen()) return;
       var hatteFokus = this.el.contains(document.activeElement);
       this.el.hidden = true;
+      zettelVonHand = true;                          // geschlossen = in diesem Seitenaufruf nicht erneut automatisch
+      document.removeEventListener('keydown', this.escape);
       this.platz();
-      if (fokusZurueck && hatteFokus && this.ausloeser && document.contains(this.ausloeser)) this.ausloeser.focus();
+      if (fokusZurueck && hatteFokus) {
+        if (this.ausloeser && document.contains(this.ausloeser)) this.ausloeser.focus();
+        else {                                       // kein Auslöser (automatisch erschienen): Fokus auf den Hauptinhalt
+          var haupt = document.getElementById('inhalt') || document.querySelector('main');
+          if (haupt) { if (!haupt.hasAttribute('tabindex')) haupt.setAttribute('tabindex', '-1'); try { haupt.focus({ preventScroll: true }); } catch (e) { haupt.focus(); } }
+        }
+      }
       this.ausloeser = null;
     },
     entscheiden: function (wahl) {
@@ -375,20 +396,29 @@
   // Gespeichertes „nein“ oder GPC: Analytics-Cookies sofort beim Laden entfernen, auf allen Seiten
   if (gpc || ZETTEL.gueltigeWahl(ablage.lesen(), Date.now()) === 'nein') gaKekseWeg();
 
-  var versuche = 0, cmpNachgeladen = false;
+  var versuche = 0, cmpNachgeladen = false, cmpHoert = false;
   function googleCmpNachladen() {
     if (cmpNachgeladen) return;
     cmpNachgeladen = true;
+    if (!document.querySelector('iframe[name="googlefcPresent"]')) {
+      var f = document.createElement('iframe');
+      f.name = 'googlefcPresent';
+      f.setAttribute('name', 'googlefcPresent');
+      f.style.display = 'none'; f.style.width = '0'; f.style.height = '0';
+      f.style.border = 'none'; f.style.zIndex = '-1000'; f.style.left = '-1000px'; f.style.top = '-1000px';
+      document.body.appendChild(f);
+    }
     var s = document.createElement('script');
     s.async = true;
     s.src = 'https://fundingchoicesmessages.google.com/i/' + PUB.replace(/^ca-/, '') + '?ers=1';
     document.head.appendChild(s);
-    versuche = 0;
-    warteAufCMP();
+    if (!cmpHoert) { versuche = 0; warteAufCMP(); }
   }
   function warteAufCMP() {
     if (ohneWerbung && !cmpNachgeladen) return;   // hier lädt die CMP nur auf ausdrücklichen Klick
     if (typeof window.__tcfapi === 'function') {
+      if (cmpHoert) return;
+      cmpHoert = true;
       window.__tcfapi('addEventListener', 2, function (tc, ok) { if (ok) tcfMeldung(tc); });
       return;
     }
@@ -403,7 +433,7 @@
     var b = zettelBefund();
     if (b === 'nein') gaKekseWeg();
     anwenden();
-    if (b === 'fragen' && !zettel.offen()) zettel.zeigen('frage', null);
+    if (b === 'fragen' && !zettel.offen() && !zettelVonHand) zettel.zeigen('frage', null);
   }, ZETTEL.FRIST_MS);
 
   /* Datenschutz-Einstellungen: Ist die Google-CMP aktiv, sperrt der Widerruf GA sofort und die CMP zeigt
