@@ -309,3 +309,31 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 .protokoll .klein{font-size:9pt;color:#444}
 @media print{.vorteile{display:none!important}}
 @media print{.frist-stempel{display:none!important}}
+
+/* Laufzettel Statistik (Übergang ab 5.11.2026): nicht modal, unten rechts fixiert, mobil volle Breite; nur Google Analytics */
+.vf-zettel{position:fixed;right:16px;bottom:16px;z-index:60;width:min(25rem,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;
+  background:var(--sheet);color:var(--ink);border:2px solid var(--ink);border-top:6px solid var(--ink);border-radius:2px;
+  box-shadow:6px 6px 0 rgba(26,26,26,.18);padding:.9rem 1.1rem 1.1rem;font-size:.95rem;line-height:1.55}
+.vf-zettel[hidden]{display:none}
+.vf-zettel__kopf{margin:0 2.4rem .7rem 0;padding-bottom:.45rem;border-bottom:1px dashed var(--rule);
+  font:500 .72rem/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vf-zettel__stempel{float:right;margin:.15rem 0 .4rem .7rem;transform:rotate(-4deg);border:2px solid var(--stempel);color:var(--stempel);
+  border-radius:3px;padding:.15rem .45rem;font:500 .7rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;background:#fff}
+.vf-zettel h2{font-size:1.3rem;margin:0 0 .5rem}
+.vf-zettel h2:focus{outline:none}
+.vf-zettel h2:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.vf-zettel p{margin:0 0 .6rem}
+.vf-zettel a{color:var(--ink)}
+.vf-zettel__stand{font:400 .8rem/1.4 var(--mono);color:var(--ink-2);border-left:3px solid var(--stempel);padding-left:.55rem}
+.vf-zettel__wahl{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.9rem}
+.vf-zettel__wahl--eins{grid-template-columns:1fr}
+.vf-zettel__knopf{min-height:44px;min-width:0;padding:.55rem .8rem;background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:var(--r);
+  font:600 1rem/1.2 var(--sans);cursor:pointer}
+.vf-zettel__knopf:hover{background:var(--ink);color:#fff}
+.vf-zettel__zu{position:absolute;top:2px;right:2px;width:44px;height:44px;background:transparent;border:0;color:var(--ink);
+  font:400 1.6rem/1 var(--sans);cursor:pointer;border-radius:var(--r)}
+.vf-zettel__zu:hover{background:var(--rule-2)}
+@media (max-width:600px){
+  .vf-zettel{left:0;right:0;bottom:0;width:auto;max-height:70vh;border-left:0;border-right:0;border-bottom:0;box-shadow:0 -4px 0 rgba(26,26,26,.12);padding:.8rem 16px 1rem}
+}
+@media print{.vf-zettel{display:none!important}}
