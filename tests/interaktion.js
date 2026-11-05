@@ -1,9 +1,13 @@
-// Interaktionstest: Länderwechsel, Fristen, .docx-Export, Druckansicht, Kuvertprüfung. Start: node tests/interaktion.js <ausgabeordner>
+// Interaktionstest: Länderwechsel, Fristen, .docx-Export, Druckansicht, Kuvertprüfung. Start: node tests/interaktion.js [ausgabeordner]
+// Ohne Ausgabeordner landen test.docx, test-at.docx, test.pdf und test-lang.pdf in einem frischen Temp-Ordner
+// (os.tmpdir()), der danach gelöscht wird – nie im Repo.
 const { chromium } = require('/opt/npm-tools/node_modules/playwright');
 const { server } = require('./server');
 const assert = require('assert');
 (async () => {
-  const out = process.argv[2] || '.';
+  const os = require('os'); const fsT = require('fs'); const pathT = require('path');
+  const eigenerOrdner = !process.argv[2];
+  const out = process.argv[2] || fsT.mkdtempSync(pathT.join(os.tmpdir(), 'vf24-interaktion-'));
   const srv = await server(0); const port = srv.address().port;
   const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   const page = await browser.newPage({ acceptDownloads: true, viewport: { width: 1366, height: 900 } });
@@ -118,6 +122,7 @@ const assert = require('assert');
   for (let i = 1; i <= 24; i++) assert(alles.includes(i + '. Dieser Absatz'), 'Absatz ' + i + ' fehlt im Druck');
   assert(!alles.includes('länger als eine Seite'), 'Überlaufhinweis im Druck');
   assert(!errs.length, errs.join('|'));
+  if (eigenerOrdner) fsT.rmSync(out, { recursive: true, force: true });
   console.log('Interaktionstest bestanden.');
   await browser.close(); srv.close();
 })().catch(e => { console.error(e.message); process.exit(1); });
