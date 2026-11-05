@@ -265,7 +265,7 @@
         var k = e.target && e.target.closest ? e.target.closest('[data-vf-wahl]') : null;
         if (!k) return;
         var w = k.getAttribute('data-vf-wahl');
-        if (w === 'zu') self.schliessen(true); else self.entscheiden(w);
+        if (w === 'zu') self.schliessen(true); else if (w === 'google') self.googleOeffnen(); else self.entscheiden(w);
       });
       // früh in der Tab-Reihenfolge (nach „Zum Inhalt springen“), optisch unten fixiert – kein Layout-Shift
       var skip = document.querySelector('.skip');
@@ -282,10 +282,14 @@
       var kopf = '<p class="vf-zettel__kopf" aria-hidden="true">Laufzettel · Statistik</p>' +
                  '<span class="vf-zettel__stempel" aria-hidden="true">nur Statistik</span>';
       var link = '<a href="/datenschutz/#statistik-fenster">Datenschutzerklärung</a>';
+      // Seiten ohne Werbung: Widerruf der Werbe-Einwilligung erreichbar halten – Google-Skript erst auf Klick
+      var werbung = ohneWerbung && this.ausloeser
+        ? '<p class="vf-zettel__google"><button type="button" class="vf-zettel__textknopf" data-vf-wahl="google">Google-Einstellungen für Werbung öffnen</button>' +
+          '<span>Lädt dafür erst jetzt das Einwilligungsfenster von Google.</span></p>' : '';
       if (art === 'gpc') {
         return kopf + '<h2 id="vf-zettel-titel" tabindex="-1">Statistik bleibt aus</h2>' +
           '<div id="vf-zettel-text"><p>Ihr Browser sendet das Signal „Global Privacy Control“. Daran halten wir uns: Google Analytics bleibt ausgeschaltet, und wir fragen nicht nach. Mehr in der ' + link + '.</p></div>' +
-          '<div class="vf-zettel__wahl vf-zettel__wahl--eins"><button type="button" class="vf-zettel__knopf" data-vf-wahl="zu">Schließen</button></div>';
+          '<div class="vf-zettel__wahl vf-zettel__wahl--eins"><button type="button" class="vf-zettel__knopf" data-vf-wahl="zu">Schließen</button></div>' + werbung;
       }
       var eintrag = ablage.lesen();
       var wahl = ZETTEL.gueltigeWahl(eintrag, Date.now());
@@ -298,10 +302,21 @@
         '<div id="vf-zettel-text"><p>Mit Google Analytics (Google Ireland Limited) zählen wir, welche Seiten und Vorlagen genutzt werden. Google setzt dafür Cookies; Daten können auch in den USA verarbeitet werden. Ihre Eingaben in den Vorlagen werden nicht übertragen. <strong>Das ist keine Einwilligung in Werbung.</strong></p>' +
         '<p>Widerruf jederzeit unten über „Datenschutz-Einstellungen“. ' + link + '</p></div>' + standHtml +
         '<div class="vf-zettel__wahl"><button type="button" class="vf-zettel__knopf" data-vf-wahl="ja">Zustimmen</button>' +
-        '<button type="button" class="vf-zettel__knopf" data-vf-wahl="nein">Ablehnen</button></div>' +
+        '<button type="button" class="vf-zettel__knopf" data-vf-wahl="nein">Ablehnen</button></div>' + werbung +
         '<button type="button" class="vf-zettel__zu" data-vf-wahl="zu" aria-label="Schließen ohne Auswahl">×</button>';
     },
     offen: function () { return !!(this.el && !this.el.hidden); },
+    // nur auf Seiten ohne Werbung: Google-Einwilligungsskript (ohne adsbygoogle.js, also ohne Anzeigen) nachladen
+    googleOeffnen: function () {
+      var knopf = this.ausloeser;
+      this.schliessen(false);
+      googleCmpNachladen();
+      window.googlefc.callbackQueue.push(function () {
+        if (window.googlefc && typeof window.googlefc.showRevocationMessage === 'function') window.googlefc.showRevocationMessage();
+      });
+      if (knopf && document.contains(knopf)) knopf.focus();
+      ansagen('Die Google-Einstellungen öffnen sich, sobald das Einwilligungsfenster geladen ist. Falls nichts erscheint, blockiert vermutlich ein Inhaltsblocker das Fenster.');
+    },
     // solange der Zettel offen ist, bleibt der Seitenfuß darunter erreichbar
     platz: function () {
       var b = document.body;
@@ -348,15 +363,29 @@
         : 'Gespeichert: Die Statistik mit Google Analytics ist eingeschaltet.');
     }
   };
-  var versuche = 0;
-  (function warteAufCMP() {
-    if (ohneWerbung) return;   // hier lädt keine CMP
+  // Gespeichertes „nein“ oder GPC: Analytics-Cookies sofort beim Laden entfernen, auf allen Seiten
+  if (gpc || ZETTEL.gueltigeWahl(ablage.lesen(), Date.now()) === 'nein') gaKekseWeg();
+
+  var versuche = 0, cmpNachgeladen = false;
+  function googleCmpNachladen() {
+    if (cmpNachgeladen) return;
+    cmpNachgeladen = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://fundingchoicesmessages.google.com/i/' + PUB.replace(/^ca-/, '') + '?ers=1';
+    document.head.appendChild(s);
+    versuche = 0;
+    warteAufCMP();
+  }
+  function warteAufCMP() {
+    if (ohneWerbung && !cmpNachgeladen) return;   // hier lädt die CMP nur auf ausdrücklichen Klick
     if (typeof window.__tcfapi === 'function') {
       window.__tcfapi('addEventListener', 2, function (tc, ok) { if (ok) tcfMeldung(tc); });
       return;
     }
     if (++versuche < 40) setTimeout(warteAufCMP, 250);   // max. 10 s; ohne CMP keine Google-Entscheidung
-  }());
+  }
+  warteAufCMP();
 
   // nach ZETTEL.FRIST_MS: Hat Google weder entschieden noch einen Dialog gezeigt, gilt die eigene Wahl – oder wir fragen
   setTimeout(function () {

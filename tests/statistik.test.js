@@ -335,3 +335,42 @@ test('Seiten ohne Werbung: kein automatisches Fenster, kein GA; Knopf öffnet La
   assert.equal(s.gespeichert().wahl, 'nein');
   assert.equal(s.gaLaden(), 0);
 });
+test('gespeichertes Nein oder GPC: _ga sofort beim Laden gelöscht, auch auf Seiten ohne Werbung', () => {
+  const nein = { v: 1, wahl: 'nein', zeit: JETZT - TAG };
+  const a = seite({ ohneWerbung: true, gespeichert: nein, kekse: ['_ga', '_ga_T00HRG2YVF', 'x'] });
+  assert.deepEqual([...a.jar.keys()], ['x']);
+  const b = seite({ tcf: HIDDEN, gespeichert: nein, kekse: ['_ga'] });
+  assert.equal(b.jar.has('_ga'), false);                     // ohne auf den 3-s-Timer zu warten
+  const c = seite({ ohneWerbung: true, gpc: true, kekse: ['_ga_T00HRG2YVF'] });
+  assert.equal(c.jar.size, 0);
+  const d = seite({ tcf: HIDDEN, kekse: ['_ga'] });          // ohne Wahl bleibt _ga unangetastet
+  assert.equal(d.jar.has('_ga'), true);
+});
+test('Seiten ohne Werbung: Knopf „Google-Einstellungen für Werbung“ lädt nur die CMP, Google-Entscheidung hat Vorrang, GA bleibt aus', () => {
+  const s = seite({ ohneWerbung: true, gespeichert: { v: 1, wahl: 'ja', zeit: JETZT - TAG }, kekse: ['_ga'] });
+  s.vergeht(5000);
+  assert.equal(s.skripte.length, 0);                        // vor dem Klick kein Google-Skript
+  s.einstellungen();
+  assert.match(s.zettel().innerHTML, /data-vf-wahl="google">Google-Einstellungen für Werbung öffnen</);
+  s.klick('google');
+  assert.equal(s.offen(), false);
+  assert.deepEqual(s.skripte, ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert(!s.skripte.some(u => /adsbygoogle/.test(u)));
+  assert.equal(s.win.__widerrufGezeigt, 1);
+  s.win.__tcfapi = (cmd, v, cb) => { if (cmd === 'addEventListener') cb(JA_TC, true); };
+  s.vergeht(300);
+  assert.equal(s.gespeichert(), null);                      // Google-Entscheidung ersetzt die eigene Wahl
+  assert.equal(s.gaLaden(), 0);                             // Pflichtseite: trotzdem kein GA
+  assert.equal(s.win[GA_AUS], true);
+  s.einstellungen(); s.klick('google');
+  assert.equal(s.skripte.length, 1);                        // nicht doppelt geladen
+  assert.equal(s.win.__widerrufGezeigt, 2);
+});
+test('Werbe-Knopf nur auf Seiten ohne Werbung und nur im per Knopf geöffneten Laufzettel', () => {
+  const s = seite({ tcf: HIDDEN });
+  s.vergeht(3000);
+  assert.doesNotMatch(s.zettel().innerHTML, /data-vf-wahl="google"/);
+  const g = seite({ ohneWerbung: true, gpc: true });
+  g.einstellungen();
+  assert.match(g.zettel().innerHTML, /data-vf-wahl="google"/);
+});

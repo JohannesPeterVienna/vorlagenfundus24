@@ -169,6 +169,12 @@ const CMP_STUB = `(function(){
   assert.equal(log2.length, vorDs, 'Google-Anfrage auf der Datenschutzseite');
   await p2.click('footer [data-cmp-widerruf]'); assert.equal(await sichtbar(), true, 'Knopf auf Datenschutzseite öffnet nichts');
   bericht.push('Datenschutzseite: kein Google-Skript, Laufzettel nur über den Knopf');
+  await p2.click('.vf-zettel [data-vf-wahl="google"]'); await p2.waitForTimeout(400);
+  const neu = log2.slice(vorDs);
+  assert(neu.some(u => /fundingchoicesmessages\.google\.com\/i\/pub-7811071715414905\?ers=1/.test(u)), 'CMP nicht nachgeladen: ' + neu);
+  assert(!neu.some(u => /adsbygoogle|googletagmanager/.test(u)), 'Werbe- oder GA-Skript auf der Datenschutzseite: ' + neu);
+  bericht.push('Datenschutzseite: „Google-Einstellungen für Werbung öffnen“ lädt nur die CMP');
+  await p2.click('footer [data-cmp-widerruf]');
   // Druck: ausgeblendet
   await p2.emulateMedia({ media: 'print' });
   assert.equal(await p2.evaluate(() => getComputedStyle(document.getElementById('vf-zettel')).display), 'none', 'Laufzettel im Druck sichtbar');
