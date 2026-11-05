@@ -178,6 +178,7 @@ const CMP_STUB = `(function(){
   // Druck: ausgeblendet
   await p2.emulateMedia({ media: 'print' });
   assert.equal(await p2.evaluate(() => getComputedStyle(document.getElementById('vf-zettel')).display), 'none', 'Laufzettel im Druck sichtbar');
+  assert.equal(await p2.evaluate(() => getComputedStyle(document.body).paddingBottom), '0px', 'Platzhalter des Laufzettels im Druck');
   await ctx2.close();
 
   assert(!errs.length, errs.join('|'));

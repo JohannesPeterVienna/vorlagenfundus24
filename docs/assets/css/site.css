@@ -339,4 +339,4 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 @media (max-width:600px){
   .vf-zettel{left:0;right:0;bottom:0;width:auto;max-height:70vh;border-left:0;border-right:0;border-bottom:0;box-shadow:0 -4px 0 rgba(26,26,26,.12);padding:.8rem 16px 1rem}
 }
-@media print{.vf-zettel{display:none!important}}
+@media print{.vf-zettel{display:none!important}body{padding-bottom:0!important}}

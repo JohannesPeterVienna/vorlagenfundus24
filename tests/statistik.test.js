@@ -20,7 +20,7 @@ const JA_TC = { gdprApplies: true, eventStatus: 'useractioncomplete', tcString: 
 const NEIN_TC = { gdprApplies: true, eventStatus: 'tcloaded', tcString: 'CQ-nein', purpose: { consents: { 1: false } }, vendor: { consents: {} } };
 
 function seite(o = {}) {
-  const { tcf, gpc = false, gespeichert, kekse = [], ohneWerbung = false, start = JETZT, speicherGesperrt = false, cm = 1 } = o;
+  const { tcf, gpc = false, gespeichert, kekse = [], ohneWerbung = false, start = JETZT, speicherGesperrt = false, cm = 1, us } = o;
   const uhr = { jetzt: start, timer: [] };
   const speicher = new Map(gespeichert ? [['vf24-statistik', JSON.stringify(gespeichert)]] : []);
   const jar = new Map(kekse.map(k => [k, '1']));
@@ -84,6 +84,7 @@ function seite(o = {}) {
   win.googlefc = {
     callbackQueue: { push: f => { queue.push(f); if (typeof f === 'function') f(); } },
     getGoogleConsentModeValues: () => ({ analyticsStoragePurposeConsentStatus: cm }),
+    usstatesoptout: us === undefined ? undefined : { getInitialUsStatesOptOutStatus: () => us },
     showRevocationMessage() { win.__widerrufGezeigt = (win.__widerrufGezeigt || 0) + 1; }
   };
   win.window = win;
@@ -142,7 +143,8 @@ test('Regel: Wahl 12 Monate gültig, Zukunft und fremde Versionen verworfen', ()
   const e = { v: 1, wahl: 'ja', zeit: JETZT };
   assert.equal(Z.gueltigeWahl(e, JETZT + 364 * TAG), 'ja');
   assert.equal(Z.gueltigeWahl(e, Date.UTC(2027, 10, 5, 10, 0, 0)), null);
-  assert.equal(Z.gueltigeWahl({ v: 1, wahl: 'ja', zeit: JETZT + 60000 }, JETZT), null);
+  assert.equal(Z.gueltigeWahl({ v: 1, wahl: 'ja', zeit: JETZT + 60000 }, JETZT), 'ja');   // 60 s Kulanz für Uhrkorrekturen
+  assert.equal(Z.gueltigeWahl({ v: 1, wahl: 'ja', zeit: JETZT + 61000 }, JETZT), null);
   assert.equal(Z.gueltigeWahl({ v: 2, wahl: 'ja', zeit: JETZT }, JETZT), null);
   assert.equal(Z.gueltigeWahl({ v: 1, wahl: 'vielleicht', zeit: JETZT }, JETZT), null);
   assert.equal(Z.gueltigeWahl({ v: 1, wahl: 'nein', zeit: 'gestern' }, JETZT), null);
@@ -373,4 +375,32 @@ test('Werbe-Knopf nur auf Seiten ohne Werbung und nur im per Knopf geöffneten L
   const g = seite({ ohneWerbung: true, gpc: true });
   g.einstellungen();
   assert.match(g.zettel().innerHTML, /data-vf-wahl="google"/);
+});
+test('gdprApplies false + gemeldeter US-Opt-out + Analytics GRANTED: kein GA, _ga gelöscht', () => {
+  const s = seite({ tcf: { gdprApplies: false, eventStatus: 'tcloaded' }, cm: 1, us: 3, kekse: ['_ga', '_ga_T00HRG2YVF'] });
+  s.vergeht(5000);
+  assert.equal(s.gaLaden(), 0);
+  assert.equal(s.jar.size, 0);
+  // US-Status noch nicht gemeldet: GA aus, aber _ga bleibt (sonst ginge es vor der Meldung verloren)
+  const w = seite({ tcf: { gdprApplies: false, eventStatus: 'tcloaded' }, cm: 1, kekse: ['_ga'] });
+  w.vergeht(5000);
+  assert.equal(w.gaLaden(), 0);
+  assert.equal(w.jar.has('_ga'), true);
+  // kein Opt-out (2): GA läuft, _ga bleibt
+  const ok = seite({ tcf: { gdprApplies: false, eventStatus: 'tcloaded' }, cm: 1, us: 2, kekse: ['_ga'] });
+  ok.vergeht(5000);
+  assert.equal(ok.gaLaden(), 1);
+  assert.equal(ok.jar.has('_ga'), true);
+});
+test('× bei schon gespeicherter Wahl ändert nichts; ohne Wahl wird beim nächsten Aufruf erneut gefragt', () => {
+  const s = seite({ tcf: HIDDEN, gespeichert: { v: 1, wahl: 'ja', zeit: JETZT - TAG } });
+  s.vergeht(3000);
+  s.einstellungen(); s.klick('zu');
+  assert.equal(s.gespeichert().wahl, 'ja');
+  assert.equal(s.win[GA_AUS], false);
+  const n = seite({ tcf: HIDDEN });
+  n.vergeht(3000); n.klick('zu');
+  const wieder = seite({ tcf: HIDDEN });
+  wieder.vergeht(3000);
+  assert.equal(wieder.offen(), true);
 });

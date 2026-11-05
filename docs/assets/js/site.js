@@ -9,7 +9,8 @@
   var ZETTEL = {
     SCHLUESSEL: 'vf24-statistik',
     VERSION: 1,
-    FRIST_MS: 3000,          // so lange hat die Google-CMP Zeit, bevor der Laufzettel fragt
+    FRIST_MS: 3000,
+    KULANZ_MS: 60000,        // Uhrkorrekturen: Zeitpunkte bis 60 s in der Zukunft gelten noch, alles darüber wird verworfen          // so lange hat die Google-CMP Zeit, bevor der Laufzettel fragt
     // echte Google-Entscheidung: Nutzeraktion oder geladene, gespeicherte Entscheidung (nicht leerer TC-String)
     entschieden: function (tc) {
       return !!tc && (tc.eventStatus === 'useractioncomplete' ||
@@ -22,11 +23,11 @@
       return tc.eventStatus === 'cmpuishown' && tc.displayStatus !== 'hidden' && tc.displayStatus !== 'disabled';
     },
     ablauf: function (zeit) { var d = new Date(zeit); d.setMonth(d.getMonth() + 12); return d.getTime(); },
-    // 'ja' | 'nein' | null (fehlt, falsche Version, abgelaufen nach 12 Monaten, Zeitpunkt in der Zukunft)
+    // 'ja' | 'nein' | null (fehlt, falsche Version, abgelaufen nach 12 Monaten, Zeitpunkt mehr als 60 s in der Zukunft)
     gueltigeWahl: function (e, jetzt) {
       if (!e || typeof e !== 'object' || e.v !== ZETTEL.VERSION) return null;
       if (e.wahl !== 'ja' && e.wahl !== 'nein') return null;
-      if (typeof e.zeit !== 'number' || !isFinite(e.zeit) || e.zeit > jetzt) return null;
+      if (typeof e.zeit !== 'number' || !isFinite(e.zeit) || e.zeit > jetzt + ZETTEL.KULANZ_MS) return null;
       return jetzt < ZETTEL.ablauf(e.zeit) ? e.wahl : null;
     },
     // 'gpc' | 'google' (CMP-Logik gilt) | 'warten' (Google-Dialog sichtbar) | 'ja' | 'nein' | 'fragen'
@@ -136,6 +137,13 @@
       return st === 1 || st === 2;
     } catch (e) { return false; }
   }
+  // ausdrücklich gemeldeter US-Opt-out (OPTED_OUT 3); „noch nicht gemeldet“ zählt hier nicht
+  function usOptOutGemeldet() {
+    try {
+      var u = window.googlefc && window.googlefc.usstatesoptout;
+      return !!u && typeof u.getInitialUsStatesOptOutStatus === 'function' && u.getInitialUsStatesOptOutStatus() === 3;
+    } catch (e) { return false; }
+  }
   function zettelBefund() { return ZETTEL.befund({ tc: letzteTC, gpc: gpc, eintrag: ablage.lesen(), jetzt: Date.now() }); }
   // Der Laufzettel entscheidet nur, wenn die Google-CMP weder entschieden hat noch ihren Dialog zeigt.
   function zettelZustaendig() {
@@ -182,7 +190,8 @@
     var tc = letzteTC;
     if (!tc || !(tc.gdprApplies === false || ZETTEL.entschieden(tc)) || erteilt()) return;
     var cmNein = zustand.cm !== null && zustand.cm !== CM_GRANTED && zustand.cm !== CM_NOT_APPLICABLE;
-    if (zustand.tcf === 'nein' || cmNein) gaKekseWeg();
+    var usNein = zustand.tcf === 'ausserhalb' && usOptOutGemeldet();
+    if (zustand.tcf === 'nein' || cmNein || usNein) gaKekseWeg();
   }
   function leseCM() {
     try {
