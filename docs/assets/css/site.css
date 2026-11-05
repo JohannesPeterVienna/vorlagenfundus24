@@ -308,3 +308,4 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 .protokoll .frist{color:#A32D2D;font-weight:700}
 .protokoll .klein{font-size:9pt;color:#444}
 @media print{.vorteile{display:none!important}}
+@media print{.frist-stempel{display:none!important}}
