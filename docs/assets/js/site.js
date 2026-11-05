@@ -466,6 +466,16 @@
     }
     return null;
   }
+  // Rückfall für Browser ohne :has(): Platz erst sichtbar, wenn Google data-ad-status="filled" meldet (site.css).
+  function erstGefuelltZeigen(box, ins) {
+    if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(a))'))) document.documentElement.classList.add('ohne-has');
+    function pruefen() {
+      if (ins.getAttribute('data-ad-status') === 'filled') box.classList.add('anzeige--gefuellt');
+      else box.classList.remove('anzeige--gefuellt');
+    }
+    pruefen();
+    if (typeof MutationObserver === 'function') new MutationObserver(pruefen).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
+  }
   var plaetze = document.querySelectorAll('.anzeige[data-format]');
   var aktiv = 0;
   Array.prototype.forEach.call(plaetze, function (box) {
@@ -486,6 +496,7 @@
     platz.style.minHeight = g[1] + 'px';
     platz.appendChild(ins);
     box.hidden = false;
+    erstGefuelltZeigen(box, ins);
     aktiv++;
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { /* Blocker */ }
   });
