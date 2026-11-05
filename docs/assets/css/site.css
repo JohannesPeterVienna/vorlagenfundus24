@@ -233,11 +233,11 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 /* Leerer Anzeigenplatz nimmt keinen Raum ein: kein Etikett „Anzeige“, keine Mindesthöhe, kein Außenabstand,
    bis Google am <ins> data-ad-status="filled" setzt. Die Breite bleibt, damit AdSense den Platz vermessen kann.
    Grundlage ist :has(); ohne :has() setzt site.js html.ohne-has und .anzeige--gefuellt (MutationObserver). */
-.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])),
+.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
 .ohne-has .anzeige:not(.anzeige--gefuellt){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .anz-platz,
+.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .anz-platz{min-height:0!important}
 .ohne-has .anzeige:not(.anzeige--gefuellt) .anz-platz{min-height:0!important}
-.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .anz-label,
+.anzeige:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .anz-label{display:none}
 .ohne-has .anzeige:not(.anzeige--gefuellt) .anz-label{display:none}
 
 /* Fuß */
