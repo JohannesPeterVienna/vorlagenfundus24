@@ -121,8 +121,8 @@ def kopf(s, canonical):
     if s['url'] == '/':
         jsonld.append({'@context': 'https://schema.org', '@type': 'WebSite', 'name': 'Vorlagenfundus 24',
                        'url': BASE + '/', 'inLanguage': 'de',
-                       'publisher': {'@type': 'Organization', 'name': 'AdStern', 'email': 'office@adstern.com',
-                                     'address': {'@type': 'PostalAddress', 'streetAddress': 'Seilerstätte 8',
+                       'publisher': {'@type': 'Organization', 'name': 'AdStern – Agentur für digitales Marketing', 'email': 'office@adstern.com',
+                                     'address': {'@type': 'PostalAddress', 'streetAddress': 'Seilerstätte 8/8',
                                                  'postalCode': '1010', 'addressLocality': 'Wien', 'addressCountry': 'AT'}}})
     ld = ''.join(f'<script type="application/ld+json">{json.dumps(j, ensure_ascii=False)}</script>' for j in jsonld)
     werbung = '' if s.get('ohneWerbung') else (
