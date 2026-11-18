@@ -151,6 +151,23 @@
   }
 
   /*
+   * Verfahrensart (nur Österreich). Der 24. Dezember verlängert das Fristende nur dort, wo das Gesetz
+   * ihn nennt: § 33 Abs. 2 AVG (Verwaltungsverfahren; gilt über § 24 VStG auch im Verwaltungsstraf-
+   * verfahren und über § 17 VwGVG vor den Verwaltungsgerichten) und § 108 Abs. 3 BAO (Abgabenverfahren).
+   * Beide zählen auf: Samstag, Sonntag, gesetzlicher Feiertag, Karfreitag, 24. Dezember.
+   * § 126 Abs. 2 ZPO (Zivilprozess) nennt Samstag, Sonntag, Feiertag, Karfreitag – ohne 24. Dezember.
+   * Im Zivilrecht (§ 903 ABGB, Art. 5 Fristenübereinkommen) kommt der 24. Dezember ebenfalls nicht vor.
+   * verfahren: undefined | "zivil" | "zpo" | "avg" | "bao"
+   */
+  function mit24Dezember(land, verfahren) { return land === 'AT' && (verfahren === 'avg' || verfahren === 'bao'); }
+  function verfahrenTage(land, verfahren, years) {
+    return mit24Dezember(land, verfahren) ? (years || []).map(function (y) { return y + '-12-24'; }) : [];
+  }
+  function verfahrenGrund(datum, grund, land, verfahren) {
+    return mit24Dezember(land, verfahren) && grund === 'Eigener Feiertag' && String(datum).slice(5) === '12-24' ? '24. Dezember' : grund;
+  }
+
+  /*
    * Allgemeine Fristberechnung (Ereignisfrist): Der Tag des Ereignisses zählt nicht mit.
    * AT § 902 Abs. 1 ABGB · DE § 187 Abs. 1, § 188 BGB · CH Art. 77 OR.
    * einheit: "tage" | "wochen" | "monate" | "jahre"
@@ -173,8 +190,10 @@
       var y = raw.getUTCFullYear(), jahre = [y, y + 1];
       try { pruefeFeiertage(opts.feiertage, opts.land, [y]); }
       catch (e) { if (e.code === 'ausserhalb') e.message += ' Rechnerisches Fristende ohne Feiertagsprüfung: ' + iso(raw) + '.'; throw e; }
-      var extra = (opts.eigeneFeiertage || []).concat(expandOptional(opts.land, jahre, opts.feiertage, opts.optional || []));
+      var extra = (opts.eigeneFeiertage || []).concat(expandOptional(opts.land, jahre, opts.feiertage, opts.optional || []))
+        .concat(verfahrenTage(opts.land, opts.verfahren, jahre));
       var s = shiftToWorkday(raw, opts.land, opts.feiertage, extra.length ? extra : null);
+      s.verschoben.forEach(function (st) { st.grund = verfahrenGrund(st.datum, st.grund, opts.land, opts.verfahren); });
       if (s.datum.getUTCFullYear() !== y) pruefeFeiertage(opts.feiertage, opts.land, [s.datum.getUTCFullYear()]);
       res.ende = iso(s.datum); res.verschoben = s.verschoben;
     }
@@ -398,7 +417,7 @@
     holidaysFor: holidaysFor, expandOptional: expandOptional, abdeckung: abdeckung, pruefeFeiertage: pruefeFeiertage, shiftToWorkday: shiftToWorkday, fristEnde: fristEnde,
     nthWerktag: nthWerktag, spaetesterZugangFuerTermin: spaetesterZugangFuerTermin,
     mietKuendigung: mietKuendigung, ruecktrittsfrist: ruecktrittsfrist,
-    gewaehrleistung: gewaehrleistung, vereinAustrittCH: vereinAustrittCH,
+    gewaehrleistung: gewaehrleistung, vereinAustrittCH: vereinAustrittCH, verfahrenTage: verfahrenTage, verfahrenGrund: verfahrenGrund,
     formatDE: formatDE, weekdayDE: weekdayDE
   };
 }));

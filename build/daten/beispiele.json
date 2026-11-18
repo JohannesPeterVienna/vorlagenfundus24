@@ -299,17 +299,17 @@
  {
   "id": "kaution-de",
   "land": "DE",
-  "titel": "Durchgerechnet: Wohnung am 31. August 2026 zurückgegeben",
+  "titel": "Durchgerechnet: Wohnung am 30. September 2026 zurückgegeben",
   "funktion": "fristEnde",
   "args": {
-   "ereignis": "2026-08-31",
+   "ereignis": "2026-09-30",
    "anzahl": 6,
    "einheit": "monate",
    "verschieben": false
   },
   "erwartet": {
-   "rohEnde": "2027-02-28",
-   "ende": "2027-02-28"
+   "rohEnde": "2027-03-30",
+   "ende": "2027-03-30"
   },
   "punkte": [
    [
@@ -321,9 +321,9 @@
     "Sechs Monate später: Ende der Frist des § 548 Abs. 1 BGB"
    ]
   ],
-  "text": "Ersatzansprüche des Vermieters wegen Veränderungen oder Verschlechterungen der Mietsache verjähren nach § 548 Abs. 1 BGB in sechs Monaten ab dem Zeitpunkt, in dem er die Wohnung zurückerhält. Bei Rückgabe am {ereignis} endet diese Frist am {ende}, weil es keinen 31. Februar gibt (§ 188 Abs. 3 BGB). Für die Kaution selbst nennt das BGB keinen festen Rückzahlungstag; das Datum zeigt nur, ab wann solche Ersatzansprüche nach dem Gesetz verjährt sind. Hemmung der Verjährung, etwa durch Verhandlungen, ist nicht eingerechnet.",
+  "text": "Ersatzansprüche des Vermieters wegen Veränderungen oder Verschlechterungen der Mietsache verjähren nach § 548 Abs. 1 BGB in sechs Monaten ab dem Zeitpunkt, in dem er die Wohnung zurückerhält. Bei Rückgabe am {ereignis} zählt dieser Tag nicht mit (§ 187 Abs. 1 BGB); sechs Monate später trägt der letzte Tag dieselbe Zahl: {ende} (§ 188 Abs. 2 BGB). Für die Kaution selbst nennt das BGB keinen festen Rückzahlungstag; das Datum zeigt nur, wann die Sechsmonatsfrist rechnerisch endet. Hemmung der Verjährung, etwa durch Verhandlungen, ist nicht eingerechnet, und ob sich ein Fristende an einem Wochenende verschiebt, beantwortet das Beispiel nicht.",
   "link": [
-   "/fristenrechner/#land=DE&e=2026-08-31&n=6&u=monate&v=0",
+   "/fristenrechner/#land=DE&e=2026-09-30&n=6&u=monate&v=0",
    "Dieses Beispiel im Fristenrechner öffnen"
   ]
  }

@@ -39,7 +39,49 @@
    "beginn": "Tag nach dem Ereignis; die Tage des Postlaufs an die Behörde werden nicht eingerechnet",
    "norm": "§ 32, § 33 Abs. 2 und 3 AVG",
    "url": "https://ris.bka.gv.at/eli/bgbl/1991/51/P33/NOR40254631",
-   "fassung": "Paragraf in Kraft seit 21.7.2023 (§ 33)"
+   "fassung": "Paragraf in Kraft seit 21.7.2023 (§ 33)",
+   "hinweis": "Gilt über § 24 VStG auch im Verwaltungsstrafverfahren und über § 17 VwGVG vor den Verwaltungsgerichten. Im Fristenrechner „Behörde, Verwaltungsgericht, Verwaltungsstrafe (AVG)“ wählen.",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1,
+    "r": "avg"
+   }
+  },
+  {
+   "id": "at-bao-108",
+   "land": "AT",
+   "bereich": "Rechenregel",
+   "titel": "Fristen im Abgabenverfahren",
+   "frist": "Wie im Zivilrecht; Ende an Samstag, Sonntag, gesetzlichem Feiertag, Karfreitag oder 24. Dezember: nächster Tag, der keiner dieser Tage ist",
+   "beginn": "Der für den Beginn maßgebende Tag zählt nicht mit; die Tage des Postenlaufs werden nicht eingerechnet",
+   "norm": "§ 108 BAO",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1961/194/P108/NOR12043881",
+   "fassung": "Paragraf in Kraft seit 19.4.1980",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1,
+    "r": "bao"
+   }
+  },
+  {
+   "id": "at-zpo-126",
+   "land": "AT",
+   "bereich": "Rechenregel",
+   "titel": "Fristen im Zivilprozess",
+   "frist": "Wie im Zivilrecht; Ende an Samstag, Sonntag, Feiertag oder Karfreitag: nächster Tag, der keiner dieser Tage ist",
+   "beginn": "Tag nach dem Ereignis",
+   "norm": "§ 125, § 126 Abs. 2 ZPO",
+   "url": "https://www.ris.bka.gv.at/eli/rgbl/1895/113/P126/NOR40138482",
+   "fassung": "Paragraf in Kraft seit 1.1.2012 (§ 126)",
+   "hinweis": "Der 24. Dezember steht in § 126 ZPO nicht.",
+   "rechner": {
+    "n": 4,
+    "u": "wochen",
+    "v": 1,
+    "r": "zpo"
+   }
   },
   {
    "id": "at-fagg-11",
@@ -349,7 +391,8 @@
    "rechner": {
     "n": 4,
     "u": "wochen",
-    "v": 1
+    "v": 1,
+    "r": "avg"
    }
   },
   {
@@ -366,7 +409,8 @@
    "rechner": {
     "n": 2,
     "u": "wochen",
-    "v": 1
+    "v": 1,
+    "r": "avg"
    }
   },
   {
@@ -382,7 +426,8 @@
    "rechner": {
     "n": 2,
     "u": "wochen",
-    "v": 1
+    "v": 1,
+    "r": "avg"
    }
   },
   {
@@ -399,7 +444,8 @@
    "rechner": {
     "n": 2,
     "u": "wochen",
-    "v": 1
+    "v": 1,
+    "r": "avg"
    }
   },
   {
@@ -416,7 +462,8 @@
    "rechner": {
     "n": 1,
     "u": "monate",
-    "v": 1
+    "v": 1,
+    "r": "bao"
    }
   },
   {
@@ -432,7 +479,8 @@
    "rechner": {
     "n": 4,
     "u": "wochen",
-    "v": 1
+    "v": 1,
+    "r": "zpo"
    }
   },
   {
@@ -791,7 +839,7 @@
    "norm": "§ 92 Abs. 1 und 2 VVG",
    "url": "https://www.gesetze-im-internet.de/vvg_2008/__92.html",
    "fassung": "geltende Fassung",
-   "hinweis": "Als Versicherungsnehmer können Sie nicht für einen späteren Zeitpunkt als den Schluss der laufenden Periode kündigen.",
+   "hinweis": "§ 92 steht im Abschnitt „Sachversicherung“ (§§ 88 bis 99 VVG). Als Versicherungsnehmer können Sie nicht für einen späteren Zeitpunkt als den Schluss der laufenden Periode kündigen.",
    "rechner": {
     "n": 1,
     "u": "monate",

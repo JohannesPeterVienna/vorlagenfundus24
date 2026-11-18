@@ -33,6 +33,10 @@
     if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
     return '"' + t.replace(/"/g, '""') + '"';
   }
+  /* Letzte CSV-Zeile: Herkunft und vollständiges Abrufdatum (z. B. „18. November 2026“). */
+  function fusszeile(abruf) {
+    return 'Quelle: vorlagenfundus24.de/fristen-tabelle/ – gesetzliche Grundregeln, keine Rechtsberatung.' + (abruf ? ' Gesetzestexte abgerufen am ' + abruf + '.' : '');
+  }
   function csv(zeilen) {
     return '﻿' + zeilen.map(function (z) { return z.map(csvZelle).join(';'); }).join('\r\n') + '\r\n';
   }
@@ -103,7 +107,7 @@
         out.push([z.getAttribute('data-land'), z.getAttribute('data-bereich'), ohne(zelle(z, 1), '.ft-bereich'), zelle(z, 2).textContent.trim(), zelle(z, 3).textContent.trim(),
           a ? a.textContent.trim() : '', a ? a.href : '', ohne(zelle(z, 4), 'a'), ohne(zelle(z, 5), '.ft-akt')]);
       });
-      out.push(['', '', 'Quelle: vorlagenfundus24.de/fristen-tabelle/ – gesetzliche Grundregeln, keine Rechtsberatung. ' + (box.querySelector('.ft-stand') ? box.querySelector('.ft-stand').textContent.split('.')[0] + '.' : ''), '', '', '', '', '', '']);
+      out.push(['', '', fusszeile(box.getAttribute('data-abruf')), '', '', '', '', '', '']);
       var blob = new Blob([csv(out)], { type: 'text/csv;charset=utf-8' }), url = URL.createObjectURL(blob), a2 = doc.createElement('a');
       a2.href = url; a2.download = 'fristentabelle-vorlagenfundus24.csv'; doc.body.appendChild(a2); a2.click(); a2.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
@@ -137,5 +141,5 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { start(document); });
     else start(document);
   }
-  return { norm: norm, passt: passt, csvZelle: csvZelle, csv: csv, auswahlLesen: auswahlLesen, auswahlSchreiben: auswahlSchreiben };
+  return { norm: norm, passt: passt, csvZelle: csvZelle, csv: csv, fusszeile: fusszeile, auswahlLesen: auswahlLesen, auswahlSchreiben: auswahlSchreiben };
 }));

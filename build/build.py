@@ -73,7 +73,8 @@ def rechner_link(f):
     r = f.get('rechner')
     if not r:
         return ''
-    return f'/fristenrechner/#land={f["land"]}&n={r["n"]}&u={r["u"]}&v={r["v"]}'
+    art = f'&r={r["r"]}' if r.get('r') else ''
+    return f'/fristenrechner/#land={f["land"]}&n={r["n"]}&u={r["u"]}&v={r["v"]}{art}'
 
 
 def fristen_zeile(f, kompakt):
@@ -98,7 +99,7 @@ def fristentabelle(zeilen, kompakt=False, titel=''):
              '<th scope="col">Beginn oder Bezugspunkt</th><th scope="col">Fundstelle</th><th scope="col">Hinweis</th></tr></thead>')
     rumpf = ''.join(fristen_zeile(f, kompakt) for f in zeilen)
     cap = f'<caption>{esc(titel)}</caption>' if titel else ''
-    attr = '' if kompakt else ' data-fristentabelle'
+    attr = '' if kompakt else f' data-fristentabelle data-abruf="{ABRUF}"'
     return (f'<div class="ft"{attr}><div class="tabelle ft-tab"><table>{cap}{kopf_}<tbody>{rumpf}</tbody></table></div>'
             f'<p class="ft-stand">Gesetzestexte abgerufen am {ABRUF}. Quellen: RIS (Österreich), Gesetze im Internet (Deutschland), Fedlex (Schweiz). '
             f'Gesetzliche Grundregeln – Vertrag, Statuten und Sonderregeln können abweichen. Keine Rechtsberatung.'
@@ -287,14 +288,21 @@ def kopfleiste(s):
 <nav class="register" aria-label="Themenregister"><div class="wrap"><ol>{reg}</ol></div></nav>'''
 
 
-def fuss():
+def stand_text(s):
+    """Datum, an dem die Rechtsangaben dieser Seite geprüft wurden. Meta „stand“ ersetzt das allgemeine
+    Datum (Seite vollständig neu geprüft), „standZusatz“ nennt später geprüfte Teile einer älteren Seite."""
+    t = s.get('stand', STAND)
+    return t + (' · ' + s['standZusatz'] if s.get('standZusatz') else '')
+
+
+def fuss(s):
     return f'''<footer class="fuss">
   <div class="wrap">
     <div class="fuss-raster">
       <div>
         <h2>Vorlagenfundus 24</h2>
         <p>Brief-Assistent für Alltagsschreiben in Österreich, Deutschland und der Schweiz. Alle Eingaben bleiben in Ihrem Browser. Die Inhalte ersetzen keine Rechtsberatung.</p>
-        <p>Stand der Rechtsangaben: {STAND}</p>
+        <p>Stand der Rechtsangaben auf dieser Seite: {stand_text(s)}</p>
       </div>
       <div>
         <h2>Vorlagen</h2>
@@ -371,10 +379,10 @@ def seite(s):
     laender = ''.join(f'<span class="land">{l}</span>' for l in s.get('laender', []))
     stempel = ''
     if s.get('vorlage'):
-        stempel = (f'<p class="stempel"><span>Stand: {STAND}</span><span class="laender">{laender}</span>'
+        stempel = (f'<p class="stempel"><span>Stand: {stand_text(s)}</span><span class="laender">{laender}</span>'
                    f'<span class="rot">Keine Rechtsberatung</span></p>')
     elif laender:
-        stempel = f'<p class="stempel"><span>Stand: {STAND}</span><span class="laender">{laender}</span></p>'
+        stempel = f'<p class="stempel"><span>Stand: {stand_text(s)}</span><span class="laender">{laender}</span></p>'
     disclaimer = ''
     if s.get('vorlage'):
         disclaimer = ('<div class="hinweis warn"><strong>Keine Rechtsberatung</strong><p>Diese Vorlage und die berechneten Fristen beruhen auf den gesetzlichen Grundregeln. '
@@ -425,7 +433,7 @@ def seite(s):
     </div>
   </div>
 </main>
-{fuss()}
+{fuss(s)}
 {''.join(scripts)}
 </body>
 </html>

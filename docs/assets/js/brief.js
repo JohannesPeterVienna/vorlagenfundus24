@@ -1064,7 +1064,7 @@
    * Der Teil hinter # wird vom Browser nicht an den Server gesendet. Jeder Wert wird beim Lesen
    * gegen eine feste Liste bzw. ein festes Muster geprüft; Unbekanntes wird verworfen.
    */
-  var LINK_LAENDER = ['AT', 'DE', 'CH'], LINK_EINHEITEN = ['tage', 'wochen', 'monate', 'jahre'];
+  var LINK_LAENDER = ['AT', 'DE', 'CH'], LINK_EINHEITEN = ['tage', 'wochen', 'monate', 'jahre'], LINK_VERFAHREN = ['avg', 'bao', 'zpo'];
   function istDatum(sx) { if (!/^\d{4}-\d{2}-\d{2}$/.test(sx)) return false; try { F.parse(sx); return true; } catch (e) { return false; } }
   function linkWerteLesen(hash) {
     var h = String(hash || '').replace(/^#/, ''), out = {};
@@ -1077,6 +1077,7 @@
       else if (k === 'n' && /^\d{1,4}$/.test(val) && +val <= 3650) out.n = +val;
       else if (k === 'u' && LINK_EINHEITEN.indexOf(val) !== -1) out.u = val;
       else if (k === 'v' && (val === '0' || val === '1')) out.v = val === '1';
+      else if (k === 'r' && LINK_VERFAHREN.indexOf(val) !== -1) out.r = val;
       else if (k === 'opt') out.opt = val.split(',').filter(function (x) { return /^[a-z0-9]{1,24}$/.test(x); }).slice(0, 30);
       else if (k === 'x') out.x = val.split(',').filter(istDatum).slice(0, 20);
     });
@@ -1084,6 +1085,7 @@
   }
   function linkWerteSchreiben(w) {
     var t = ['land=' + w.land, 'e=' + w.e, 'n=' + w.n, 'u=' + w.u, 'v=' + (w.v ? 1 : 0)];
+    if (w.r && w.land === 'AT' && LINK_VERFAHREN.indexOf(w.r) !== -1) t.push('r=' + w.r);
     if (w.opt && w.opt.length) t.push('opt=' + w.opt.join(','));
     if (w.x && w.x.length) t.push('x=' + w.x.join(','));
     return '#' + t.join('&');
@@ -1106,13 +1108,18 @@
   var RECHEN_NORM = {
     AT: { beginn: '§ 902 Abs. 1 ABGB', ende: '§ 902 Abs. 2 ABGB', schub: '§ 903 ABGB und Art. 5 Europäisches Fristenübereinkommen' },
     DE: { beginn: '§ 187 Abs. 1 BGB', ende: '§ 188 Abs. 2 und 3 BGB', schub: '§ 193 BGB' },
-    CH: { beginn: 'Art. 77 Abs. 1 Ziff. 1 OR', ende: 'Art. 77 Abs. 1 Ziff. 2 und 3 OR', schub: 'Art. 78 OR und SR 173.110.3' }
+    CH: { beginn: 'Art. 77 Abs. 1 Ziff. 1 OR', ende: 'Art. 77 Abs. 1 Ziff. 2 und 3 OR', schub: 'Art. 78 OR und SR 173.110.3' },
+    // Österreich, Verfahrensfristen: eigene Vorschriften statt §§ 902, 903 ABGB
+    avg: { beginn: '§ 32 Abs. 1 AVG', ende: '§ 32 Abs. 2 AVG', schub: '§ 33 Abs. 2 AVG', url: 'https://ris.bka.gv.at/eli/bgbl/1991/51/P33/NOR40254631', name: '§§ 32, 33 AVG' },
+    bao: { beginn: '§ 108 Abs. 1 BAO', ende: '§ 108 Abs. 2 BAO', schub: '§ 108 Abs. 3 BAO', url: 'https://www.ris.bka.gv.at/eli/bgbl/1961/194/P108/NOR12043881', name: '§ 108 BAO' },
+    zpo: { beginn: '§ 125 Abs. 1 ZPO', ende: '§ 125 Abs. 2 ZPO', schub: '§ 126 Abs. 2 ZPO', url: 'https://www.ris.bka.gv.at/eli/rgbl/1895/113/P126/NOR40138482', name: '§§ 125, 126 ZPO' }
   };
+  function rechenNorm(w) { return w.land === 'AT' && w.r && RECHEN_NORM[w.r] ? RECHEN_NORM[w.r] : RECHEN_NORM[w.land]; }
   var EINHEIT_TEXT = { tage: ['Tag', 'Tage'], wochen: ['Woche', 'Wochen'], monate: ['Monat', 'Monate'], jahre: ['Jahr', 'Jahre'] };
   function dauerText(n, u) { return n + ' ' + EINHEIT_TEXT[u][n === 1 ? 0 : 1]; }
   /* Rechenweg in Worten – jede Zeile mit der Vorschrift, auf die sich der Schritt stützt. */
   function rechenweg(r, w) {
-    var N = RECHEN_NORM[w.land], land = w.land, z = [];
+    var N = rechenNorm(w), land = w.land, z = [];
     var tag = function (d) { return F.weekdayDE(d) + ', ' + datum(d, land); };
     z.push('Ereignis: ' + tag(r.ereignis) + '. Dieser Tag zählt nicht mit (' + N.beginn + ').');
     if (w.n === 0) z.push('Dauer 0: Die Frist endet rechnerisch am Tag des Ereignisses.');
@@ -1123,10 +1130,13 @@
       z.push(dauerText(w.n, w.u) + ' später' + (gleich ? ', am Tag mit derselben Zahl: ' : ': Den ' + F.parse(r.ereignis).getUTCDate() + '. gibt es im Zielmonat nicht, deshalb gilt dessen letzter Tag: ') + tag(r.rohEnde) + ' (' + N.ende + ').');
     }
     if (!w.v) z.push('Verschiebung ausgeschaltet: Es bleibt beim rechnerischen Ende.');
-    else if (!r.verschoben.length) z.push('Der Tag ist ein Werktag und kein hinterlegter Feiertag – keine Verschiebung (' + N.schub + ').');
+    else if (!r.verschoben.length) z.push('Der Tag ist keiner der Tage, an denen das Fristende weiterrückt – keine Verschiebung (' + N.schub + ').');
     else {
       r.verschoben.forEach(function (sx) { z.push(tag(sx.datum) + ' ist kein Werktag (' + sx.grund + ') – weiter zum nächsten Tag.'); });
       z.push('Erster Werktag danach: ' + tag(r.ende) + ' (' + N.schub + ').');
+    }
+    if (land === 'AT' && (w.r === 'avg' || w.r === 'bao')) {
+      z.push('Nicht eingerechnet werden die Tage des Postlaufs an die Behörde (' + (w.r === 'avg' ? '§ 33 Abs. 3 AVG' : '§ 108 Abs. 4 BAO') + ').');
     }
     return z;
   }
@@ -1135,7 +1145,7 @@
     var von = F.addDays(F.parse(r.rohEnde), -2), bis = F.addDays(F.parse(r.ende), 2), out = '', kurz = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
     for (var d = von, i = 0; d.getTime() <= bis.getTime() && i < 21; d = F.addDays(d, 1), i++) {
       var id = F.iso(d), frei = null;
-      try { var sh = F.shiftToWorkday(d, w.land, FT, extra); frei = sh.verschoben.length ? sh.verschoben[0].grund : null; } catch (e) { frei = null; }
+      try { var sh = F.shiftToWorkday(d, w.land, FT, extra); frei = sh.verschoben.length ? F.verfahrenGrund(sh.verschoben[0].datum, sh.verschoben[0].grund, w.land, w.r) : null; } catch (e) { frei = null; }
       var kl = (frei ? ' frei' : '') + (id === r.rohEnde ? ' roh' : '') + (id === r.ende ? ' ziel' : '');
       var sagt = F.weekdayDE(id) + ', ' + datum(id, w.land) + (frei ? ', kein Werktag: ' + frei : '') + (id === r.rohEnde ? ', rechnerisches Fristende' : '') + (id === r.ende ? ', letzter Tag der Frist' : '');
       out += '<li class="' + kl.trim() + '" title="' + esc(sagt) + '"><span aria-hidden="true">' + kurz[d.getUTCDay()] + '<b>' + d.getUTCDate() + '.</b></span><span class="visually-hidden">' + esc(sagt) + '</span></li>';
@@ -1147,7 +1157,8 @@
     { t: 'AT · 14 Tage ab 12.3.2027 (Ende am Karfreitag)', w: { land: 'AT', e: '2027-03-12', n: 14, u: 'tage', v: true } },
     { t: 'CH · 14 Tage ab 18.7.2026 (Ende am 1. August)', w: { land: 'CH', e: '2026-07-18', n: 14, u: 'tage', v: true } },
     { t: 'DE · ein Monat ab 31.1.2027 (kein 31. Februar)', w: { land: 'DE', e: '2027-01-31', n: 1, u: 'monate', v: false } },
-    { t: 'AT · vier Wochen ab 28.11.2026 (Ende am Stefanitag)', w: { land: 'AT', e: '2026-11-28', n: 4, u: 'wochen', v: true } }
+    { t: 'AT · vier Wochen ab 28.11.2026 (Ende am Stefanitag)', w: { land: 'AT', e: '2026-11-28', n: 4, u: 'wochen', v: true } },
+    { t: 'AT · Behörde: zwei Wochen ab 10.12.2026 (Ende am 24. Dezember)', w: { land: 'AT', e: '2026-12-10', n: 2, u: 'wochen', v: true, r: 'avg' } }
   ];
 
   /* ================= Fristenrechner (eigenständig) ================= */
@@ -1170,7 +1181,8 @@
         '<fieldset><legend>Frist</legend><div class="feld"><label for="fr-ereignis">Ereignis (z. B. Zugang eines Schreibens, Erhalt der Ware)</label><input type="date" id="fr-ereignis" name="ereignis"></div>' +
         '<div class="zwei"><div class="feld"><label for="fr-anzahl">Dauer</label><input type="number" id="fr-anzahl" name="anzahl" value="14" min="0" max="3650" inputmode="numeric"></div>' +
         '<div class="feld"><label for="fr-einheit">Einheit</label><select id="fr-einheit" name="einheit"><option value="tage">Tage</option><option value="wochen">Wochen</option><option value="monate">Monate</option><option value="jahre">Jahre</option></select></div></div>' +
-        '<div class="check"><input type="checkbox" id="fr-verschieben" name="verschieben" checked><label for="fr-verschieben">Fristende auf den nächsten Werktag verschieben, wenn es auf Samstag, Sonntag oder Feiertag fällt</label></div></fieldset>' +
+        '<div class="check"><input type="checkbox" id="fr-verschieben" name="verschieben" checked><label for="fr-verschieben">Fristende auf den nächsten Werktag verschieben, wenn es auf Samstag, Sonntag oder Feiertag fällt</label></div>' +
+        '<div class="feld" id="fr-verfahren-feld"><label for="fr-verfahren">Österreich: Art der Frist</label><select id="fr-verfahren" name="verfahren"><option value="">Zivilrecht, Vertrag (ABGB)</option><option value="avg">Behörde, Verwaltungsgericht, Verwaltungsstrafe (AVG)</option><option value="bao">Finanzamt, Abgaben (BAO)</option><option value="zpo">Zivilgericht (ZPO)</option></select><small class="hilfe">Bei AVG und BAO rückt das Fristende auch am 24. Dezember weiter.</small></div></fieldset>' +
         '<fieldset><legend>Regionale Feiertage</legend><div id="fr-optional" class="wahl"></div><div class="feld" style="margin-top:.6rem"><label for="fr-eigene">Weitere freie Tage (JJJJ-MM-TT, durch Komma getrennt)</label><input type="text" id="fr-eigene" name="eigene" inputmode="numeric" placeholder="2026-12-24"></div></fieldset>';
     }
     root.innerHTML = '';
@@ -1179,6 +1191,7 @@
     var e1 = $('#fv-zugang', form) || $('#fr-ereignis', form); if (e1) e1.value = modus === 'vergleich' ? startDatum : HEUTE;
 
     function optionalBauen(land) {
+      var vf = $('#fr-verfahren-feld', form); if (vf) { vf.hidden = land !== 'AT'; if (land !== 'AT') $('#fr-verfahren', form).value = ''; }
       var box = $('#fr-optional', form); if (!box) return;
       var def = FT && FT[land] ? FT[land].optional || [] : [];
       box.innerHTML = def.length ? '' : '<span class="hilfe">Für dieses Land sind nur bundesweite Feiertage hinterlegt.</span>';
@@ -1188,6 +1201,7 @@
     function setze(w) {
       if (!w) return;
       if (w.land) { $all('input[name=land]', form).forEach(function (e) { e.checked = e.value === w.land; }); optionalBauen(w.land); }
+      $('#fr-verfahren', form).value = w.r && (w.land || 'AT') === 'AT' ? w.r : '';
       if (w.e) $('#fr-ereignis', form).value = w.e;
       if (typeof w.n === 'number') $('#fr-anzahl', form).value = w.n;
       if (w.u) $('#fr-einheit', form).value = w.u;
@@ -1202,12 +1216,14 @@
       if (!istDatum(v.ereignis || HEUTE)) throw new Error('Bitte ein gültiges Ereignisdatum eintragen.');
       if (String(v.anzahl).trim() === '' || !(n >= 0) || n > 3650) throw new Error('Bitte eine Dauer zwischen 0 und 3650 eintragen.');
       var w = { land: land, e: v.ereignis || HEUTE, n: n, u: LINK_EINHEITEN.indexOf(v.einheit) !== -1 ? v.einheit : 'tage', v: !!v.verschieben, opt: v.opt || [], x: eigene };
+      if (land === 'AT' && LINK_VERFAHREN.indexOf(v.verfahren) !== -1) w.r = v.verfahren;
       // Regionale Feiertage löst der Rechenkern für das Jahr des Fristendes auf (nicht nur für die
       // ersten Jahre ab dem Ereignis) und prüft die Abdeckung der Feiertagsdaten.
-      var r = F.fristEnde({ ereignis: w.e, anzahl: w.n, einheit: w.u, land: land, feiertage: FT, verschieben: w.v, eigeneFeiertage: eigene, optional: w.opt });
+      var r = F.fristEnde({ ereignis: w.e, anzahl: w.n, einheit: w.u, land: land, feiertage: FT, verschieben: w.v, eigeneFeiertage: eigene, optional: w.opt, verfahren: w.r });
       var q = land === 'AT' ? 'AT-902' : land === 'DE' ? 'DE-187' : 'CH-77';
       var y = F.parse(r.rohEnde).getUTCFullYear();
-      var extra = eigene.concat(F.expandOptional(land, [y, y + 1], FT, w.opt));
+      var extra = eigene.concat(F.expandOptional(land, [y, y + 1], FT, w.opt)).concat(F.verfahrenTage(land, w.r, [y, y + 1]));
+      var VN = w.r ? RECHEN_NORM[w.r] : null;
       var weg = rechenweg(r, w);
       letzte = { w: w, text: 'Fristberechnung (' + L(land, { AT: 'Österreich', DE: 'Deutschland', CH: 'Schweiz' }) + '), Dauer ' + dauerText(w.n, w.u) + '\n' +
         weg.map(function (zl, i) { return (i + 1) + '. ' + zl; }).join('\n') + '\nLetzter Tag der Frist: ' + F.weekdayDE(r.ende) + ', ' + datum(r.ende, land) +
@@ -1219,7 +1235,7 @@
         (r.verschoben.length ? '<p class="fristquelle">Verschoben wegen: ' + r.verschoben.map(function (s) { return esc(datum(s.datum, land) + ' – ' + s.grund); }).join('; ') + '</p>' : '') +
         '<h4 class="weg-titel">Rechenweg</h4><ol class="rechenweg">' + weg.map(function (zl) { return '<li>' + esc(zl) + '</li>'; }).join('') + '</ol>' +
         (w.v ? kalenderstreifen(r, w, extra.length ? extra : null) : '') +
-        '<p class="fristquelle">Grundlage: ' + quelleHtml(q) + (land === 'AT' ? ', Samstag und Karfreitag nach <a href="https://www.ris.bka.gv.at/eli/bgbl/1983/254/A5/NOR12010626" rel="noopener" target="_blank">Art. 5 Europäisches Fristenübereinkommen</a>' : land === 'CH' ? ', Samstag nach <a href="https://www.fedlex.admin.ch/eli/cc/1963/819_815_843/de" rel="noopener" target="_blank">SR 173.110.3</a>' : '') + '. Weitere gesetzliche Fristen mit Fundstelle: <a href="/fristen-tabelle/">Fristentabelle</a>.</p>' +
+        '<p class="fristquelle">Grundlage: ' + (VN ? '<a href="' + VN.url + '" rel="noopener" target="_blank">' + esc(VN.name) + '</a>' : quelleHtml(q)) + (VN ? '' : land === 'AT' ? ', Samstag und Karfreitag nach <a href="https://www.ris.bka.gv.at/eli/bgbl/1983/254/A5/NOR12010626" rel="noopener" target="_blank">Art. 5 Europäisches Fristenübereinkommen</a>' : land === 'CH' ? ', Samstag nach <a href="https://www.fedlex.admin.ch/eli/cc/1963/819_815_843/de" rel="noopener" target="_blank">SR 173.110.3</a>' : '') + '. Weitere gesetzliche Fristen mit Fundstelle: <a href="/fristen-tabelle/">Fristentabelle</a>.</p>' +
         '<p class="knopfreihe"><button type="button" class="knopf leise" data-akt="kopieren">Ergebnis kopieren</button><button type="button" class="knopf leise" data-akt="link">Link mit diesen Werten kopieren</button></p>' +
         '<p class="status" role="status" data-status></p></section>' +
         '<div class="hinweis"><strong>Wichtig</strong><p>Kündigungsfristen und -termine werden nicht verschoben: Wer zu einem Monatsende kündigt, muss rechtzeitig vorher zugehen lassen. Für Kündigungen nutzen Sie die Rechner auf den jeweiligen Vorlagenseiten. Der Link enthält nur die Rechenwerte (Land, Datum, Dauer, Feiertagsauswahl), keine Namen.</p></div>';

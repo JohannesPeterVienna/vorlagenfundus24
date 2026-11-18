@@ -45,6 +45,7 @@ test('Fristentabelle: Pflichtfelder, eindeutige IDs, nur amtliche Quellen je Lan
       assert.ok(Number.isInteger(f.rechner.n) && f.rechner.n >= 1 && f.rechner.n <= 3650);
       assert.ok(['tage', 'wochen', 'monate', 'jahre'].includes(f.rechner.u));
       assert.ok(f.rechner.v === 0 || f.rechner.v === 1);
+      if (f.rechner.r) assert.ok(f.land === 'AT' && ['avg', 'bao', 'zpo'].includes(f.rechner.r), f.id + ': Verfahrensart');
     }
     if (f.seite) assert.ok(fs.existsSync(path.join(ROOT, 'build', 'content', f.seite.replace(/\//g, '') + '.html')), f.id + ': Seite fehlt ' + f.seite);
   }
@@ -52,9 +53,14 @@ test('Fristentabelle: Pflichtfelder, eindeutige IDs, nur amtliche Quellen je Lan
 
 test('Fristentabelle: Rechner-Links werden vom Fristenrechner vollständig verstanden', () => {
   for (const f of DATEN.fristen.filter(x => x.rechner)) {
-    const w = B.linkWerteLesen(`#land=${f.land}&n=${f.rechner.n}&u=${f.rechner.u}&v=${f.rechner.v}`);
-    assert.deepEqual(JSON.parse(JSON.stringify(w)), { land: f.land, n: f.rechner.n, u: f.rechner.u, v: f.rechner.v === 1 }, f.id);
+    const w = B.linkWerteLesen(`#land=${f.land}&n=${f.rechner.n}&u=${f.rechner.u}&v=${f.rechner.v}` + (f.rechner.r ? '&r=' + f.rechner.r : ''));
+    const soll = { land: f.land, n: f.rechner.n, u: f.rechner.u, v: f.rechner.v === 1 }; if (f.rechner.r) soll.r = f.rechner.r;
+    assert.deepEqual(JSON.parse(JSON.stringify(w)), soll, f.id);
   }
+  // Österreichische Behörden-, Abgaben- und Gerichtsfristen übergeben ihre Verfahrensart
+  const art = id => DATEN.fristen.find(x => x.id === id).rechner.r;
+  for (const id of ['at-vwgvg-7', 'at-avg-63', 'at-avg-57', 'at-vstg-49', 'at-avg-32']) assert.equal(art(id), 'avg', id);
+  assert.equal(art('at-bao-245'), 'bao'); assert.equal(art('at-bao-108'), 'bao'); assert.equal(art('at-zpo-248'), 'zpo'); assert.equal(art('at-fagg-11'), undefined);
 });
 
 test('Rechenbeispiele: jedes Datum stimmt mit dem Rechenkern überein', () => {
@@ -131,4 +137,56 @@ test('Rechenweg: nennt Vorschrift, fehlenden Monatstag und jeden übersprungenen
   const w2 = B.rechenweg(r2, { land: 'AT', e: '2027-01-31', n: 1, u: 'monate', v: false });
   assert.match(w2[1], /Den 31\. gibt es im Zielmonat nicht.*28\. Februar 2027 \(§ 902 Abs\. 2 ABGB\)/);
   assert.match(w2[2], /Verschiebung ausgeschaltet/);
+});
+
+test('Österreich: 24. Dezember verlängert nur AVG- und BAO-Fristen (§ 33 Abs. 2 AVG, § 108 Abs. 3 BAO)', () => {
+  const f = (v, e, n, u) => F.fristEnde({ ereignis: e, anzahl: n, einheit: u, land: 'AT', feiertage: FT, verfahren: v });
+  // 10.12.2026 + 2 Wochen = Do, 24.12.2026
+  assert.equal(f(undefined, '2026-12-10', 2, 'wochen').ende, '2026-12-24');
+  assert.equal(f('zivil', '2026-12-10', 2, 'wochen').ende, '2026-12-24');
+  assert.equal(f('zpo', '2026-12-10', 2, 'wochen').ende, '2026-12-24');
+  for (const v of ['avg', 'bao']) {
+    const r = f(v, '2026-12-10', 2, 'wochen');
+    assert.equal(r.ende, '2026-12-28', v);
+    assert.deepEqual(r.verschoben.map(s => s.grund), ['24. Dezember', 'Christtag', 'Samstag', 'Sonntag'], v);
+  }
+  // 24.12.2027 ist ein Freitag: AVG → Mo 27.12.2027 (25. Sa, 26. So); Zivilrecht bleibt am 24.
+  assert.equal(f('avg', '2027-11-24', 1, 'monate').ende, '2027-12-27');
+  assert.equal(f(undefined, '2027-11-24', 1, 'monate').ende, '2027-12-24');
+  // Karfreitag verlängert in allen vier Arten (26.3.2027) → Di 30.3.2027
+  for (const v of [undefined, 'zpo', 'avg', 'bao']) assert.equal(f(v, '2027-03-12', 14, 'tage').ende, '2027-03-30', String(v));
+  // Ein gewöhnlicher Werktag bleibt in jeder Art unverändert
+  for (const v of [undefined, 'zpo', 'avg', 'bao']) assert.equal(f(v, '2026-11-03', 14, 'tage').ende, '2026-11-17', String(v));
+  // Außerhalb Österreichs wirkt die Verfahrensart nicht
+  assert.equal(F.fristEnde({ ereignis: '2026-12-10', anzahl: 2, einheit: 'wochen', land: 'DE', feiertage: FT, verfahren: 'avg' }).ende, '2026-12-24');
+  assert.deepEqual(F.verfahrenTage('DE', 'avg', [2026]), []);
+  assert.deepEqual(F.verfahrenTage('AT', 'zpo', [2026]), []);
+  assert.deepEqual(F.verfahrenTage('AT', 'bao', [2026, 2027]), ['2026-12-24', '2027-12-24']);
+});
+
+test('Rechenweg nennt bei Verfahrensfristen die Vorschrift des Verfahrens, nicht das ABGB', () => {
+  const fall = { avg: [/§ 32 Abs\. 1 AVG/, /§ 33 Abs\. 2 AVG/, /§ 33 Abs\. 3 AVG/], bao: [/§ 108 Abs\. 1 BAO/, /§ 108 Abs\. 3 BAO/, /§ 108 Abs\. 4 BAO/], zpo: [/§ 125 Abs\. 1 ZPO/, /§ 126 Abs\. 2 ZPO/] };
+  for (const v of Object.keys(fall)) {
+    const r = F.fristEnde({ ereignis: '2026-12-11', anzahl: 2, einheit: 'wochen', land: 'AT', feiertage: FT, verfahren: v });
+    const t = B.rechenweg(r, { land: 'AT', e: '2026-12-11', n: 2, u: 'wochen', v: true, r: v }).join('\n');
+    for (const re of fall[v]) assert.match(t, re, v);
+    assert.ok(!/ABGB/.test(t), v + ': ABGB zitiert');
+  }
+  const zivil = B.rechenweg(F.fristEnde({ ereignis: '2026-12-11', anzahl: 2, einheit: 'wochen', land: 'AT', feiertage: FT }), { land: 'AT', e: '2026-12-11', n: 2, u: 'wochen', v: true }).join('\n');
+  assert.match(zivil, /§ 902 Abs\. 1 ABGB/); assert.ok(!/AVG|BAO|ZPO/.test(zivil));
+  // Deutschland ignoriert eine mitgegebene Verfahrensart
+  const de = B.rechenweg(F.fristEnde({ ereignis: '2026-12-11', anzahl: 14, einheit: 'tage', land: 'DE', feiertage: FT }), { land: 'DE', e: '2026-12-11', n: 14, u: 'tage', v: true, r: 'avg' }).join('\n');
+  assert.match(de, /§ 187 Abs\. 1 BGB/); assert.ok(!/AVG/.test(de));
+});
+
+test('Link: Verfahrensart nur aus fester Liste und nur für Österreich', () => {
+  assert.equal(B.linkWerteLesen('#land=AT&r=avg').r, 'avg');
+  assert.equal(B.linkWerteLesen('#land=AT&r=<script>').r, undefined);
+  assert.equal(B.linkWerteSchreiben({ land: 'AT', e: '2026-12-10', n: 2, u: 'wochen', v: true, r: 'bao' }), '#land=AT&e=2026-12-10&n=2&u=wochen&v=1&r=bao');
+  assert.equal(B.linkWerteSchreiben({ land: 'DE', e: '2026-12-10', n: 2, u: 'wochen', v: true, r: 'bao' }), '#land=DE&e=2026-12-10&n=2&u=wochen&v=1');
+});
+
+test('CSV-Fußzeile nennt das vollständige Abrufdatum', () => {
+  assert.equal(T.fusszeile('18. November 2026'), 'Quelle: vorlagenfundus24.de/fristen-tabelle/ – gesetzliche Grundregeln, keine Rechtsberatung. Gesetzestexte abgerufen am 18. November 2026.');
+  assert.ok(!/abgerufen/.test(T.fusszeile('')));
 });

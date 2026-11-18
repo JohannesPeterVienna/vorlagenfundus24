@@ -43,13 +43,26 @@ const ROOT = path.join(__dirname, '..', 'docs');
     const page = await neu(1366, 900, { permissions: ['clipboard-read', 'clipboard-write'] });
     await page.goto(B + '/fristenrechner/', { waitUntil: 'networkidle' });
     const chips = await page.locator('.bsp-leiste .chip').count(); assert(chips >= 5, 'Beispiel-Knöpfe fehlen');
-    const erwartet = ['28. Dezember 2026', '30. März 2027', '3. August 2026', '28. Februar 2027', '28. Dezember 2026'];
+    const erwartet = ['28. Dezember 2026', '30. März 2027', '3. August 2026', '28. Februar 2027', '28. Dezember 2026', '28. Dezember 2026'];
+    assert.strictEqual(chips, erwartet.length, 'Anzahl Beispiele');
     for (let i = 0; i < chips; i++) {
       await page.locator('.bsp-leiste .chip').nth(i).click();
       const t = await page.textContent('.wz-ausgabe .mark');
       assert(t.includes(erwartet[i]), `Beispiel ${i}: ${t}`);
       assert(await page.locator('.rechenweg li').count() >= 3, 'Rechenweg fehlt');
     }
+    // Behördenfrist: 24. Dezember zählt, Rechenweg zitiert das AVG, Link trägt die Verfahrensart
+    assert.strictEqual(await page.inputValue('#fr-verfahren'), 'avg');
+    const wegAvg = await page.textContent('.rechenweg');
+    assert(/24\. Dezember 2026 ist kein Werktag \(24\. Dezember\)/.test(wegAvg) && /§ 33 Abs\. 2 AVG/.test(wegAvg) && !/ABGB/.test(wegAvg), 'AVG-Rechenweg: ' + wegAvg);
+    assert(/§§ 32, 33 AVG/.test(await page.textContent('.wz-ausgabe')) && !/Fristenübereinkommen/.test(await page.textContent('.wz-ausgabe .fristkarte')), 'Grundlage nennt nicht das AVG');
+    await page.click('[data-akt=link]'); await page.waitForFunction(() => /Link kopiert/.test(document.querySelector('[data-status]').textContent));
+    assert((await page.evaluate(() => navigator.clipboard.readText())).endsWith('#land=AT&e=2026-12-10&n=2&u=wochen&v=1&r=avg'));
+    await page.selectOption('#fr-verfahren', ''); assert((await page.textContent('.wz-ausgabe .mark')).includes('24. Dezember 2026'), 'Zivilrecht: 24.12. bleibt');
+    await page.selectOption('#fr-verfahren', 'zpo'); assert((await page.textContent('.wz-ausgabe .mark')).includes('24. Dezember 2026') && /§ 126 Abs\. 2 ZPO/.test(await page.textContent('.rechenweg')));
+    await page.selectOption('#fr-verfahren', 'bao'); assert((await page.textContent('.wz-ausgabe .mark')).includes('28. Dezember 2026') && /§ 108 Abs\. 3 BAO/.test(await page.textContent('.rechenweg')));
+    await page.check('input[name=land][value=DE]'); assert(!(await page.isVisible('#fr-verfahren')), 'Verfahrensart außerhalb Österreichs sichtbar');
+    assert((await page.textContent('.wz-ausgabe .mark')).includes('24. Dezember 2026') && /§ 193 BGB/.test(await page.textContent('.rechenweg')));
     await page.locator('.bsp-leiste .chip').nth(0).click();
     assert.strictEqual(await page.locator('.kalstreifen li.ziel').count(), 1, 'Kalenderstreifen ohne Zieltag');
     assert.strictEqual(await page.locator('.kalstreifen li.frei').count(), 3, 'Kalenderstreifen: freie Tage');
@@ -99,6 +112,9 @@ const ROOT = path.join(__dirname, '..', 'docs');
     assert(oben < 900, 'Rechner steht nicht im ersten Bildschirm: ' + oben);
     await page.locator('.bsp-leiste .chip').nth(2).click();
     assert((await page.textContent('.wz-ausgabe .mark')).includes('3. August 2026'));
+    const mob = await neu(390, 844); await mob.goto(B + '/', { waitUntil: 'networkidle' });
+    const obenMobil = await mob.evaluate(() => document.querySelector('.werkzeug').getBoundingClientRect().top + scrollY);
+    assert(obenMobil < 500, 'Startseite 390 px: Rechner beginnt erst bei ' + obenMobil); await mob.context().close();
 
     // ---------- 4. Fristentabelle ----------
     await page.goto(B + '/fristen-tabelle/', { waitUntil: 'networkidle' });
@@ -123,6 +139,7 @@ const ROOT = path.join(__dirname, '..', 'docs');
     const csv = fs.readFileSync(await dl.path(), 'utf8');
     const zl = csv.trim().split('\r\n');
     assert(csv.charCodeAt(0) === 0xFEFF && zl.length === nATKauf + 2, 'CSV-Zeilen: ' + zl.length);
+    assert(zl[zl.length - 1].includes('Gesetzestexte abgerufen am 18. November 2026.'), 'CSV-Fußzeile: ' + zl[zl.length - 1]);
     assert(zl[1].startsWith('"AT";"Kauf";"') && /ris\.bka\.gv\.at/.test(zl[1]), zl[1]);
     for (const z of zl) for (const c of z.split('";"')) assert(!/^"?[=+\-@]/.test(c), 'CSV-Zelle beginnt mit Formelzeichen: ' + c);
     await page.goto(B + '/', { waitUntil: 'networkidle' });
@@ -141,6 +158,8 @@ const ROOT = path.join(__dirname, '..', 'docs');
       assert.strictEqual(await page.inputValue('#fr-anzahl'), q.n, h); assert.strictEqual(await page.inputValue('#fr-einheit'), q.u, h);
       assert.strictEqual(await page.isChecked(`input[name=land][value=${q.land}]`), true, h);
       assert.strictEqual(await page.isChecked('#fr-verschieben'), q.v === '1', h);
+      assert.strictEqual(await page.inputValue('#fr-verfahren'), q.r || '', h);
+      if (q.r) assert(new RegExp({ avg: 'AVG', bao: 'BAO', zpo: 'ZPO' }[q.r]).test(await page.textContent('.rechenweg')) && !/ABGB/.test(await page.textContent('.rechenweg')), 'Fundstelle im Rechenweg: ' + h);
       assert(await page.locator('.wz-ausgabe .mark').count() === 1, 'kein Ergebnis: ' + h);
     }
     // Ohne JavaScript bleibt die ganze Tabelle lesbar
