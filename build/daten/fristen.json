@@ -1,0 +1,1239 @@
+{
+ "abruf": "2026-11-18",
+ "quellen": {
+  "AT": "Rechtsinformationssystem des Bundes (RIS), Bundesrecht konsolidiert – gelesen über die amtliche Open-Data-Schnittstelle data.bka.gv.at",
+  "DE": "Gesetze im Internet (gesetze-im-internet.de)",
+  "CH": "Fedlex, konsolidierte Fassung der Systematischen Rechtssammlung"
+ },
+ "fristen": [
+  {
+   "id": "at-abgb-902",
+   "land": "AT",
+   "bereich": "Rechenregel",
+   "titel": "Fristbeginn und Fristende im Zivilrecht",
+   "frist": "Ereignistag zählt nicht mit; Wochen-, Monats- und Jahresfristen enden am Tag mit gleicher Benennung oder Zahl",
+   "beginn": "Tag nach dem Ereignis; fehlt der Tag im letzten Monat, gilt dessen letzter Tag",
+   "norm": "§ 902 Abs. 1 und 2 ABGB",
+   "url": "https://www.ris.bka.gv.at/eli/jgs/1811/946/P902/NOR12018626",
+   "fassung": "Paragraf in Kraft seit 1.1.1917",
+   "hinweis": "Gilt „vorbehaltlich anderer Festsetzung“ – Vertrag oder Sondergesetz können anders rechnen."
+  },
+  {
+   "id": "at-abgb-903",
+   "land": "AT",
+   "bereich": "Rechenregel",
+   "titel": "Fristende am Sonntag oder Feiertag",
+   "frist": "Nächstfolgender Werktag",
+   "beginn": "Letzter Tag fällt auf einen Sonntag oder anerkannten Feiertag",
+   "norm": "§ 903 ABGB",
+   "url": "https://www.ris.bka.gv.at/eli/jgs/1811/946/P903/NOR12018627",
+   "fassung": "Paragraf in Kraft seit 1.1.1917",
+   "hinweis": "Vorbehaltlich gegenteiliger Vereinbarung. Der Samstag steht nicht in § 903; der Fristenrechner stützt ihn auf Art. 5 des Europäischen Fristenübereinkommens (BGBl. Nr. 254/1983)."
+  },
+  {
+   "id": "at-avg-32",
+   "land": "AT",
+   "bereich": "Rechenregel",
+   "titel": "Fristen im Verwaltungsverfahren",
+   "frist": "Wie im Zivilrecht; Ende an Samstag, Sonntag, Feiertag, Karfreitag oder 24. Dezember: nächster Tag, der keiner dieser Tage ist",
+   "beginn": "Tag nach dem Ereignis; die Tage des Postlaufs an die Behörde werden nicht eingerechnet",
+   "norm": "§ 32, § 33 Abs. 2 und 3 AVG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1991/51/P33/NOR40254631",
+   "fassung": "Paragraf in Kraft seit 21.7.2023 (§ 33)"
+  },
+  {
+   "id": "at-fagg-11",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Rücktritt vom Fernabsatz- oder Auswärtsgeschäft",
+   "frist": "14 Tage",
+   "beginn": "Waren: Tag, an dem Sie (oder eine von Ihnen benannte Person, nicht der Beförderer) die Ware bekommen; bei getrennten Lieferungen die letzte Ware. Dienstleistungen: Tag des Vertragsabschlusses",
+   "norm": "§ 11 FAGG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2014/33/P11/NOR40162337",
+   "fassung": "Paragraf in Kraft seit 13.6.2014",
+   "hinweis": "Die Frist ist gewahrt, wenn die Erklärung innerhalb der Frist abgesendet wird (§ 13 Abs. 1 FAGG). Ausnahmen vom Rücktrittsrecht stehen in § 18 FAGG.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/ruecktritt-online-kauf/"
+  },
+  {
+   "id": "at-fagg-12",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Rücktritt, wenn über das Rücktrittsrecht nicht informiert wurde",
+   "frist": "Verlängerung um zwölf Monate",
+   "beginn": "Holt das Unternehmen die Information binnen zwölf Monaten nach, endet die Frist 14 Tage nach deren Erhalt",
+   "norm": "§ 12 FAGG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2014/33/P12/NOR40162338",
+   "fassung": "Paragraf in Kraft seit 13.6.2014",
+   "seite": "/ruecktritt-online-kauf/"
+  },
+  {
+   "id": "at-fagg-14",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Rückzahlung nach dem Rücktritt",
+   "frist": "Unverzüglich, spätestens 14 Tage",
+   "beginn": "Zugang der Rücktrittserklärung beim Unternehmen",
+   "norm": "§ 14 Abs. 1 FAGG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2014/33/P14/NOR40245433",
+   "fassung": "Paragraf in Kraft seit 20.7.2022",
+   "hinweis": "Bei Waren darf das Unternehmen die Rückzahlung verweigern, bis es die Ware zurückhat oder Sie die Rücksendung nachweisen (§ 14 Abs. 3).",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-kschg-3",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Rücktritt bei Vertragserklärung außerhalb der Geschäftsräume des Unternehmens",
+   "frist": "14 Tage; ohne Urkunde zwölf Monate und 14 Tage",
+   "beginn": "Ausfolgung einer Urkunde mit Belehrung, frühestens Zustandekommen des Vertrags; bei Warenkauf Tag, an dem Sie die Ware bekommen",
+   "norm": "§ 3 Abs. 1 KSchG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1979/140/P3/NOR40204682",
+   "fassung": "Paragraf in Kraft seit 1.1.2019",
+   "hinweis": "Kein Rücktrittsrecht in den Fällen des § 3 Abs. 3 KSchG, etwa wenn Sie die Geschäftsverbindung selbst angebahnt haben.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-kschg-15",
+   "land": "AT",
+   "bereich": "Verträge",
+   "titel": "Kündigung von Verträgen über wiederkehrende Lieferungen oder Werkleistungen",
+   "frist": "Zwei Monate zum Ablauf des ersten Jahres, danach zum Ablauf jedes halben Jahres",
+   "beginn": "Verträge auf unbestimmte Zeit oder für mehr als ein Jahr, bei denen Sie wiederholt zahlen",
+   "norm": "§ 15 Abs. 1 KSchG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1979/140/P15/NOR12031497",
+   "fassung": "Paragraf in Kraft seit 1.1.1985",
+   "hinweis": "Abs. 2 und 3 erlauben in bestimmten Fällen andere Termine und Fristen. Eine verspätete Kündigung wirkt zum nächsten Termin (Abs. 4)."
+  },
+  {
+   "id": "at-tkg-135",
+   "land": "AT",
+   "bereich": "Verträge",
+   "titel": "Höchste Mindestvertragsdauer bei Handy- und Internetverträgen",
+   "frist": "24 Monate",
+   "beginn": "Verträge zwischen Verbrauchern und Anbietern von Kommunikationsdiensten",
+   "norm": "§ 135 Abs. 1 TKG 2021",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2021/190/P135/NOR40238593",
+   "fassung": "Paragraf in Kraft seit 1.11.2021",
+   "hinweis": "Je Dienst muss auch ein Vertrag mit höchstens zwölf Monaten Mindestdauer angeboten werden.",
+   "seite": "/handyvertrag-kuendigen/"
+  },
+  {
+   "id": "at-zpo-560",
+   "land": "AT",
+   "bereich": "Wohnen",
+   "titel": "Wohnung kündigen, unbefristeter Vertrag ohne vereinbarte Termine",
+   "frist": "Zum letzten Tag eines Monats; ein Monat Vorlauf, wenn der Zins monatlich oder in kürzeren Abständen zu zahlen ist, sonst drei Monate",
+   "beginn": "Die Kündigung muss spätestens einen bzw. drei Monate vor dem Termin zugestellt sein",
+   "norm": "§ 560 Abs. 1 Z 2 lit. d ZPO",
+   "url": "https://www.ris.bka.gv.at/eli/rgbl/1895/113/P560/NOR12020706",
+   "fassung": "Paragraf in Kraft seit 1.6.1958",
+   "hinweis": "Die Termine gelten ausdrücklich „ohne Rücksicht auf Sonn- und Feiertage“. Vereinbarte Termine und Fristen gehen vor (Z 1).",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "at-mrg-29",
+   "land": "AT",
+   "bereich": "Wohnen",
+   "titel": "Befristeten Wohnungsmietvertrag vorzeitig kündigen (Mieterseite)",
+   "frist": "Drei Monate zum Monatsletzten",
+   "beginn": "Erst nach Ablauf eines Jahres der ursprünglich vereinbarten oder verlängerten Vertragsdauer",
+   "norm": "§ 29 Abs. 2 MRG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1981/520/P29/NOR40273695",
+   "fassung": "Paragraf in Kraft seit 1.1.2026",
+   "hinweis": "Das Recht ist nach dem Gesetz unverzichtbar und unbeschränkbar; die Kündigung muss gerichtlich oder schriftlich erfolgen.",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "at-mrg-33",
+   "land": "AT",
+   "bereich": "Wohnen",
+   "titel": "Schriftliche Kündigung kommt zu spät an",
+   "frist": "Wirkt zum ersten späteren Termin, für den die Frist noch offen war",
+   "beginn": "Zugang nach Beginn der Kündigungsfrist für den genannten Termin",
+   "norm": "§ 33 Abs. 1 MRG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1981/520/P33/NOR40105103",
+   "fassung": "Paragraf in Kraft seit 1.4.2009",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "at-mrg-16b",
+   "land": "AT",
+   "bereich": "Wohnen",
+   "titel": "Kaution zurückbekommen",
+   "frist": "Unverzüglich – das Gesetz nennt keine Zahl von Tagen",
+   "beginn": "Ende des Mietvertrags",
+   "norm": "§ 16b Abs. 2 MRG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1981/520/P16b/NOR40118719",
+   "fassung": "Paragraf in Kraft seit 1.7.2010",
+   "hinweis": "Samt den Zinsen aus der Veranlagung, soweit die Kaution nicht für berechtigte Forderungen aus dem Mietverhältnis herangezogen wird.",
+   "seite": "/kaution-zurueckfordern/"
+  },
+  {
+   "id": "at-vgg-10",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Gewährleistung beim Kauf einer Ware (Verbraucher – Unternehmen)",
+   "frist": "Zwei Jahre",
+   "beginn": "Übergabe der Ware; der Mangel muss innerhalb der Frist hervorkommen",
+   "norm": "§ 10 Abs. 1 VGG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/i/2021/175/P10/NOR40279639",
+   "fassung": "Paragraf in Kraft seit 1.10.2026",
+   "hinweis": "Nach einer Verbesserung verlängert sich die Frist einmal um ein Jahr (§ 10 Abs. 2a VGG in der seit 1.10.2026 geltenden Fassung).",
+   "rechner": {
+    "n": 2,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "at-vgg-11",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Vermutung, dass der Mangel schon bei Übergabe vorlag",
+   "frist": "Ein Jahr",
+   "beginn": "Übergabe der Ware",
+   "norm": "§ 11 Abs. 1 VGG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2021/175/P11/NOR40237872",
+   "fassung": "Paragraf in Kraft seit 1.1.2022",
+   "hinweis": "Gilt nicht, wenn die Vermutung mit der Art der Ware oder des Mangels unvereinbar ist.",
+   "rechner": {
+    "n": 1,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "at-vgg-28",
+   "land": "AT",
+   "bereich": "Verjährung",
+   "titel": "Verjährung der Gewährleistungsrechte (Verbraucherkauf)",
+   "frist": "Drei Monate nach Ablauf der Gewährleistungsfrist",
+   "beginn": "Ende der jeweiligen Gewährleistungsfrist",
+   "norm": "§ 28 Abs. 1 VGG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2021/175/P28/NOR40237889",
+   "fassung": "Paragraf in Kraft seit 1.1.2022",
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "at-abgb-933",
+   "land": "AT",
+   "bereich": "Kauf",
+   "titel": "Gewährleistung außerhalb des Verbrauchergewährleistungsgesetzes",
+   "frist": "Zwei Jahre, bei unbeweglichen Sachen drei Jahre; Verjährung drei Monate danach",
+   "beginn": "Übergabe der Sache",
+   "norm": "§ 933 Abs. 1 und 3 ABGB",
+   "url": "https://ris.bka.gv.at/eli/jgs/1811/946/P933/NOR40237220",
+   "fassung": "Paragraf in Kraft seit 1.1.2022"
+  },
+  {
+   "id": "at-abgb-1489",
+   "land": "AT",
+   "bereich": "Verjährung",
+   "titel": "Schadenersatz",
+   "frist": "Drei Jahre; ohne Kenntnis 30 Jahre",
+   "beginn": "Zeitpunkt, zu dem Schaden und Schädiger bekannt wurden",
+   "norm": "§ 1489 ABGB",
+   "url": "https://www.ris.bka.gv.at/eli/jgs/1811/946/P1489/NOR12019236",
+   "fassung": "Paragraf in Kraft seit 1.1.1975"
+  },
+  {
+   "id": "at-abgb-1486",
+   "land": "AT",
+   "bereich": "Verjährung",
+   "titel": "Forderungen für Lieferungen und Leistungen aus einem geschäftlichen Betrieb",
+   "frist": "Drei Jahre",
+   "beginn": "—",
+   "norm": "§ 1486 Z 1 ABGB",
+   "url": "https://www.ris.bka.gv.at/eli/jgs/1811/946/P1486/NOR40108842",
+   "fassung": "Paragraf in Kraft seit 1.1.2010"
+  },
+  {
+   "id": "at-versvg-8-2",
+   "land": "AT",
+   "bereich": "Versicherung",
+   "titel": "Versicherung auf unbestimmte Zeit kündigen",
+   "frist": "Nur zum Schluss der laufenden Versicherungsperiode; Frist laut Vertrag, mindestens ein und höchstens drei Monate",
+   "beginn": "Rückwärts vom Ende der Versicherungsperiode gerechnet",
+   "norm": "§ 8 Abs. 2 VersVG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1959/2/P8/NOR40138452",
+   "fassung": "Paragraf in Kraft seit 1.7.2012",
+   "hinweis": "Die Frist muss für beide Seiten gleich sein.",
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "at-versvg-8-3",
+   "land": "AT",
+   "bereich": "Versicherung",
+   "titel": "Versicherungsvertrag mit mehr als drei Jahren Laufzeit kündigen (Verbraucher)",
+   "frist": "Ein Monat zum Ende des dritten oder jedes folgenden Jahres",
+   "beginn": "Vertragsjahr, nicht Kalenderjahr",
+   "norm": "§ 8 Abs. 3 VersVG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1959/2/P8/NOR40138452",
+   "fassung": "Paragraf in Kraft seit 1.7.2012",
+   "hinweis": "Ein wegen der langen Laufzeit gewährter Prämiennachlass kann zurückzuzahlen sein.",
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "at-versvg-96",
+   "land": "AT",
+   "bereich": "Versicherung",
+   "titel": "Kündigung nach einem Versicherungsfall",
+   "frist": "Bis zum Ablauf eines Monats",
+   "beginn": "Abschluss der Verhandlungen über die Entschädigung",
+   "norm": "§ 96 Abs. 1 und 2 VersVG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1959/2/P96/NOR12037690",
+   "fassung": "Paragraf in Kraft seit 1.1.1995",
+   "hinweis": "Als Versicherungsnehmer können Sie nicht für einen späteren Zeitpunkt als den Schluss der laufenden Periode kündigen. Für welche Sparten § 96 gilt, bitte am Gesetz und an den Bedingungen prüfen.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "at-versvg-5c",
+   "land": "AT",
+   "bereich": "Versicherung",
+   "titel": "Rücktritt von einem neuen Versicherungsvertrag",
+   "frist": "14 Tage, bei Lebensversicherungen 30 Tage",
+   "beginn": "Zustandekommen des Vertrags und Information darüber, nicht vor Erhalt von Polizze, Bedingungen und Belehrung",
+   "norm": "§ 5c Abs. 1 und 2 VersVG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1959/2/P5c/NOR40279617",
+   "fassung": "Paragraf in Kraft seit 1.10.2026",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "at-abgb-1159",
+   "land": "AT",
+   "bereich": "Arbeit",
+   "titel": "Dienstverhältnis selbst kündigen (Dienstnehmerseite)",
+   "frist": "Ein Monat zum letzten Tag eines Kalendermonats",
+   "beginn": "Gilt mangels einer für Sie günstigeren Vereinbarung",
+   "norm": "§ 1159 Abs. 4 ABGB",
+   "url": "https://ris.bka.gv.at/eli/jgs/1811/946/P1159/NOR40273789",
+   "fassung": "Paragraf in Kraft seit 1.1.2026",
+   "hinweis": "Die Frist kann vertraglich bis zu einem halben Jahr verlängert werden. Kollektivvertrag und Dienstvertrag prüfen."
+  },
+  {
+   "id": "at-vwgvg-7",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Beschwerde gegen einen Bescheid an das Verwaltungsgericht",
+   "frist": "Vier Wochen",
+   "beginn": "Tag der Zustellung des Bescheids, bei nur mündlicher Verkündung dieser Tag",
+   "norm": "§ 7 Abs. 4 VwGVG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/i/2013/33/P7/NOR40235305",
+   "fassung": "Paragraf in Kraft seit 1.1.2019",
+   "hinweis": "Maßgeblich ist die Rechtsmittelbelehrung im Bescheid.",
+   "rechner": {
+    "n": 4,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-avg-63",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Berufung gegen einen Bescheid (wo sie vorgesehen ist)",
+   "frist": "Zwei Wochen",
+   "beginn": "Zustellung der schriftlichen Ausfertigung, bei bloß mündlicher Verkündung diese",
+   "norm": "§ 63 Abs. 5 AVG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1991/51/P63/NOR40148227",
+   "fassung": "Paragraf in Kraft seit 1.1.2014",
+   "hinweis": "Welches Rechtsmittel zusteht, sagt die Rechtsmittelbelehrung.",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-avg-57",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Vorstellung gegen einen Mandatsbescheid",
+   "frist": "Zwei Wochen",
+   "beginn": "Bescheid nach § 57 Abs. 1 AVG (ohne vorausgegangenes Ermittlungsverfahren); den Fristbeginn nennt die Rechtsmittelbelehrung",
+   "norm": "§ 57 Abs. 2 AVG",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1991/51/P57/NOR40280800",
+   "fassung": "Paragraf in Kraft seit 17.10.2026",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-vstg-49",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Einspruch gegen eine Strafverfügung",
+   "frist": "Zwei Wochen",
+   "beginn": "Zustellung der Strafverfügung",
+   "norm": "§ 49 Abs. 1 VStG",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/1991/52/P49/NOR40205647",
+   "fassung": "Paragraf in Kraft seit 1.1.2019",
+   "hinweis": "Der Einspruch kann auch mündlich erhoben werden – bei der Behörde, die die Strafverfügung erlassen hat.",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-bao-245",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Beschwerde gegen einen Abgabenbescheid (z. B. Einkommensteuer)",
+   "frist": "Ein Monat",
+   "beginn": "Bekanntgabe des Bescheids; bei angekündigter Begründung nicht vor deren Bekanntgabe",
+   "norm": "§ 245 Abs. 1 BAO",
+   "url": "https://ris.bka.gv.at/eli/bgbl/1961/194/P245/NOR40145084",
+   "fassung": "Fassung in Kraft seit 1.1.2014 bis 31.12.2026",
+   "hinweis": "Ab 1.1.2027 gilt eine neue Fassung des § 245 BAO; der erste Satz („einen Monat“) lautet darin gleich.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   }
+  },
+  {
+   "id": "at-zpo-248",
+   "land": "AT",
+   "bereich": "Behörde und Gericht",
+   "titel": "Einspruch gegen einen Zahlungsbefehl (Mahnverfahren)",
+   "frist": "Vier Wochen, nicht verlängerbar",
+   "beginn": "Zustellung der schriftlichen Ausfertigung des Zahlungsbefehls",
+   "norm": "§ 248 Abs. 2 ZPO",
+   "url": "https://www.ris.bka.gv.at/eli/rgbl/1895/113/P248/NOR40030230",
+   "fassung": "Paragraf in Kraft seit 1.1.2003",
+   "rechner": {
+    "n": 4,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-bgb-187",
+   "land": "DE",
+   "bereich": "Rechenregel",
+   "titel": "Fristbeginn und Fristende",
+   "frist": "Ereignistag zählt nicht mit; Wochen-, Monats- und Jahresfristen enden am Tag mit gleicher Benennung oder Zahl",
+   "beginn": "Tag nach dem Ereignis; fehlt der Tag im letzten Monat, endet die Frist mit dessen letztem Tag",
+   "norm": "§ 187 Abs. 1, § 188 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__187.html",
+   "fassung": "geltende Fassung"
+  },
+  {
+   "id": "de-bgb-193",
+   "land": "DE",
+   "bereich": "Rechenregel",
+   "titel": "Fristende am Samstag, Sonntag oder Feiertag",
+   "frist": "Nächster Werktag",
+   "beginn": "Wenn innerhalb der Frist eine Willenserklärung abzugeben oder eine Leistung zu bewirken ist",
+   "norm": "§ 193 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__193.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Maßgeblich sind die am Erklärungs- oder Leistungsort staatlich anerkannten allgemeinen Feiertage."
+  },
+  {
+   "id": "de-bgb-355",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Widerruf eines Fernabsatzvertrags oder eines außerhalb von Geschäftsräumen geschlossenen Vertrags",
+   "frist": "14 Tage",
+   "beginn": "Grundsätzlich Vertragsschluss; beim Kauf von Waren, sobald Sie (oder eine von Ihnen benannte Person, nicht der Frachtführer) die Ware erhalten haben, bei Teillieferungen die letzte",
+   "norm": "§ 355 Abs. 2, § 356 Abs. 2 Nr. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__355.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Zur Fristwahrung genügt die rechtzeitige Absendung (§ 355 Abs. 1 Satz 5). Die Frist beginnt nicht vor der Unterrichtung über das Widerrufsrecht (§ 356 Abs. 3). Ausnahmen: § 312g Abs. 2 BGB.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/ruecktritt-online-kauf/"
+  },
+  {
+   "id": "de-bgb-356-4",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Spätestes Erlöschen des Widerrufsrechts ohne Belehrung",
+   "frist": "Zwölf Monate und 14 Tage",
+   "beginn": "Der Zeitpunkt, zu dem die Frist bei ordnungsgemäßer Belehrung begonnen hätte",
+   "norm": "§ 356 Abs. 4 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__356.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Für Finanzdienstleistungen gelten Besonderheiten (Abs. 4 Satz 2).",
+   "seite": "/ruecktritt-online-kauf/"
+  },
+  {
+   "id": "de-bgb-357",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Rückzahlung und Rücksendung nach dem Widerruf",
+   "frist": "Spätestens nach 14 Tagen",
+   "beginn": "Für das Unternehmen: Zugang des Widerrufs; für Sie: Abgabe der Widerrufserklärung",
+   "norm": "§ 357 Abs. 1, § 355 Abs. 3 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__357.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Sie wahren die Frist durch rechtzeitige Absendung der Ware. Das Unternehmen darf die Rückzahlung bis zum Rückerhalt oder Absendenachweis verweigern (§ 357 Abs. 4).",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-bgb-573c-1",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Wohnung kündigen (Mieterseite)",
+   "frist": "Zum Ablauf des übernächsten Monats",
+   "beginn": "Zugang spätestens am dritten Werktag eines Kalendermonats",
+   "norm": "§ 573c Abs. 1 Satz 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__573c.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Abweichungen zum Nachteil des Mieters sind unwirksam (Abs. 4). Für die Vermieterseite verlängert sich die Frist nach fünf und acht Jahren um je drei Monate.",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "de-bgb-573c-3",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Möbliertes Zimmer in der vom Vermieter selbst bewohnten Wohnung kündigen (Wohnraum nach § 549 Abs. 2 Nr. 2 BGB)",
+   "frist": "Zum Ablauf desselben Monats",
+   "beginn": "Zugang spätestens am 15. des Monats",
+   "norm": "§ 573c Abs. 3 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__573c.html",
+   "fassung": "geltende Fassung",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "de-bgb-568",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Form der Mietkündigung",
+   "frist": "Schriftform – keine Frist, aber Voraussetzung jeder Fristwahrung",
+   "beginn": "—",
+   "norm": "§ 568 Abs. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__568.html",
+   "fassung": "geltende Fassung",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "de-bgb-561",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Sonderkündigung nach einer Mieterhöhung (§ 558 oder § 559 BGB)",
+   "frist": "Kündigung bis zum Ablauf des zweiten Monats nach Zugang; sie wirkt zum Ablauf des übernächsten Monats",
+   "beginn": "Zugang der Erhöhungserklärung",
+   "norm": "§ 561 Abs. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__561.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Kündigen Sie, tritt die Mieterhöhung nicht ein."
+  },
+  {
+   "id": "de-bgb-558b",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Überlegungsfrist für die Zustimmung zur Mieterhöhung",
+   "frist": "Bis zum Ablauf des zweiten Kalendermonats",
+   "beginn": "Zugang des Erhöhungsverlangens",
+   "norm": "§ 558b Abs. 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__558b.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Danach kann der Vermieter innerhalb von drei weiteren Monaten auf Zustimmung klagen."
+  },
+  {
+   "id": "de-bgb-574b",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Widerspruch gegen die Kündigung des Vermieters (Härtefall)",
+   "frist": "Spätestens zwei Monate vor Beendigung des Mietverhältnisses",
+   "beginn": "Rückwärts vom Kündigungstermin gerechnet",
+   "norm": "§ 574b Abs. 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__574b.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "In Textform. Hat der Vermieter nicht rechtzeitig auf Widerspruch, Form und Frist hingewiesen, ist der Widerspruch noch im ersten Termin des Räumungsrechtsstreits möglich."
+  },
+  {
+   "id": "de-bgb-545",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Widerspruch gegen die stillschweigende Verlängerung nach Ablauf der Mietzeit",
+   "frist": "Zwei Wochen",
+   "beginn": "Für Mieter: Fortsetzung des Gebrauchs; für Vermieter: Kenntnis davon",
+   "norm": "§ 545 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__545.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-bgb-556-a",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Betriebskostenabrechnung des Vermieters",
+   "frist": "Bis zum Ablauf des zwölften Monats",
+   "beginn": "Ende des Abrechnungszeitraums",
+   "norm": "§ 556 Abs. 3 Satz 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__556.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Danach ist eine Nachforderung ausgeschlossen, außer der Vermieter hat die Verspätung nicht zu vertreten."
+  },
+  {
+   "id": "de-bgb-556-b",
+   "land": "DE",
+   "bereich": "Wohnen",
+   "titel": "Einwendungen gegen die Betriebskostenabrechnung",
+   "frist": "Bis zum Ablauf des zwölften Monats",
+   "beginn": "Zugang der Abrechnung",
+   "norm": "§ 556 Abs. 3 Satz 5 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__556.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Danach sind Einwendungen ausgeschlossen, außer Sie haben die Verspätung nicht zu vertreten."
+  },
+  {
+   "id": "de-bgb-548",
+   "land": "DE",
+   "bereich": "Verjährung",
+   "titel": "Ersatzansprüche nach Mietende",
+   "frist": "Sechs Monate",
+   "beginn": "Vermieter (Schäden an der Mietsache): Rückerhalt der Mietsache. Mieter (Aufwendungen, Wegnahme): Beendigung des Mietverhältnisses",
+   "norm": "§ 548 Abs. 1 und 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__548.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 6,
+    "u": "monate",
+    "v": 0
+   },
+   "seite": "/kaution-zurueckfordern/"
+  },
+  {
+   "id": "de-bgb-438",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Verjährung der Mängelansprüche beim Kauf",
+   "frist": "Zwei Jahre (Bauwerke und Baustoffe: fünf Jahre)",
+   "beginn": "Ablieferung der Sache, bei Grundstücken Übergabe",
+   "norm": "§ 438 Abs. 1 Nr. 3, Abs. 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__438.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Bei arglistig verschwiegenem Mangel gilt die regelmäßige Verjährungsfrist (Abs. 3).",
+   "rechner": {
+    "n": 2,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "de-bgb-475e",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Verbrauchsgüterkauf: wann die Verjährung später endet",
+   "frist": "Nicht vor vier Monaten nach erstem Zeigen des Mangels; nicht vor zwei Monaten nach Rückgabe der nachgebesserten Ware; einmalig zwölf Monate mehr nach Nachbesserung",
+   "beginn": "Jeweils das genannte Ereignis",
+   "norm": "§ 475e Abs. 3, 4 und 5 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__475e.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Übergangsrecht zu Abs. 5 steht im EGBGB und ist hier nicht ausgewertet.",
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "de-bgb-477",
+   "land": "DE",
+   "bereich": "Kauf",
+   "titel": "Beweislastumkehr beim Verbrauchsgüterkauf",
+   "frist": "Ein Jahr (lebende Tiere: sechs Monate)",
+   "beginn": "Gefahrübergang",
+   "norm": "§ 477 Abs. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__477.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 1,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "de-bgb-195",
+   "land": "DE",
+   "bereich": "Verjährung",
+   "titel": "Regelmäßige Verjährung",
+   "frist": "Drei Jahre",
+   "beginn": "Schluss des Jahres, in dem der Anspruch entstanden ist und Sie von den Umständen und der Person des Schuldners Kenntnis hatten oder ohne grobe Fahrlässigkeit hätten haben müssen",
+   "norm": "§ 195, § 199 Abs. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__199.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Kenntnisunabhängige Höchstfristen: zehn bzw. 30 Jahre (§ 199 Abs. 2 bis 4)."
+  },
+  {
+   "id": "de-bgb-309-9",
+   "land": "DE",
+   "bereich": "Verträge",
+   "titel": "Laufzeitverträge mit AGB (z. B. Fitnessstudio, Abo): was Klauseln höchstens vorsehen dürfen",
+   "frist": "Bindung höchstens zwei Jahre; Kündigungsfrist höchstens ein Monat vor Ablauf; nach stillschweigender Verlängerung jederzeit kündbar mit höchstens einem Monat Frist",
+   "beginn": "Verträge über regelmäßige Lieferung von Waren oder regelmäßige Dienst- oder Werkleistungen",
+   "norm": "§ 309 Nr. 9 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__309.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Gilt nicht für Versicherungsverträge und nicht für zusammengehörig verkaufte Sachen. Übergangsrecht für ältere Verträge ist hier nicht ausgewertet.",
+   "seite": "/fitnessstudio-kuendigen/"
+  },
+  {
+   "id": "de-tkg-56",
+   "land": "DE",
+   "bereich": "Verträge",
+   "titel": "Handy- oder Internetvertrag nach stillschweigender Verlängerung kündigen",
+   "frist": "Jederzeit mit einem Monat Frist",
+   "beginn": "Nach Ablauf der anfänglichen Laufzeit (höchstens 24 Monate)",
+   "norm": "§ 56 Abs. 1 und 3 TKG",
+   "url": "https://www.gesetze-im-internet.de/tkg_2021/__56.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 0
+   },
+   "seite": "/handyvertrag-kuendigen/"
+  },
+  {
+   "id": "de-bgb-314",
+   "land": "DE",
+   "bereich": "Verträge",
+   "titel": "Kündigung eines Dauerschuldverhältnisses aus wichtigem Grund",
+   "frist": "Ohne Kündigungsfrist, aber nur innerhalb einer angemessenen Frist",
+   "beginn": "Kenntnis vom Kündigungsgrund",
+   "norm": "§ 314 Abs. 1 und 3 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__314.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Bei Pflichtverletzung in der Regel erst nach erfolgloser Abhilfefrist oder Abmahnung (Abs. 2).",
+   "seite": "/fitnessstudio-kuendigen/"
+  },
+  {
+   "id": "de-vvg-11-2",
+   "land": "DE",
+   "bereich": "Versicherung",
+   "titel": "Versicherung auf unbestimmte Zeit kündigen",
+   "frist": "Nur zum Schluss der laufenden Versicherungsperiode; Frist laut Vertrag, mindestens ein und höchstens drei Monate",
+   "beginn": "Rückwärts vom Ende der Versicherungsperiode gerechnet",
+   "norm": "§ 11 Abs. 2 und 3 VVG",
+   "url": "https://www.gesetze-im-internet.de/vvg_2008/__11.html",
+   "fassung": "geltende Fassung",
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "de-vvg-11-4",
+   "land": "DE",
+   "bereich": "Versicherung",
+   "titel": "Versicherungsvertrag mit mehr als drei Jahren Laufzeit kündigen",
+   "frist": "Drei Monate zum Schluss des dritten oder jedes folgenden Jahres",
+   "beginn": "Vertragsjahr",
+   "norm": "§ 11 Abs. 4 VVG",
+   "url": "https://www.gesetze-im-internet.de/vvg_2008/__11.html",
+   "fassung": "geltende Fassung",
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "de-vvg-40",
+   "land": "DE",
+   "bereich": "Versicherung",
+   "titel": "Kündigung nach Prämienerhöhung ohne mehr Schutz",
+   "frist": "Innerhalb eines Monats, mit sofortiger Wirkung",
+   "beginn": "Zugang der Mitteilung des Versicherers",
+   "norm": "§ 40 Abs. 1 VVG",
+   "url": "https://www.gesetze-im-internet.de/vvg_2008/__40.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Frühestens wirksam zum Zeitpunkt der Erhöhung.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "de-vvg-92",
+   "land": "DE",
+   "bereich": "Versicherung",
+   "titel": "Kündigung nach einem Versicherungsfall",
+   "frist": "Bis zum Ablauf eines Monats",
+   "beginn": "Abschluss der Verhandlungen über die Entschädigung",
+   "norm": "§ 92 Abs. 1 und 2 VVG",
+   "url": "https://www.gesetze-im-internet.de/vvg_2008/__92.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Als Versicherungsnehmer können Sie nicht für einen späteren Zeitpunkt als den Schluss der laufenden Periode kündigen.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "de-vvg-8",
+   "land": "DE",
+   "bereich": "Versicherung",
+   "titel": "Widerruf eines neuen Versicherungsvertrags",
+   "frist": "14 Tage, bei Lebensversicherungen 30 Tage",
+   "beginn": "Vertragsschluss, nicht vor Zugang von Versicherungsschein, Bedingungen und Belehrung in Textform",
+   "norm": "§ 8 Abs. 1 und 2, § 152 Abs. 1 VVG",
+   "url": "https://www.gesetze-im-internet.de/vvg_2008/__8.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "In Textform; rechtzeitige Absendung genügt.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "de-bgb-622-1",
+   "land": "DE",
+   "bereich": "Arbeit",
+   "titel": "Arbeitsverhältnis selbst kündigen (Arbeitnehmerseite)",
+   "frist": "Vier Wochen zum 15. oder zum Ende eines Kalendermonats",
+   "beginn": "Zugang der Kündigung",
+   "norm": "§ 622 Abs. 1 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__622.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Tarifvertrag und – in engen Grenzen – der Arbeitsvertrag können abweichen (Abs. 4 und 5). Für den Arbeitgeber gelten nach Betriebszugehörigkeit längere Fristen (Abs. 2)."
+  },
+  {
+   "id": "de-bgb-622-3",
+   "land": "DE",
+   "bereich": "Arbeit",
+   "titel": "Kündigung in der vereinbarten Probezeit",
+   "frist": "Zwei Wochen",
+   "beginn": "Zugang der Kündigung; Probezeit längstens sechs Monate",
+   "norm": "§ 622 Abs. 3 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__622.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 0
+   }
+  },
+  {
+   "id": "de-bgb-626",
+   "land": "DE",
+   "bereich": "Arbeit",
+   "titel": "Fristlose Kündigung aus wichtigem Grund",
+   "frist": "Nur innerhalb von zwei Wochen",
+   "beginn": "Kenntnis der für die Kündigung maßgebenden Tatsachen",
+   "norm": "§ 626 Abs. 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__626.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-kschg-4",
+   "land": "DE",
+   "bereich": "Arbeit",
+   "titel": "Klage gegen eine Kündigung des Arbeitgebers",
+   "frist": "Drei Wochen",
+   "beginn": "Zugang der schriftlichen Kündigung",
+   "norm": "§ 4 Satz 1 KSchG",
+   "url": "https://www.gesetze-im-internet.de/kschg/__4.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Klage beim Arbeitsgericht. Hier ist rasche Beratung besonders wichtig.",
+   "rechner": {
+    "n": 3,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-vwgo-70",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Widerspruch gegen einen Verwaltungsakt",
+   "frist": "Ein Monat",
+   "beginn": "Bekanntgabe des Verwaltungsakts",
+   "norm": "§ 70 Abs. 1 VwGO",
+   "url": "https://www.gesetze-im-internet.de/vwgo/__70.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Ob ein Widerspruchsverfahren stattfindet, steht in der Rechtsbehelfsbelehrung des Bescheids.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-vwgo-58",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Rechtsbehelf, wenn die Belehrung fehlt oder falsch ist",
+   "frist": "Ein Jahr",
+   "beginn": "Zustellung, Eröffnung oder Verkündung",
+   "norm": "§ 58 Abs. 2 VwGO",
+   "url": "https://www.gesetze-im-internet.de/vwgo/__58.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Die normale Frist beginnt nur bei schriftlicher oder elektronischer Belehrung zu laufen (Abs. 1).",
+   "rechner": {
+    "n": 1,
+    "u": "jahre",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-vwgo-74",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Anfechtungsklage zum Verwaltungsgericht",
+   "frist": "Ein Monat",
+   "beginn": "Zustellung des Widerspruchsbescheids; ohne Widerspruchsverfahren Bekanntgabe des Verwaltungsakts",
+   "norm": "§ 74 Abs. 1 VwGO",
+   "url": "https://www.gesetze-im-internet.de/vwgo/__74.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-sgg-84",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Widerspruch gegen einen Bescheid im Sozialrecht (z. B. Krankenkasse, Jobcenter, Rente)",
+   "frist": "Ein Monat",
+   "beginn": "Bekanntgabe des Verwaltungsakts; bei Bekanntgabe im Ausland drei Monate",
+   "norm": "§ 84 Abs. 1 SGG",
+   "url": "https://www.gesetze-im-internet.de/sgg/__84.html",
+   "fassung": "geltende Fassung",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-ao-355",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Einspruch gegen einen Steuerbescheid",
+   "frist": "Ein Monat",
+   "beginn": "Bekanntgabe des Verwaltungsakts",
+   "norm": "§ 355 Abs. 1 AO",
+   "url": "https://www.gesetze-im-internet.de/ao_1977/__355.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Wann ein Bescheid als bekannt gegeben gilt, regelt die AO an anderer Stelle; diese Tabelle wertet das nicht aus.",
+   "rechner": {
+    "n": 1,
+    "u": "monate",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-owig-67",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Einspruch gegen einen Bußgeldbescheid",
+   "frist": "Zwei Wochen",
+   "beginn": "Zustellung des Bußgeldbescheids",
+   "norm": "§ 67 Abs. 1 OWiG",
+   "url": "https://www.gesetze-im-internet.de/owig_1968/__67.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Schriftlich oder zur Niederschrift bei der Behörde, die den Bescheid erlassen hat.",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-zpo-692",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Widerspruch gegen einen Mahnbescheid",
+   "frist": "Zwei Wochen laut Aufforderung im Mahnbescheid",
+   "beginn": "Zustellung des Mahnbescheids",
+   "norm": "§ 692 Abs. 1 Nr. 3, § 694 ZPO",
+   "url": "https://www.gesetze-im-internet.de/zpo/__694.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Widerspruch ist möglich, solange der Vollstreckungsbescheid nicht verfügt ist; ein verspäteter Widerspruch wird als Einspruch behandelt (§ 694).",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-zpo-339",
+   "land": "DE",
+   "bereich": "Behörde und Gericht",
+   "titel": "Einspruch gegen einen Vollstreckungsbescheid",
+   "frist": "Zwei Wochen (Notfrist)",
+   "beginn": "Zustellung",
+   "norm": "§ 700 Abs. 1, § 339 Abs. 1 ZPO",
+   "url": "https://www.gesetze-im-internet.de/zpo/__339.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Der Vollstreckungsbescheid steht einem Versäumnisurteil gleich; deshalb gilt dessen Einspruchsfrist.",
+   "rechner": {
+    "n": 2,
+    "u": "wochen",
+    "v": 1
+   }
+  },
+  {
+   "id": "de-bgb-39",
+   "land": "DE",
+   "bereich": "Verein",
+   "titel": "Austritt aus einem Verein",
+   "frist": "Laut Satzung; die Kündigungsfrist darf höchstens zwei Jahre betragen",
+   "beginn": "Die Satzung kann den Austritt auf das Ende des Geschäftsjahrs legen",
+   "norm": "§ 39 Abs. 2 BGB",
+   "url": "https://www.gesetze-im-internet.de/bgb/__39.html",
+   "fassung": "geltende Fassung",
+   "hinweis": "Ohne Satzungsregel nennt das Gesetz keine Frist.",
+   "seite": "/verein-austritt/"
+  },
+  {
+   "id": "ch-or-77",
+   "land": "CH",
+   "bereich": "Rechenregel",
+   "titel": "Fristbeginn und Fristende",
+   "frist": "Tag des Vertragsschlusses zählt nicht mit; Wochen- und Monatsfristen enden am Tag mit gleichem Namen bzw. gleicher Zahl",
+   "beginn": "Fehlt der Tag im letzten Monat, gilt dessen letzter Tag",
+   "norm": "Art. 77 Abs. 1 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_77",
+   "fassung": "Stand 1.10.2026"
+  },
+  {
+   "id": "ch-or-78",
+   "land": "CH",
+   "bereich": "Rechenregel",
+   "titel": "Fristende am Sonntag oder Feiertag",
+   "frist": "Nächstfolgender Werktag",
+   "beginn": "Letzter Tag fällt auf einen Sonntag oder einen am Erfüllungsort staatlich anerkannten Feiertag",
+   "norm": "Art. 78 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_78",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Abweichende Vereinbarungen bleiben vorbehalten. Der Samstag steht nicht in Art. 78; der Fristenrechner stützt ihn auf das Bundesgesetz über den Fristenlauf an Samstagen (SR 173.110.3)."
+  },
+  {
+   "id": "ch-or-266c",
+   "land": "CH",
+   "bereich": "Wohnen",
+   "titel": "Wohnung kündigen",
+   "frist": "Drei Monate auf einen ortsüblichen Termin; ohne Ortsgebrauch auf das Ende einer dreimonatigen Mietdauer",
+   "beginn": "Rückwärts vom Termin gerechnet",
+   "norm": "Art. 266c OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_c",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Gilt, sofern keine längere Frist oder kein anderer Termin vereinbart ist (Art. 266a Abs. 1). Schriftform nach Art. 266l.",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "ch-or-266a",
+   "land": "CH",
+   "bereich": "Wohnen",
+   "titel": "Kündigung mit falscher Frist oder falschem Termin",
+   "frist": "Gilt für den nächstmöglichen Termin",
+   "beginn": "—",
+   "norm": "Art. 266a Abs. 2 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_a",
+   "fassung": "Stand 1.10.2026",
+   "seite": "/wohnung-kuendigen/"
+  },
+  {
+   "id": "ch-or-266d",
+   "land": "CH",
+   "bereich": "Wohnen",
+   "titel": "Geschäftsräume kündigen",
+   "frist": "Sechs Monate auf einen ortsüblichen Termin; ohne Ortsgebrauch auf das Ende einer dreimonatigen Mietdauer",
+   "beginn": "Rückwärts vom Termin gerechnet",
+   "norm": "Art. 266d OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_d",
+   "fassung": "Stand 1.10.2026"
+  },
+  {
+   "id": "ch-or-257e",
+   "land": "CH",
+   "bereich": "Wohnen",
+   "titel": "Mietkaution: Auszahlung ohne Zustimmung des Vermieters",
+   "frist": "Ein Jahr",
+   "beginn": "Beendigung des Mietverhältnisses, wenn der Vermieter bis dahin keinen Anspruch rechtlich geltend gemacht hat",
+   "norm": "Art. 257e Abs. 3 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_257_e",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Vorher gibt die Bank nur mit Zustimmung beider Parteien, Zahlungsbefehl oder Urteil heraus.",
+   "rechner": {
+    "n": 1,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/kaution-zurueckfordern/"
+  },
+  {
+   "id": "ch-or-40e",
+   "land": "CH",
+   "bereich": "Kauf",
+   "titel": "Widerruf nach Art. 40a ff. OR (Haustürgeschäfte und ähnliche Verträge)",
+   "frist": "14 Tage",
+   "beginn": "Sobald Sie den Vertrag beantragt oder angenommen und die Angaben nach Art. 40d erhalten haben",
+   "norm": "Art. 40e OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_40_e",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Für gewöhnliche Online-Käufe gibt es in der Schweiz kein allgemeines gesetzliches Widerrufsrecht. Welche Verträge erfasst sind, regeln Art. 40a bis 40c.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/ruecktritt-online-kauf/"
+  },
+  {
+   "id": "ch-or-201",
+   "land": "CH",
+   "bereich": "Kauf",
+   "titel": "Mängelrüge beim Kauf",
+   "frist": "Sofort",
+   "beginn": "Nach der Prüfung, die „sobald es nach dem üblichen Geschäftsgange tunlich ist“ erfolgen soll; bei verdeckten Mängeln sofort nach der Entdeckung",
+   "norm": "Art. 201 Abs. 1 und 3 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_201",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Abs. 4 nennt 60 Tage für Sachen, die bestimmungsgemäss in ein unbewegliches Werk integriert wurden.",
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "ch-or-210",
+   "land": "CH",
+   "bereich": "Verjährung",
+   "titel": "Gewährleistungsklagen beim Kauf",
+   "frist": "Zwei Jahre",
+   "beginn": "Ablieferung an den Käufer – auch wenn der Mangel erst später entdeckt wird",
+   "norm": "Art. 210 Abs. 1 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_210",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Fünf Jahre bei Sachen, die in ein unbewegliches Werk integriert wurden (Abs. 2). Eine Verkürzung unter zwei Jahre (gebrauchte Sachen: ein Jahr) ist bei Konsumentenkäufen ungültig (Abs. 4).",
+   "rechner": {
+    "n": 2,
+    "u": "jahre",
+    "v": 0
+   },
+   "seite": "/reklamation-gewaehrleistung/"
+  },
+  {
+   "id": "ch-or-335c",
+   "land": "CH",
+   "bereich": "Arbeit",
+   "titel": "Arbeitsverhältnis kündigen",
+   "frist": "Ein Monat im ersten Dienstjahr, zwei Monate im zweiten bis neunten, danach drei Monate – je auf das Ende eines Monats",
+   "beginn": "Zugang der Kündigung",
+   "norm": "Art. 335c Abs. 1 OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_335_c",
+   "fassung": "Stand 1.10.2026",
+   "hinweis": "Abänderbar durch schriftliche Abrede, Normal- oder Gesamtarbeitsvertrag (Abs. 2)."
+  },
+  {
+   "id": "ch-or-335b",
+   "land": "CH",
+   "bereich": "Arbeit",
+   "titel": "Kündigung in der Probezeit",
+   "frist": "Sieben Tage, jederzeit",
+   "beginn": "Probezeit ist der erste Monat, verlängerbar auf höchstens drei Monate",
+   "norm": "Art. 335b OR",
+   "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_335_b",
+   "fassung": "Stand 1.10.2026",
+   "rechner": {
+    "n": 7,
+    "u": "tage",
+    "v": 0
+   }
+  },
+  {
+   "id": "ch-zgb-70",
+   "land": "CH",
+   "bereich": "Verein",
+   "titel": "Austritt aus einem Verein",
+   "frist": "Halbjährige Frist auf das Ende des Kalenderjahres oder einer vorgesehenen Verwaltungsperiode",
+   "beginn": "Rückwärts vom Termin gerechnet",
+   "norm": "Art. 70 Abs. 2 ZGB",
+   "url": "https://www.fedlex.admin.ch/eli/cc/24/233_245_233/de#art_70",
+   "fassung": "Stand 1.7.2026",
+   "seite": "/verein-austritt/"
+  },
+  {
+   "id": "ch-vvg-35a",
+   "land": "CH",
+   "bereich": "Versicherung",
+   "titel": "Versicherungsvertrag ordentlich kündigen",
+   "frist": "Drei Monate auf das Ende des dritten oder jedes folgenden Jahres",
+   "beginn": "Auch bei länger vereinbarter Dauer",
+   "norm": "Art. 35a VVG",
+   "url": "https://www.fedlex.admin.ch/eli/cc/24/719_735_717/de#art_35_a",
+   "fassung": "Stand 1.1.2024",
+   "hinweis": "Schriftlich oder in anderer Form mit Textnachweis. Die Lebensversicherung ist ausgenommen; eine frühere Kündbarkeit kann vereinbart sein.",
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "ch-vvg-2a",
+   "land": "CH",
+   "bereich": "Versicherung",
+   "titel": "Widerruf eines neuen Versicherungsvertrags",
+   "frist": "14 Tage",
+   "beginn": "Sobald Sie den Vertrag beantragt oder angenommen haben",
+   "norm": "Art. 2a VVG",
+   "url": "https://www.fedlex.admin.ch/eli/cc/24/719_735_717/de#art_2_a",
+   "fassung": "Stand 1.1.2024",
+   "hinweis": "Die Frist ist eingehalten, wenn Sie den Widerruf am letzten Tag mitteilen oder der Post übergeben.",
+   "rechner": {
+    "n": 14,
+    "u": "tage",
+    "v": 1
+   },
+   "seite": "/versicherung-kuendigen/"
+  },
+  {
+   "id": "ch-vvg-42",
+   "land": "CH",
+   "bereich": "Versicherung",
+   "titel": "Kündigung nach einem Teilschaden",
+   "frist": "Spätestens bei der Auszahlung der Entschädigung",
+   "beginn": "—",
+   "norm": "Art. 42 Abs. 1 und 2 VVG",
+   "url": "https://www.fedlex.admin.ch/eli/cc/24/719_735_717/de#art_42",
+   "fassung": "Stand 1.1.2024",
+   "hinweis": "Die Haftung des Versicherers erlischt 14 Tage nach Mitteilung der Kündigung.",
+   "seite": "/versicherung-kuendigen/"
+  }
+ ]
+}

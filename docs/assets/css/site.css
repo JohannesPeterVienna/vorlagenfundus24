@@ -353,3 +353,68 @@ ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important}
   .vf-zettel{left:0;right:0;bottom:0;width:auto;max-height:70vh;border-left:0;border-right:0;border-bottom:0;box-shadow:0 -4px 0 rgba(26,26,26,.12);padding:.8rem 16px 1rem}
 }
 @media print{.vf-zettel{display:none!important}body{padding-bottom:0!important}}
+
+/* ===== Eigenwert 18.11.2026: Fristentabelle, Rechenbeispiele, Rechenweg ===== */
+.ft{margin:1.2rem 0 1.6rem}
+.ft-filter{display:grid;gap:.8rem 1rem;grid-template-columns:minmax(0,1fr);background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:1rem;margin-bottom:1rem}
+.ft-filter fieldset{border:0;padding:0;margin:0;min-width:0}
+.ft-filter legend{font:600 .9rem/1.3 var(--sans);padding:0;margin-bottom:.3rem}
+.ft-filter .feld{margin:0}
+.ft-filter .knopfreihe,.ft-filter .status{grid-column:1/-1;margin:0}
+@media (min-width:860px){.ft-filter{grid-template-columns:minmax(0,5fr) auto minmax(0,3fr);align-items:end}}
+.ft-tab table{min-width:0;width:100%;font-size:.93rem}
+.ft-tab th[scope=row]{font-weight:600;text-align:left}
+.ft-tab tr[hidden]{display:none}
+.ft-tab tr:target{background:var(--marker-soft)}
+.ft-bereich,.ft-fassung,.ft-hinweis,.ft-akt{display:block;font-size:.82rem;color:var(--muted);font-weight:400;margin-top:.25rem}
+.ft-bereich{font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;font-size:.72rem}
+.ft-akt a{white-space:nowrap}
+.ft-stand{font-size:.85rem;color:var(--muted)}
+@media (max-width:820px){
+  .ft-tab{border:0;overflow:visible}
+  .ft-tab table,.ft-tab tbody,.ft-tab tr,.ft-tab td,.ft-tab th[scope=row]{display:block;width:auto}
+  .ft-tab thead{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+  .ft-tab caption{display:block;text-align:left}
+  .ft-tab tr{border:1px solid var(--rule);border-radius:var(--r);background:#fff;margin:0 0 .8rem;padding:.7rem .9rem}
+  .ft-tab tr[hidden]{display:none}
+  .ft-tab td,.ft-tab th[scope=row]{border:0;padding:.2rem 0}
+  .ft-tab td::before,.ft-tab th[scope=row]::before{content:attr(data-l);display:block;font:500 .7rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .ft-tab td:first-child::before{display:none}
+  .ft-tab td:empty{display:none}
+}
+.beispiel{margin:1.6rem 0;padding:1.1rem 1.2rem;background:#fff;border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:var(--r)}
+.beispiel figcaption{font:600 1.15rem/1.3 var(--serif);margin-bottom:.8rem}
+.bsp-etikett{display:block;font:500 .72rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--stempel);margin-bottom:.25rem}
+.bsp-raster{display:grid;gap:1rem 1.6rem;grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){.bsp-raster{grid-template-columns:minmax(0,360px) minmax(0,1fr);align-items:start}}
+.beispiel p{margin:0 0 .7rem}
+.beispiel .klein{font-size:.8rem;color:var(--muted)}
+.zeitstrahl{display:block;max-width:360px;width:100%}
+.zs-linie{stroke:var(--ink);stroke-width:2}
+.zs-punkt{fill:#fff;stroke:var(--ink);stroke-width:2}
+.zs-punkt.zs-ziel{fill:var(--stempel);stroke:var(--stempel)}
+.zs-datum{font:600 14px var(--mono);fill:var(--ink)}
+.zs-text{font:400 13px var(--sans);fill:var(--muted)}
+.bsp-leiste{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 1rem}
+.bsp-wort{font:600 .85rem/1.3 var(--sans);flex-basis:100%}
+.chip{font:400 .85rem/1.25 var(--sans);text-align:left;border:1px solid #A0A0A0;border-radius:999px;background:#fff;color:var(--ink);padding:.45rem .8rem;min-height:40px;cursor:pointer}
+.chip:hover{background:#F1EEE6}
+.weg-titel{font:700 .95rem/1.3 var(--sans);margin:1rem 0 .3rem}
+.rechenweg{margin:0 0 .6rem;padding-left:1.3rem;font-size:.93rem}
+.rechenweg li{margin:.2rem 0}
+.kalstreifen{list-style:none;margin:.8rem 0 .2rem;padding:0;display:flex;flex-wrap:wrap;gap:4px}
+.kalstreifen li{margin:0;width:42px;border:1px solid var(--rule);border-radius:var(--r);background:#fff;text-align:center;font:400 .7rem/1.2 var(--mono);padding:.3rem 0;color:var(--muted)}
+.kalstreifen li b{display:block;font:600 .95rem/1.2 var(--mono);color:var(--ink)}
+.kalstreifen li.frei{background:var(--rule-2)}
+.kalstreifen li.roh{border:2px dashed var(--ink)}
+.kalstreifen li.ziel{background:var(--marker);border:2px solid var(--stempel)}
+.kal-m{display:inline-block;width:.9rem;height:.9rem;vertical-align:-.1rem;border:1px solid var(--rule);border-radius:2px;margin-left:.5rem}
+.kal-m:first-child{margin-left:0}
+.kal-m.frei{background:var(--rule-2)}.kal-m.roh{border:2px dashed var(--ink)}.kal-m.ziel{background:var(--marker);border:2px solid var(--stempel)}
+.held.kurz{padding:1.6rem 0 .4rem}
+.held.kurz .lead{max-width:46rem}
+@media print{.ft-filter,.ft-akt,.bsp-fuss{display:none!important}.ft-tab{overflow:visible;border:0}.ft-tab table{font-size:9pt}body:not(.druck-brief) main{padding:0 12mm}}
+.ft-tab th[scope=row]{font:600 .93rem/1.4 var(--sans);text-transform:none;letter-spacing:0;background:none}
+.inhalt:not(.mit-leiste) .text-spalte>.ft[data-fristentabelle]{max-width:none}
+.ft-filter input[type=search],.ft-filter select{width:100%;font:inherit;padding:.6rem .7rem;border:1px solid #A0A0A0;border-radius:var(--r);background:#fff;color:var(--ink);min-height:44px}
+@media (min-width:821px){.ft-tab td:nth-child(1){width:3.2rem}.ft-tab th[scope=row]{width:22%}.ft-tab td:nth-child(3){width:19%}.ft-tab td:nth-child(4){width:20%}.ft-tab td:nth-child(5){width:15%}}

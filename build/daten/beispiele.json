@@ -1,0 +1,330 @@
+[
+ {
+  "id": "wohnung-de",
+  "land": "DE",
+  "titel": "Durchgerechnet: Kündigung, die am 4. Januar 2027 ankommt",
+  "funktion": "mietKuendigung",
+  "args": {
+   "land": "DE",
+   "variante": "standard",
+   "zugang": "2027-01-04"
+  },
+  "erwartet": {
+   "termin": "2027-03-31",
+   "spaetesterZugang": "2027-01-05",
+   "puffer": 1
+  },
+  "punkte": [
+   [
+    "=2027-01-01",
+    "Neujahr – Feiertag, kein Werktag"
+   ],
+   [
+    "=2027-01-02",
+    "Samstag – 1. Werktag (so zählt der Rechner)"
+   ],
+   [
+    "zugang",
+    "Zugang beim Vermieter – 2. Werktag"
+   ],
+   [
+    "spaetesterZugang",
+    "3. Werktag: letzter Tag für diesen Termin"
+   ],
+   [
+    "termin",
+    "Mietende: Ablauf des übernächsten Monats"
+   ]
+  ],
+  "text": "Der Januar 2027 beginnt mit einem Feiertag am Freitag. Der Rechner zählt den Samstag als ersten Werktag, den Montag als zweiten und {spaetesterZugang} als dritten. Ein Schreiben, das am {zugang} zugeht, ist also einen Tag vor dem Stichtag da und beendet das Mietverhältnis zum {termin} (§ 573c Abs. 1 BGB). Käme es erst am 7. Januar an, verschöbe sich das Mietende um einen ganzen Monat auf den 30. April 2027. Ob der Samstag als Werktag zählt, steht nicht in § 573c; im Assistenten lässt sich die Zählweise umstellen.",
+  "link": [
+   "#wz-titel",
+   "Mit Ihrem Zugangstag rechnen"
+  ]
+ },
+ {
+  "id": "wohnung-at",
+  "land": "AT",
+  "titel": "Durchgerechnet: unbefristeter Vertrag, Miete monatlich",
+  "funktion": "mietKuendigung",
+  "args": {
+   "land": "AT",
+   "variante": "unbefristet-monatlich",
+   "zugang": "2027-01-15"
+  },
+  "erwartet": {
+   "termin": "2027-02-28",
+   "spaetesterZugang": "2027-01-31",
+   "puffer": 16
+  },
+  "punkte": [
+   [
+    "zugang",
+    "Kündigung geht der Vermieterseite zu"
+   ],
+   [
+    "spaetesterZugang",
+    "Spätester Zugang für diesen Termin"
+   ],
+   [
+    "termin",
+    "Mietende: letzter Tag des Monats"
+   ]
+  ],
+  "text": "Nach § 560 Abs. 1 Z 2 lit. d ZPO muss die Kündigung spätestens einen Monat vor dem Kündigungstermin zugestellt sein, und Termin ist immer ein Monatsletzter. Geht das Schreiben am {zugang} zu, ist der nächste erreichbare Termin der {termin}; bis {spaetesterZugang} wäre es dafür noch rechtzeitig. Der {spaetesterZugang} ist ein Sonntag – verschoben wird trotzdem nichts, denn § 560 gilt ausdrücklich „ohne Rücksicht auf Sonn- und Feiertage“. Steht im Vertrag eine längere Frist oder ein anderer Termin, gilt der Vertrag.",
+  "link": [
+   "#wz-titel",
+   "Mit Ihrem Zugangstag rechnen"
+  ]
+ },
+ {
+  "id": "ruecktritt-de",
+  "land": "DE",
+  "titel": "Durchgerechnet: Paket kommt am 11. Dezember 2026",
+  "funktion": "ruecktrittsfrist",
+  "args": {
+   "land": "DE",
+   "erhalt": "2026-12-11"
+  },
+  "erwartet": {
+   "rohEnde": "2026-12-25",
+   "ende": "2026-12-28"
+  },
+  "punkte": [
+   [
+    "erhalt",
+    "Ware erhalten – dieser Tag zählt nicht mit"
+   ],
+   [
+    "=2026-12-12",
+    "Tag 1 der Frist"
+   ],
+   [
+    "rohEnde",
+    "Tag 14 – Feiertag"
+   ],
+   [
+    "=2026-12-26",
+    "Samstag und Feiertag"
+   ],
+   [
+    "=2026-12-27",
+    "Sonntag"
+   ],
+   [
+    "ende",
+    "Letzter Tag für das Absenden des Widerrufs"
+   ]
+  ],
+  "text": "Die 14 Tage beginnen am Tag nach dem Erhalt (§ 187 Abs. 1 BGB). Rechnerisch enden sie am {rohEnde}. Weil dieser Tag ein Feiertag ist und Samstag und Sonntag folgen, tritt nach § 193 BGB der nächste Werktag an seine Stelle: {ende}. Bis dahin muss der Widerruf abgesendet sein (§ 355 Abs. 1 Satz 5 BGB) – ankommen darf er später. In Österreich ergibt dieselbe Lieferung dasselbe Datum, dort gestützt auf § 11 und § 13 Abs. 1 FAGG.",
+  "link": [
+   "/fristenrechner/#land=DE&e=2026-12-11&n=14&u=tage&v=1",
+   "Dieses Beispiel im Fristenrechner öffnen"
+  ]
+ },
+ {
+  "id": "reklamation-at",
+  "land": "AT",
+  "titel": "Durchgerechnet: Übergabe am 20. November 2026 (Österreich)",
+  "funktion": "gewaehrleistung",
+  "args": {
+   "land": "AT",
+   "uebergabe": "2026-11-20"
+  },
+  "erwartet": {
+   "vermutungBis": "2027-11-20",
+   "fristEnde": "2028-11-20",
+   "verjaehrung": "2029-02-20"
+  },
+  "punkte": [
+   [
+    "uebergabe",
+    "Übergabe der Ware"
+   ],
+   [
+    "vermutungBis",
+    "Ende der Vermutungsfrist (§ 11 VGG)"
+   ],
+   [
+    "fristEnde",
+    "Ende der Gewährleistungsfrist (§ 10 VGG)"
+   ],
+   [
+    "verjaehrung",
+    "Verjährung der Rechte (§ 28 VGG)"
+   ]
+  ],
+  "text": "Kommt der Mangel bis {vermutungBis} hervor, wird vermutet, dass er schon bei der Übergabe da war. Bis {fristEnde} haftet das Unternehmen weiter, aber dann müssen Sie im Streitfall belegen, dass der Mangel von Anfang an vorlag. Gerichtlich geltend machen lassen sich die Rechte noch drei Monate länger, bis {verjaehrung}. Das Beispiel rechnet nur die Grundfristen: Eine Verbesserung nach § 10 Abs. 2a VGG, digitale Elemente oder eine vertragliche Garantie ändern die Daten.",
+  "link": [
+   "#wz-titel",
+   "Mit Ihrem Übergabetag rechnen"
+  ]
+ },
+ {
+  "id": "versicherung",
+  "land": "AT",
+  "titel": "Durchgerechnet: Versicherungsperiode endet am 30. Juni 2027",
+  "funktion": "spaetesterZugangFuerTermin",
+  "args": [
+   "2027-06-30",
+   3
+  ],
+  "erwartet": "2027-03-31",
+  "punkte": [
+   [
+    "=2027-03-31",
+    "Spätester Zugang bei drei Monaten Frist"
+   ],
+   [
+    "=2027-05-31",
+    "Spätester Zugang bei einem Monat Frist"
+   ],
+   [
+    "=2027-06-30",
+    "Ende der Versicherungsperiode"
+   ]
+  ],
+  "text": "Das Gesetz lässt Kündigungsfristen zwischen einem und drei Monaten zu (§ 8 Abs. 2 VersVG, § 11 Abs. 3 VVG); welche gilt, steht in Ihrem Vertrag. Bei drei Monaten muss die Kündigung spätestens am {=2027-03-31} beim Versicherer sein, bei einem Monat reicht der {=2027-05-31}. Der Unterschied von zwei Monaten entscheidet darüber, ob der Vertrag ein weiteres Jahr läuft. Verschoben wird hier nicht: Fällt der letzte Tag auf ein Wochenende, sollte das Schreiben vorher ankommen.",
+  "link": [
+   "#wz-titel",
+   "Mit Ihrem Ablaufdatum rechnen"
+  ]
+ },
+ {
+  "id": "verein-ch",
+  "land": "CH",
+  "titel": "Durchgerechnet: Austritt nach Art. 70 ZGB, fünf Tage zu spät",
+  "funktion": "vereinAustrittCH",
+  "args": {
+   "zugang": "2027-07-05"
+  },
+  "erwartet": {
+   "austritt": "2028-12-31",
+   "spaetesterZugang": "2028-06-30"
+  },
+  "punkte": [
+   [
+    "=2027-06-30",
+    "Stichtag für einen Austritt per Ende 2027"
+   ],
+   [
+    "zugang",
+    "Austrittserklärung geht dem Verein zu"
+   ],
+   [
+    "spaetesterZugang",
+    "Stichtag für den Austritt per Ende 2028"
+   ],
+   [
+    "austritt",
+    "Mitgliedschaft endet"
+   ]
+  ],
+  "text": "Ohne abweichende Statuten verlangt Art. 70 Abs. 2 ZGB eine halbjährige Frist auf das Ende des Kalenderjahres. Für einen Austritt per 31. Dezember 2027 hätte die Erklärung bis {=2027-06-30} beim Verein sein müssen. Geht sie am {zugang} zu, wirkt sie erst zum {austritt} – fünf Tage kosten ein ganzes Mitgliedsjahr. In Österreich und Deutschland gibt es keinen solchen gesetzlichen Termin; dort entscheiden die Statuten bzw. die Satzung.",
+  "link": [
+   "#wz-titel",
+   "Mit Ihrem Zugangstag rechnen"
+  ]
+ },
+ {
+  "id": "handy-de",
+  "land": "DE",
+  "titel": "Durchgerechnet: Kündigung nach der Verlängerung, Zugang am 31. Januar 2027",
+  "funktion": "fristEnde",
+  "args": {
+   "ereignis": "2027-01-31",
+   "anzahl": 1,
+   "einheit": "monate",
+   "verschieben": false
+  },
+  "erwartet": {
+   "rohEnde": "2027-02-28",
+   "ende": "2027-02-28"
+  },
+  "punkte": [
+   [
+    "ereignis",
+    "Kündigung geht dem Anbieter zu"
+   ],
+   [
+    "ende",
+    "Vertragsende nach einem Monat"
+   ]
+  ],
+  "text": "Hat sich der Vertrag stillschweigend verlängert, können Sie nach § 56 Abs. 3 TKG jederzeit mit einem Monat Frist kündigen. Die Monatsfrist ab {ereignis} würde am 31. Februar enden – den Tag gibt es nicht, also endet sie nach § 188 Abs. 3 BGB am letzten Tag des Monats: {ende}. Das Beispiel rechnet nur die gesetzliche Monatsfrist; für die anfängliche Laufzeit gilt das im Vertrag genannte Ende.",
+  "link": [
+   "/fristenrechner/#land=DE&e=2027-01-31&n=1&u=monate&v=0",
+   "Dieses Beispiel im Fristenrechner öffnen"
+  ]
+ },
+ {
+  "id": "maengel-de",
+  "land": "DE",
+  "titel": "Durchgerechnet: 14 Tage Frist ab Samstag, 17. April 2027",
+  "funktion": "fristEnde",
+  "args": {
+   "ereignis": "2027-04-17",
+   "anzahl": 14,
+   "einheit": "tage",
+   "land": "DE"
+  },
+  "erwartet": {
+   "rohEnde": "2027-05-01",
+   "ende": "2027-05-03"
+  },
+  "punkte": [
+   [
+    "ereignis",
+    "Mängelanzeige geht der Vermieterseite zu"
+   ],
+   [
+    "rohEnde",
+    "Tag 14 – Samstag und Feiertag"
+   ],
+   [
+    "=2027-05-02",
+    "Sonntag"
+   ],
+   [
+    "ende",
+    "Letzter Tag der gesetzten Frist"
+   ]
+  ],
+  "text": "Setzen Sie eine Frist von 14 Tagen ab Zugang, zählt der Zugangstag nicht mit. Rechnerisch endet die Frist am {rohEnde}. Muss die Vermieterseite bis dahin etwas leisten, rückt das Ende nach § 193 BGB auf den nächsten Werktag: {ende}. Wer das im Brief gleich ausschreibt („bis spätestens 3. Mai 2027“), vermeidet Streit über die Zählweise. Wie lang eine angemessene Frist ist, hängt vom Mangel ab – das Gesetz nennt dafür keine Zahl.",
+  "link": [
+   "/fristenrechner/#land=DE&e=2027-04-17&n=14&u=tage&v=1",
+   "Dieses Beispiel im Fristenrechner öffnen"
+  ]
+ },
+ {
+  "id": "kaution-de",
+  "land": "DE",
+  "titel": "Durchgerechnet: Wohnung am 31. August 2026 zurückgegeben",
+  "funktion": "fristEnde",
+  "args": {
+   "ereignis": "2026-08-31",
+   "anzahl": 6,
+   "einheit": "monate",
+   "verschieben": false
+  },
+  "erwartet": {
+   "rohEnde": "2027-02-28",
+   "ende": "2027-02-28"
+  },
+  "punkte": [
+   [
+    "ereignis",
+    "Vermieter erhält die Wohnung zurück"
+   ],
+   [
+    "ende",
+    "Sechs Monate später: Ende der Frist des § 548 Abs. 1 BGB"
+   ]
+  ],
+  "text": "Ersatzansprüche des Vermieters wegen Veränderungen oder Verschlechterungen der Mietsache verjähren nach § 548 Abs. 1 BGB in sechs Monaten ab dem Zeitpunkt, in dem er die Wohnung zurückerhält. Bei Rückgabe am {ereignis} endet diese Frist am {ende}, weil es keinen 31. Februar gibt (§ 188 Abs. 3 BGB). Für die Kaution selbst nennt das BGB keinen festen Rückzahlungstag; das Datum zeigt nur, ab wann solche Ersatzansprüche nach dem Gesetz verjährt sind. Hemmung der Verjährung, etwa durch Verhandlungen, ist nicht eingerechnet.",
+  "link": [
+   "/fristenrechner/#land=DE&e=2026-08-31&n=6&u=monate&v=0",
+   "Dieses Beispiel im Fristenrechner öffnen"
+  ]
+ }
+]

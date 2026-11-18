@@ -1056,6 +1056,100 @@
   /* Ereignis an Google Analytics – wirkt nur nach Einwilligung (site.js) */
   function zaehlen(name, p) { try { if (typeof window.gtag === 'function' && window['ga-disable-G-T00HRG2YVF'] === false) window.gtag('event', name, p || {}); } catch (e) { /* */ } }
 
+
+  /* ================= Teilbarer Link des Fristenrechners ================= */
+  /*
+   * Der Link trägt nur Rechenwerte hinter dem #-Zeichen: Land, Ereignisdatum, Dauer, Einheit,
+   * Verschiebung, regionale Feiertage (IDs) und eigene freie Tage. Keine Namen, keine Freitexte.
+   * Der Teil hinter # wird vom Browser nicht an den Server gesendet. Jeder Wert wird beim Lesen
+   * gegen eine feste Liste bzw. ein festes Muster geprüft; Unbekanntes wird verworfen.
+   */
+  var LINK_LAENDER = ['AT', 'DE', 'CH'], LINK_EINHEITEN = ['tage', 'wochen', 'monate', 'jahre'];
+  function istDatum(sx) { if (!/^\d{4}-\d{2}-\d{2}$/.test(sx)) return false; try { F.parse(sx); return true; } catch (e) { return false; } }
+  function linkWerteLesen(hash) {
+    var h = String(hash || '').replace(/^#/, ''), out = {};
+    if (!h || h.length > 600 || h.indexOf('=') === -1) return null;
+    h.split('&').forEach(function (t) {
+      var i = t.indexOf('='); if (i < 1) return;
+      var k = t.slice(0, i), val; try { val = decodeURIComponent(t.slice(i + 1)); } catch (e) { return; }
+      if (k === 'land' && LINK_LAENDER.indexOf(val) !== -1) out.land = val;
+      else if (k === 'e' && istDatum(val)) out.e = val;
+      else if (k === 'n' && /^\d{1,4}$/.test(val) && +val <= 3650) out.n = +val;
+      else if (k === 'u' && LINK_EINHEITEN.indexOf(val) !== -1) out.u = val;
+      else if (k === 'v' && (val === '0' || val === '1')) out.v = val === '1';
+      else if (k === 'opt') out.opt = val.split(',').filter(function (x) { return /^[a-z0-9]{1,24}$/.test(x); }).slice(0, 30);
+      else if (k === 'x') out.x = val.split(',').filter(istDatum).slice(0, 20);
+    });
+    return Object.keys(out).length ? out : null;
+  }
+  function linkWerteSchreiben(w) {
+    var t = ['land=' + w.land, 'e=' + w.e, 'n=' + w.n, 'u=' + w.u, 'v=' + (w.v ? 1 : 0)];
+    if (w.opt && w.opt.length) t.push('opt=' + w.opt.join(','));
+    if (w.x && w.x.length) t.push('x=' + w.x.join(','));
+    return '#' + t.join('&');
+  }
+  // Werte sofort lesen und aus der Adresszeile nehmen, bevor irgendein anderes Skript die Adresse liest.
+  var LINKWERTE = null;
+  try {
+    if (document.querySelector('[data-werkzeug="fristen"][data-modus="allgemein"]')) {
+      LINKWERTE = linkWerteLesen(location.hash);
+      if (LINKWERTE && window.history && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+    }
+  } catch (e) { LINKWERTE = null; }
+  function kopiere(text, status, okText) {
+    function nein() { status.textContent = 'Kopieren wird von diesem Browser nicht erlaubt. Bitte von Hand markieren: ' + text; }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { status.textContent = okText; }, nein);
+      else nein();
+    } catch (e) { nein(); }
+  }
+  var RECHEN_NORM = {
+    AT: { beginn: '§ 902 Abs. 1 ABGB', ende: '§ 902 Abs. 2 ABGB', schub: '§ 903 ABGB und Art. 5 Europäisches Fristenübereinkommen' },
+    DE: { beginn: '§ 187 Abs. 1 BGB', ende: '§ 188 Abs. 2 und 3 BGB', schub: '§ 193 BGB' },
+    CH: { beginn: 'Art. 77 Abs. 1 Ziff. 1 OR', ende: 'Art. 77 Abs. 1 Ziff. 2 und 3 OR', schub: 'Art. 78 OR und SR 173.110.3' }
+  };
+  var EINHEIT_TEXT = { tage: ['Tag', 'Tage'], wochen: ['Woche', 'Wochen'], monate: ['Monat', 'Monate'], jahre: ['Jahr', 'Jahre'] };
+  function dauerText(n, u) { return n + ' ' + EINHEIT_TEXT[u][n === 1 ? 0 : 1]; }
+  /* Rechenweg in Worten – jede Zeile mit der Vorschrift, auf die sich der Schritt stützt. */
+  function rechenweg(r, w) {
+    var N = RECHEN_NORM[w.land], land = w.land, z = [];
+    var tag = function (d) { return F.weekdayDE(d) + ', ' + datum(d, land); };
+    z.push('Ereignis: ' + tag(r.ereignis) + '. Dieser Tag zählt nicht mit (' + N.beginn + ').');
+    if (w.n === 0) z.push('Dauer 0: Die Frist endet rechnerisch am Tag des Ereignisses.');
+    else if (w.u === 'tage') z.push('Tag 1 ist ' + tag(F.iso(F.addDays(F.parse(r.ereignis), 1))) + '; Tag ' + w.n + ' ist ' + tag(r.rohEnde) + '.');
+    else if (w.u === 'wochen') z.push(dauerText(w.n, w.u) + ' später, am selben Wochentag: ' + tag(r.rohEnde) + ' (' + N.ende + ').');
+    else {
+      var gleich = F.parse(r.ereignis).getUTCDate() === F.parse(r.rohEnde).getUTCDate();
+      z.push(dauerText(w.n, w.u) + ' später' + (gleich ? ', am Tag mit derselben Zahl: ' : ': Den ' + F.parse(r.ereignis).getUTCDate() + '. gibt es im Zielmonat nicht, deshalb gilt dessen letzter Tag: ') + tag(r.rohEnde) + ' (' + N.ende + ').');
+    }
+    if (!w.v) z.push('Verschiebung ausgeschaltet: Es bleibt beim rechnerischen Ende.');
+    else if (!r.verschoben.length) z.push('Der Tag ist ein Werktag und kein hinterlegter Feiertag – keine Verschiebung (' + N.schub + ').');
+    else {
+      r.verschoben.forEach(function (sx) { z.push(tag(sx.datum) + ' ist kein Werktag (' + sx.grund + ') – weiter zum nächsten Tag.'); });
+      z.push('Erster Werktag danach: ' + tag(r.ende) + ' (' + N.schub + ').');
+    }
+    return z;
+  }
+  /* Kalenderstreifen: die Tage rund um das Fristende, freie Tage und das Ergebnis markiert. */
+  function kalenderstreifen(r, w, extra) {
+    var von = F.addDays(F.parse(r.rohEnde), -2), bis = F.addDays(F.parse(r.ende), 2), out = '', kurz = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    for (var d = von, i = 0; d.getTime() <= bis.getTime() && i < 21; d = F.addDays(d, 1), i++) {
+      var id = F.iso(d), frei = null;
+      try { var sh = F.shiftToWorkday(d, w.land, FT, extra); frei = sh.verschoben.length ? sh.verschoben[0].grund : null; } catch (e) { frei = null; }
+      var kl = (frei ? ' frei' : '') + (id === r.rohEnde ? ' roh' : '') + (id === r.ende ? ' ziel' : '');
+      var sagt = F.weekdayDE(id) + ', ' + datum(id, w.land) + (frei ? ', kein Werktag: ' + frei : '') + (id === r.rohEnde ? ', rechnerisches Fristende' : '') + (id === r.ende ? ', letzter Tag der Frist' : '');
+      out += '<li class="' + kl.trim() + '" title="' + esc(sagt) + '"><span aria-hidden="true">' + kurz[d.getUTCDay()] + '<b>' + d.getUTCDate() + '.</b></span><span class="visually-hidden">' + esc(sagt) + '</span></li>';
+    }
+    return '<ol class="kalstreifen">' + out + '</ol><p class="fristquelle kal-legende"><span class="kal-m roh"></span> rechnerisches Ende <span class="kal-m frei"></span> kein Werktag <span class="kal-m ziel"></span> letzter Tag der Frist</p>';
+  }
+  var FRIST_BEISPIELE = [
+    { t: 'DE · Paket am 11.12.2026, 14 Tage Widerruf', w: { land: 'DE', e: '2026-12-11', n: 14, u: 'tage', v: true } },
+    { t: 'AT · 14 Tage ab 12.3.2027 (Ende am Karfreitag)', w: { land: 'AT', e: '2027-03-12', n: 14, u: 'tage', v: true } },
+    { t: 'CH · 14 Tage ab 18.7.2026 (Ende am 1. August)', w: { land: 'CH', e: '2026-07-18', n: 14, u: 'tage', v: true } },
+    { t: 'DE · ein Monat ab 31.1.2027 (kein 31. Februar)', w: { land: 'DE', e: '2027-01-31', n: 1, u: 'monate', v: false } },
+    { t: 'AT · vier Wochen ab 28.11.2026 (Ende am Stefanitag)', w: { land: 'AT', e: '2026-11-28', n: 4, u: 'wochen', v: true } }
+  ];
+
   /* ================= Fristenrechner (eigenständig) ================= */
   function fristenrechner(root) {
     var modus = root.getAttribute('data-modus') || 'allgemein';
@@ -1090,6 +1184,52 @@
       box.innerHTML = def.length ? '' : '<span class="hilfe">Für dieses Land sind nur bundesweite Feiertage hinterlegt.</span>';
       def.forEach(function (h) { box.appendChild(el('label', {}, [el('input', { type: 'checkbox', name: 'opt', value: h.id }), ' ' + h.name])); });
     }
+    var letzte = null; // zuletzt gerechnete Werte für „Kopieren“ und „Link“
+    function setze(w) {
+      if (!w) return;
+      if (w.land) { $all('input[name=land]', form).forEach(function (e) { e.checked = e.value === w.land; }); optionalBauen(w.land); }
+      if (w.e) $('#fr-ereignis', form).value = w.e;
+      if (typeof w.n === 'number') $('#fr-anzahl', form).value = w.n;
+      if (w.u) $('#fr-einheit', form).value = w.u;
+      if (typeof w.v === 'boolean') $('#fr-verschieben', form).checked = w.v;
+      $all('input[name=opt]', form).forEach(function (e) { e.checked = !!(w.opt && w.opt.indexOf(e.value) !== -1); });
+      $('#fr-eigene', form).value = w.x ? w.x.join(', ') : '';
+    }
+    function zeigeAllgemein(v) {
+      var land = LINK_LAENDER.indexOf(v.land) !== -1 ? v.land : 'AT';
+      var eigene = String(v.eigene || '').split(/[,;\s]+/).filter(istDatum).slice(0, 20);
+      var n = Math.round(+v.anzahl);
+      if (!istDatum(v.ereignis || HEUTE)) throw new Error('Bitte ein gültiges Ereignisdatum eintragen.');
+      if (String(v.anzahl).trim() === '' || !(n >= 0) || n > 3650) throw new Error('Bitte eine Dauer zwischen 0 und 3650 eintragen.');
+      var w = { land: land, e: v.ereignis || HEUTE, n: n, u: LINK_EINHEITEN.indexOf(v.einheit) !== -1 ? v.einheit : 'tage', v: !!v.verschieben, opt: v.opt || [], x: eigene };
+      // Regionale Feiertage löst der Rechenkern für das Jahr des Fristendes auf (nicht nur für die
+      // ersten Jahre ab dem Ereignis) und prüft die Abdeckung der Feiertagsdaten.
+      var r = F.fristEnde({ ereignis: w.e, anzahl: w.n, einheit: w.u, land: land, feiertage: FT, verschieben: w.v, eigeneFeiertage: eigene, optional: w.opt });
+      var q = land === 'AT' ? 'AT-902' : land === 'DE' ? 'DE-187' : 'CH-77';
+      var y = F.parse(r.rohEnde).getUTCFullYear();
+      var extra = eigene.concat(F.expandOptional(land, [y, y + 1], FT, w.opt));
+      var weg = rechenweg(r, w);
+      letzte = { w: w, text: 'Fristberechnung (' + L(land, { AT: 'Österreich', DE: 'Deutschland', CH: 'Schweiz' }) + '), Dauer ' + dauerText(w.n, w.u) + '\n' +
+        weg.map(function (zl, i) { return (i + 1) + '. ' + zl; }).join('\n') + '\nLetzter Tag der Frist: ' + F.weekdayDE(r.ende) + ', ' + datum(r.ende, land) +
+        '\nBerechnet mit vorlagenfundus24.de/fristenrechner/ – gesetzliche Grundregel, keine Rechtsberatung.' };
+      aus.innerHTML = '<section class="fristkarte"><h3>Ergebnis</h3>' +
+        '<div class="fristzeile"><span>Ereignis</span><b>' + esc(datum(r.ereignis, land)) + ' (' + F.weekdayDE(r.ereignis) + ')</b></div>' +
+        '<div class="fristzeile"><span>Rechnerisches Fristende</span><b>' + esc(datum(r.rohEnde, land)) + ' (' + F.weekdayDE(r.rohEnde) + ')</b></div>' +
+        '<div class="fristzeile"><span>Letzter Tag der Frist</span><b class="mark">' + esc(datum(r.ende, land)) + ' (' + F.weekdayDE(r.ende) + ')</b></div>' +
+        (r.verschoben.length ? '<p class="fristquelle">Verschoben wegen: ' + r.verschoben.map(function (s) { return esc(datum(s.datum, land) + ' – ' + s.grund); }).join('; ') + '</p>' : '') +
+        '<h4 class="weg-titel">Rechenweg</h4><ol class="rechenweg">' + weg.map(function (zl) { return '<li>' + esc(zl) + '</li>'; }).join('') + '</ol>' +
+        (w.v ? kalenderstreifen(r, w, extra.length ? extra : null) : '') +
+        '<p class="fristquelle">Grundlage: ' + quelleHtml(q) + (land === 'AT' ? ', Samstag und Karfreitag nach <a href="https://www.ris.bka.gv.at/eli/bgbl/1983/254/A5/NOR12010626" rel="noopener" target="_blank">Art. 5 Europäisches Fristenübereinkommen</a>' : land === 'CH' ? ', Samstag nach <a href="https://www.fedlex.admin.ch/eli/cc/1963/819_815_843/de" rel="noopener" target="_blank">SR 173.110.3</a>' : '') + '. Weitere gesetzliche Fristen mit Fundstelle: <a href="/fristen-tabelle/">Fristentabelle</a>.</p>' +
+        '<p class="knopfreihe"><button type="button" class="knopf leise" data-akt="kopieren">Ergebnis kopieren</button><button type="button" class="knopf leise" data-akt="link">Link mit diesen Werten kopieren</button></p>' +
+        '<p class="status" role="status" data-status></p></section>' +
+        '<div class="hinweis"><strong>Wichtig</strong><p>Kündigungsfristen und -termine werden nicht verschoben: Wer zu einem Monatsende kündigt, muss rechtzeitig vorher zugehen lassen. Für Kündigungen nutzen Sie die Rechner auf den jeweiligen Vorlagenseiten. Der Link enthält nur die Rechenwerte (Land, Datum, Dauer, Feiertagsauswahl), keine Namen.</p></div>';
+    }
+    aus.addEventListener('click', function (ev) {
+      var k = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-akt') : null, st = $('[data-status]', aus);
+      if (!k || !letzte || !st) return;
+      if (k === 'kopieren') kopiere(letzte.text, st, 'Ergebnis mit Rechenweg in die Zwischenablage kopiert.');
+      if (k === 'link') kopiere(location.origin + '/fristenrechner/' + linkWerteSchreiben(letzte.w), st, 'Link kopiert. Er enthält nur die Rechenwerte.');
+    });
     function rechne() {
       var v = {}; $all('input,select', form).forEach(function (e) {
         if (e.type === 'radio') { if (e.checked) v[e.name] = e.value; }
@@ -1119,25 +1259,24 @@
           });
           aus.innerHTML = '<h3 style="margin-top:0">Zugang am ' + esc(datum(z, 'DE')) + ' (' + F.weekdayDE(z) + ')</h3><div class="vergleich">' + karten + '</div><p class="fristquelle">Gesetzliche Mindestregeln für Mieterinnen und Mieter. Deutschland: nur bundesweite Feiertage – Landesfeiertage können den dritten Werktag verschieben; sie lassen sich im Brief-Assistenten auf der Seite „Wohnung kündigen“ anhaken. Vertragliche Abweichungen: In Österreich und der Schweiz können Verträge längere Fristen oder weitere Termine vorsehen, soweit zulässig. In Deutschland ist eine Vereinbarung, die von der gesetzlichen Frist zum Nachteil der Mieterin oder des Mieters abweicht, nach ' + quelleHtml('DE-573c-4') + ' unwirksam; ein vereinbarter Kündigungsverzicht oder ein Zeitmietvertrag kann die Kündigung aber zeitweise ausschließen, und für ältere Verträge gelten Übergangsregeln – Vertrag prüfen. Keine Rechtsberatung.</p>';
         } else {
-          var land = v.land || 'AT';
-          var eigene = String(v.eigene || '').split(/[,;\s]+/).filter(function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s); });
-          // Regionale Feiertage löst der Rechenkern für das Jahr des Fristendes auf (nicht nur für die
-          // ersten Jahre ab dem Ereignis) und prüft die Abdeckung der Feiertagsdaten.
-          var r = F.fristEnde({ ereignis: v.ereignis || HEUTE, anzahl: +v.anzahl, einheit: v.einheit, land: land, feiertage: FT, verschieben: !!v.verschieben, eigeneFeiertage: eigene, optional: v.opt || [] });
-          var q = land === 'AT' ? 'AT-902' : land === 'DE' ? 'DE-187' : 'CH-77';
-          aus.innerHTML = '<section class="fristkarte"><h3>Ergebnis</h3>' +
-            '<div class="fristzeile"><span>Ereignis</span><b>' + esc(datum(r.ereignis, land)) + ' (' + F.weekdayDE(r.ereignis) + ')</b></div>' +
-            '<div class="fristzeile"><span>Rechnerisches Fristende</span><b>' + esc(datum(r.rohEnde, land)) + ' (' + F.weekdayDE(r.rohEnde) + ')</b></div>' +
-            '<div class="fristzeile"><span>Letzter Tag der Frist</span><b class="mark">' + esc(datum(r.ende, land)) + ' (' + F.weekdayDE(r.ende) + ')</b></div>' +
-            (r.verschoben.length ? '<p class="fristquelle">Verschoben wegen: ' + r.verschoben.map(function (s) { return esc(datum(s.datum, land) + ' – ' + s.grund); }).join('; ') + '</p>' : '') +
-            '<p class="fristquelle">Der Tag des Ereignisses zählt nicht mit. Grundlage: ' + quelleHtml(q) + (land === 'AT' ? ', Samstag und Karfreitag nach <a href="https://www.ris.bka.gv.at/eli/bgbl/1983/254/A5/NOR12010626" rel="noopener" target="_blank">Art. 5 Europäisches Fristenübereinkommen</a>' : land === 'CH' ? ', Samstag nach <a href="https://www.fedlex.admin.ch/eli/cc/1963/819_815_843/de" rel="noopener" target="_blank">SR 173.110.3</a>' : '') + '.</p></section>' +
-            '<div class="hinweis"><strong>Wichtig</strong><p>Kündigungsfristen und -termine werden nicht verschoben: Wer zu einem Monatsende kündigt, muss rechtzeitig vorher zugehen lassen. Für Kündigungen nutzen Sie die Rechner auf den jeweiligen Vorlagenseiten.</p></div>';
+          zeigeAllgemein(v);
         }
       } catch (e) { aus.innerHTML = '<p class="nok">' + esc(isoText(e.message, v.land || 'DE')) + '</p>'; }
     }
     form.addEventListener('input', rechne);
     form.addEventListener('change', function (e) { if (e.target.name === 'land') optionalBauen(e.target.value); rechne(); });
     optionalBauen('AT');
+    if (modus !== 'vergleich') {
+      var leiste = el('div', { class: 'bsp-leiste' }, [el('span', { class: 'bsp-wort' }, ['Beispiele zum Anklicken:'])]);
+      FRIST_BEISPIELE.forEach(function (b, i) { leiste.appendChild(el('button', { type: 'button', class: 'chip', 'data-bsp': String(i) }, [b.t])); });
+      leiste.addEventListener('click', function (ev) {
+        var i = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-bsp') : null;
+        if (i == null || !FRIST_BEISPIELE[+i]) return;
+        setze(FRIST_BEISPIELE[+i].w); rechne();
+      });
+      form.insertBefore(leiste, form.firstChild);
+      if (LINKWERTE) { setze(LINKWERTE); LINKWERTE = null; }
+    }
     rechne();
   }
 
@@ -1234,5 +1373,5 @@
 
   // für Tests
   window.VFBrief = { versandEmpfehlung: versandEmpfehlung, VORLAGEN: VORLAGEN, crc32: crc32, briefDaten: briefDaten, blattHtml: blattHtml,
-    fristenHtml: fristenHtml, wiederherstellPruefung: wiederherstellPruefung, fristKern: fristKern, setzeFeiertage: function (d) { FT = d; } };
+    fristenHtml: fristenHtml, linkWerteLesen: linkWerteLesen, linkWerteSchreiben: linkWerteSchreiben, rechenweg: rechenweg, wiederherstellPruefung: wiederherstellPruefung, fristKern: fristKern, setzeFeiertage: function (d) { FT = d; } };
 })();

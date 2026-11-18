@@ -295,7 +295,7 @@
    * AT: § 11 Abs. 1 und 2 Z 2 FAGG; rechtzeitige Absendung genügt (§ 13 Abs. 1 FAGG).
    * DE: § 355 Abs. 2, § 356 Abs. 2 Nr. 1 BGB; rechtzeitige Absendung genügt (§ 355 Abs. 1 BGB).
    * Ohne ordnungsgemäße Belehrung verlängert sich die Frist (AT § 12 FAGG: um zwölf Monate;
-   * DE § 356 Abs. 3: spätestens zwölf Monate und 14 Tage) – das gibt der Rechner nur als Hinweis aus.
+   * DE § 356 Abs. 4: spätestens zwölf Monate und 14 Tage) – das gibt der Rechner nur als Hinweis aus.
    */
   function ruecktrittsfrist(opts) {
     if (opts.land !== 'AT' && opts.land !== 'DE') throw new Error('Nur AT/DE: in der Schweiz gibt es kein allgemeines Widerrufsrecht für Online-Käufe');

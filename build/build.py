@@ -16,7 +16,7 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = '2. November 2026'
 LASTMOD = '2026-11-02'
-ASSETV = '2026-11-05g'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+ASSETV = '2026-11-18a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -36,6 +36,7 @@ NAV = [
     ('/', 'Start'),
     ('/vorlagen/', 'Alle Vorlagen'),
     ('/fristenrechner/', 'Fristenrechner'),
+    ('/fristen-tabelle/', 'Fristentabelle'),
     ('/einschreiben-rueckschein-zugang/', 'Versand'),
     ('/ueber-uns/', 'Über uns'),
 ]
@@ -46,6 +47,120 @@ LOGO = ('<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" focu
         '<rect x="8" y="15" width="16" height="3" fill="#1A1A1A"/><rect x="8" y="21" width="20" height="2" fill="#A0A0A0"/>'
         '<rect x="8" y="25" width="14" height="2" fill="#A0A0A0"/><rect x="25" y="26" width="10" height="8" fill="#F3D9D5"/>'
         '<path d="M27 30h6" stroke="#1A1A1A" stroke-width="1.5"/></svg>')
+
+
+# ---------- Eigene Daten: Fristentabelle und durchgerechnete Beispiele ----------
+DATEN = ROOT / 'build' / 'daten'
+FRISTEN = json.loads((DATEN / 'fristen.json').read_text(encoding='utf-8'))
+BEISPIELE = {b['id']: b for b in json.loads((DATEN / 'beispiele.json').read_text(encoding='utf-8'))}
+LANDNAME = {'AT': 'Österreich', 'DE': 'Deutschland', 'CH': 'Schweiz'}
+MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+WOCHENTAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+
+
+def datum_lang(iso, land='DE', wochentag=True):
+    import datetime
+    d = datetime.date.fromisoformat(iso)
+    mon = 'Jänner' if (land == 'AT' and d.month == 1) else MONATE[d.month - 1]
+    t = f'{d.day}. {mon} {d.year}'
+    return f'{WOCHENTAGE[d.weekday()]}, {t}' if wochentag else t
+
+
+ABRUF = datum_lang(FRISTEN['abruf'], 'DE', False)
+
+
+def rechner_link(f):
+    r = f.get('rechner')
+    if not r:
+        return ''
+    return f'/fristenrechner/#land={f["land"]}&n={r["n"]}&u={r["u"]}&v={r["v"]}'
+
+
+def fristen_zeile(f, kompakt):
+    aktionen = []
+    if rechner_link(f):
+        aktionen.append(f'<a href="{rechner_link(f)}">Im Fristenrechner öffnen</a>')
+    if f.get('seite') and not kompakt:
+        aktionen.append(f'<a href="{f["seite"]}">Zur Vorlage</a>')
+    hinweis = f'<span class="ft-hinweis">{esc(f["hinweis"])}</span>' if f.get('hinweis') else ''
+    akt = f'<span class="ft-akt">{" · ".join(aktionen)}</span>' if aktionen else ''
+    return (f'<tr id="f-{f["id"]}" data-land="{f["land"]}" data-bereich="{esc(f["bereich"])}">'
+            f'<td data-l="Land"><span class="land" title="{LANDNAME[f["land"]]}">{f["land"]}</span></td>'
+            f'<th scope="row" data-l="Worum es geht">{esc(f["titel"])}<span class="ft-bereich">{esc(f["bereich"])}</span></th>'
+            f'<td data-l="Frist"><b>{esc(f["frist"])}</b></td>'
+            f'<td data-l="Beginn oder Bezugspunkt">{esc(f["beginn"])}</td>'
+            f'<td data-l="Fundstelle"><a href="{esc(f["url"])}" rel="noopener">{esc(f["norm"])}</a><span class="ft-fassung">{esc(f["fassung"])}</span></td>'
+            f'<td data-l="Hinweis">{hinweis}{akt}</td></tr>')
+
+
+def fristentabelle(zeilen, kompakt=False, titel=''):
+    kopf_ = ('<thead><tr><th scope="col">Land</th><th scope="col">Worum es geht</th><th scope="col">Frist</th>'
+             '<th scope="col">Beginn oder Bezugspunkt</th><th scope="col">Fundstelle</th><th scope="col">Hinweis</th></tr></thead>')
+    rumpf = ''.join(fristen_zeile(f, kompakt) for f in zeilen)
+    cap = f'<caption>{esc(titel)}</caption>' if titel else ''
+    attr = '' if kompakt else ' data-fristentabelle'
+    return (f'<div class="ft"{attr}><div class="tabelle ft-tab"><table>{cap}{kopf_}<tbody>{rumpf}</tbody></table></div>'
+            f'<p class="ft-stand">Gesetzestexte abgerufen am {ABRUF}. Quellen: RIS (Österreich), Gesetze im Internet (Deutschland), Fedlex (Schweiz). '
+            f'Gesetzliche Grundregeln – Vertrag, Statuten und Sonderregeln können abweichen. Keine Rechtsberatung.'
+            f'{"" if not kompakt else " Alle Einträge: <a href=&quot;/fristen-tabelle/&quot;>Fristentabelle</a>."}</p></div>').replace('&quot;', '"')
+
+
+def umbrechen(text, n=44):
+    zeilen, akt = [], ''
+    for w in text.split():
+        if akt and len(akt) + 1 + len(w) > n:
+            zeilen.append(akt); akt = w
+        else:
+            akt = (akt + ' ' + w).strip()
+    return zeilen + ([akt] if akt else [])
+
+
+def beispiel_html(bid):
+    b = BEISPIELE[bid]
+    land = b['land']
+
+    def wert(k):
+        if k.startswith('='):
+            return k[1:]
+        if isinstance(b['erwartet'], dict) and k in b['erwartet']:
+            return b['erwartet'][k]
+        return b['args'][k]
+    y, teile = 22, []
+    punkte = [(wert(k), t) for k, t in b['punkte']]
+    for i, (d, t) in enumerate(punkte):
+        zl = umbrechen(t)
+        letzter = i == len(punkte) - 1
+        hoehe = 30 + 17 * len(zl) + 10
+        if not letzter:
+            teile.append(f'<line class="zs-linie" x1="14" y1="{y}" x2="14" y2="{y + hoehe}"/>')
+        teile.append(f'<circle class="zs-punkt{" zs-ziel" if letzter else ""}" cx="14" cy="{y}" r="7"/>')
+        teile.append(f'<text class="zs-datum" x="34" y="{y + 5}">{esc(datum_lang(d, land))}</text>')
+        for j, z in enumerate(zl):
+            teile.append(f'<text class="zs-text" x="34" y="{y + 24 + 17 * j}">{esc(z)}</text>')
+        y += hoehe
+    hoehe_ges = y - 6
+    label = 'Zeitstrahl: ' + '; '.join(f'{datum_lang(d, land, False)} – {t}' for d, t in punkte)
+    svg = (f'<svg class="zeitstrahl" viewBox="0 0 360 {hoehe_ges}" width="360" height="{hoehe_ges}" role="img" aria-label="{esc(label)}">'
+           f'{"".join(teile)}</svg>')
+    text = re.sub(r'\{([^}]+)\}', lambda m: datum_lang(wert(m.group(1)), land), b['text'])
+    href, linktext = b['link']
+    return (f'<figure class="beispiel"><figcaption><span class="bsp-etikett">Rechenbeispiel · {LANDNAME[land]}</span>{esc(b["titel"])}</figcaption>'
+            f'<div class="bsp-raster">{svg}<div><p>{text}</p>'
+            f'<p class="bsp-fuss"><a class="knopf leise" href="{esc(href)}">{esc(linktext)}</a></p>'
+            f'<p class="klein">Konstruiertes Beispiel mit angenommenen Daten, gerechnet mit dem Rechenkern dieser Website; ein automatischer Test vergleicht die Daten vor jeder Veröffentlichung.</p></div></div></figure>')
+
+
+def daten_einfuegen(s, body):
+    """<!--fristentabelle--> = ganze Tabelle; <!--fristen--> = Einträge zu dieser Seite; <!--beispiel:id--> = Rechenbeispiel."""
+    # Reihenfolge der großen Tabelle: je Land zuerst die Alltagsfristen, die Rechenregeln am Schluss
+    alle = sorted(FRISTEN['fristen'], key=lambda f: (['AT', 'DE', 'CH'].index(f['land']), f['bereich'] == 'Rechenregel'))
+    body = body.replace('<!--fristentabelle-->', fristentabelle(alle))
+    if '<!--fristen-->' in body:
+        eigene = [f for f in FRISTEN['fristen'] if f.get('seite') == s['url']]
+        if not eigene:
+            raise SystemExit('Keine Fristen für ' + s['url'])
+        body = body.replace('<!--fristen-->', fristentabelle(eigene, True))
+    return re.sub(r'<!--beispiel:([a-z0-9-]+)-->', lambda m: beispiel_html(m.group(1)), body)
 
 
 def kurz(d, n=160):
@@ -187,6 +302,7 @@ def fuss():
           <li><a href="/wohnung-kuendigen/">Wohnung kündigen</a></li>
           <li><a href="/ruecktritt-online-kauf/">Rücktritt vom Online-Kauf</a></li>
           <li><a href="/vollmacht-post-pakete/">Vollmacht Post</a></li>
+          <li><a href="/fristen-tabelle/">Fristentabelle</a></li>
           <li><a href="/vorlagen/">Alle Vorlagen</a></li>
         </ul>
       </div>
@@ -246,7 +362,7 @@ def quellen_html(s):
 def seite(s):
     url = s['url']
     canonical = BASE + url
-    body, toc = toc_aus_html(s['body'])
+    body, toc = toc_aus_html(daten_einfuegen(s, s['body']))
     ohne = s.get('ohneWerbung')
     if ohne:
         body = body.replace('<!--anzeige-->', '').replace('<!--banner-->', '')
@@ -275,6 +391,8 @@ def seite(s):
     if mit_leiste:
         leiste = f'<aside class="leiste" aria-label="Seitenleiste">{toc_html}{"" if ohne else anzeige("seite")}</aside>'
     scripts = ['<script src="/assets/js/site.js?v=' + ASSETV + '" defer></script>']
+    if s.get('tabelle'):
+        scripts.insert(0, '<script src="/assets/js/tabelle.js?v=' + ASSETV + '" defer></script>')
     if s.get('werkzeug'):
         scripts.insert(0, '<script src="/assets/js/brief.js?v=' + ASSETV + '" defer></script>')
         scripts.insert(0, '<script src="/assets/js/fristen.js?v=' + ASSETV + '" defer></script>')

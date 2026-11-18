@@ -17,7 +17,7 @@
       {"datum": "12-26", "name": "Stefanitag"}
     ],
     "ostern": [
-      {"offset": -2, "name": "Karfreitag (Fristhemmung nach BGBl. Nr. 37/1961)"},
+      {"offset": -2, "name": "Karfreitag (von Österreich zum Europäischen Fristenübereinkommen notifiziert)"},
       {"offset": 1, "name": "Ostermontag"},
       {"offset": 39, "name": "Christi Himmelfahrt"},
       {"offset": 50, "name": "Pfingstmontag"},
