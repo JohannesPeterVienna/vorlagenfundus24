@@ -114,7 +114,10 @@ const ROOT = path.join(__dirname, '..', 'docs');
     assert((await page.textContent('.wz-ausgabe .mark')).includes('3. August 2026'));
     const mob = await neu(390, 844); await mob.goto(B + '/', { waitUntil: 'networkidle' });
     const obenMobil = await mob.evaluate(() => document.querySelector('.werkzeug').getBoundingClientRect().top + scrollY);
-    assert(obenMobil < 500, 'Startseite 390 px: Rechner beginnt erst bei ' + obenMobil); await mob.context().close();
+    // seit 19.11.2026 steht der Kopfplatz (320×100) zwischen Einleitung und Rechner: Rechnerkopf samt erster Beispielzeile bleibt im ersten Bildschirm
+    assert(obenMobil < 560, 'Startseite 390 px: Rechner beginnt erst bei ' + obenMobil);
+    const ersteWahl = await mob.evaluate(() => document.querySelector('.werkzeug .chip, .werkzeug input, .werkzeug button').getBoundingClientRect().bottom + scrollY);
+    assert(ersteWahl < 844, 'Startseite 390 px: erstes Bedienelement des Rechners nicht im ersten Bildschirm: ' + ersteWahl); await mob.context().close();
 
     // ---------- 4. Fristentabelle ----------
     await page.goto(B + '/fristen-tabelle/', { waitUntil: 'networkidle' });

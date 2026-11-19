@@ -230,6 +230,27 @@ caption{text-align:left;font:600 .85rem var(--mono);padding:.5rem .7rem;color:va
 .anzeige[data-format="seite"] .anz-platz{min-height:600px;width:160px;margin:0 auto}
 @media (min-width:1280px){.anzeige[data-format="seite"] .anz-platz{width:300px}}
 .leiste .anzeige{margin-top:32px}
+/* Kopfplatz: nach Überschrift und Einleitung, im ersten Bildschirm. Die Größe des <ins> steht von Anfang an fest
+   (site.js), das Etikett liegt im Zeilenabstand darüber – beim Füllen verschiebt sich nichts. Abstand zur Navigation
+   durch Brotkrumen und Überschrift, zum Werkzeug durch Stempel, Hinweis und Werkzeugkopf (tests/kopfplatz.js). */
+.anzeige[data-format^="kopf"]{position:relative;margin:0 auto;clear:none}
+.anzeige[data-format^="kopf"] .anz-label{position:absolute;left:0;right:0;bottom:100%;margin:0 0 6px}
+.mit-anzeige>.lead{margin-bottom:30px}
+.anzeige[data-format^="kopf"]:not([hidden])+.stempel{margin-top:18px}
+.anzeige[data-format^="kopf"]:has(ins.adsbygoogle[data-ad-status="unfilled"])+.stempel{margin-top:0}
+@media (min-width:800px){.held.kurz.mit-anzeige{padding-bottom:1.3rem}}
+/* Ab 1024 px steht der Kopfplatz rechts neben Überschrift und Einleitung. Damit das Werkzeug trotz der schmaleren
+   Textspalte im ersten Bildschirm beginnt, sind die Abstände im Seitenkopf hier etwas knapper. */
+@media screen and (min-width:1024px){
+  .seitenkopf.mit-anzeige{position:relative;padding:.5rem 332px .9rem 0;min-height:312px}
+  .seitenkopf.mit-anzeige>.krumen{margin-top:.75rem}
+  .seitenkopf.mit-anzeige>h1{margin-bottom:.4em}
+  .seitenkopf.mit-anzeige>.lead{margin-bottom:1.1em}
+  .seitenkopf.mit-anzeige>.anzeige[data-format="kopf"]{position:absolute;right:0;top:48px;width:300px;margin:0}
+  .seitenkopf.mit-anzeige>.anzeige[data-format="kopf"]+.stempel{margin-top:0}
+  .seitenkopf.mit-anzeige+.hinweis{margin-top:.9rem}
+  .seitenkopf.mit-anzeige~.werkzeug{margin-top:1.2rem}
+}
 /* Werbeflächen ohne Antwort von Google: Das <ins class="adsbygoogle"> bleibt immer sichtbar und ungeschnitten
    (AdSense-Hilfe 10762946: Anzeigenblöcke nicht anfangs versteckt laden). Nur das Beiwerk – Beschriftung,
    Mindesthöhe, Rahmen, Hintergrund, Polster, Abstände – erscheint erst bei data-ad-status="filled" oder

@@ -68,7 +68,7 @@ function ungeschnitten(l, wo) {
     const { ctx, page } = await oeffnen(1366, '/wohnung-kuendigen/');
     await page.$$eval('.anzeige ins.adsbygoogle', (l, st) => l.forEach(i => i.setAttribute('data-ad-status', st)), status);
     const da = await sichtbarePlaetze(page);
-    assert(da.length > 0 && da.every(p => p.etikett && p.hoehe >= 90 && p.oben === 32), status + ': Plätze nicht vollständig sichtbar: ' + JSON.stringify(da));
+    assert(da.length > 0 && da.every(p => p.etikett && p.hoehe >= 90 && p.oben === (p.format.startsWith('kopf') ? 0 : 32)), status + ': Plätze nicht vollständig sichtbar: ' + JSON.stringify(da));
     assert(await page.$$eval('.anzeige:not([hidden])', l => l.every(b => b.classList.contains('anzeige--gefuellt'))), 'Rückfall-Klasse fehlt');
     bericht.push(`1366 px ${status}: ${da.length} Plätze mit Etikett „Anzeige“ und Abstand sichtbar`);
     await ctx.close();
@@ -96,7 +96,7 @@ function ungeschnitten(l, wo) {
     assert(l.every(x => !x.etikett && x.abstand === 0), 'ohne :has(): Beiwerk ohne Status sichtbar');
     await page.$$eval('.anzeige ins.adsbygoogle', l => l.forEach(i => i.setAttribute('data-ad-status', 'unfill-optimized')));
     l = await inse(page);
-    assert(l.every(x => x.etikett && x.abstand > 0), 'ohne :has(): unfill-optimized ohne Etikett');
+    assert(l.every(x => x.etikett && (x.abstand > 0 || x.format.startsWith('kopf'))), 'ohne :has(): unfill-optimized ohne Etikett'); // Kopfplatz: Etikett im Zeilenabstand, kein eigener Rand
     bericht.push('ohne :has(): Rückfall-Klassen verhalten sich gleich');
     await ctx.close();
   }

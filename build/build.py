@@ -16,7 +16,7 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = '2. November 2026'
 LASTMOD = '2026-11-02'
-ASSETV = '2026-11-18a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+ASSETV = '2026-11-19a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -406,13 +406,18 @@ def seite(s):
         scripts.insert(0, '<script src="/assets/js/fristen.js?v=' + ASSETV + '" defer></script>')
     lead = f'<p class="lead">{s["lead"]}</p>' if s.get('lead') else ''
     held = s.get('held')
+    kopfplatz = not ohne and ('<!--banner-->' in s['body'] or '<!--anzeige-->' in s['body'])  # nur Seiten, die schon Plätze im Text haben
+    # Kopfplatz: nach Überschrift und Einleitung, vor Stempel und Werkzeug. Startseite: Band unter der Einleitung;
+    # übrige Seiten: ab 1024 px rechts neben Überschrift und Einleitung (site.css), darunter flaches Band.
     if held:
-        kopfbereich = held
+        kopfbereich = held if not kopfplatz else held.replace('<section class="held kurz">', '<section class="held kurz mit-anzeige">', 1).replace('</section>', anzeige('kopfband') + '</section>', 1)
+        assert not kopfplatz or 'data-format="kopfband"' in kopfbereich, 'Kopfplatz der Startseite fehlt'
     else:
-        kopfbereich = f'''<div class="seitenkopf">
+        kopfbereich = f'''<div class="seitenkopf{' mit-anzeige' if kopfplatz else ''}">
       {krumen_html(s)}
       <h1>{esc(s['h1'])}</h1>
       {lead}
+      {anzeige('kopf') if kopfplatz else ''}
       {stempel}
     </div>'''
     return f'''{kopf(s, canonical)}

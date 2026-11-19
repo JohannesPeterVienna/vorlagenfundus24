@@ -460,6 +460,9 @@
   function groesse(format) {
     if (format === 'banner') return mq('(min-width: 768px)') ? [728, 90] : (mq('(min-width: 360px)') ? [320, 100] : null); // 320 px Banner braucht Platz für den Seitenrand
     if (format === 'rectangle') return [300, 250];
+    // Kopfplatz (nach Überschrift und Einleitung): flaches Band; auf Inhaltsseiten ab 1024 px Rechteck neben dem Seitenkopf
+    if (format === 'kopf' && mq('(min-width: 1024px)')) return [300, 250];
+    if (format === 'kopf' || format === 'kopfband') return mq('(min-width: 800px)') ? [728, 90] : (mq('(min-width: 360px)') ? [320, 100] : null);
     if (format === 'seite') {
       if (!mq('(min-width: 1024px)')) return null;
       return mq('(min-width: 1280px)') ? [300, 600] : [160, 600];
@@ -482,9 +485,10 @@
   var aktiv = 0;
   Array.prototype.forEach.call(plaetze, function (box) {
     var format = box.getAttribute('data-format');
-    var slot = SLOTS[format];
     var g = groesse(format);
-    if (g && format === 'banner' && g[0] === 320) slot = SLOT_MOBIL;
+    var slot = SLOTS[format];
+    if (g && (format === 'kopf' || format === 'kopfband')) slot = g[0] === 300 ? SLOTS.rectangle : SLOTS.banner; // gleiche Blöcke wie im Text
+    if (g && (format === 'banner' || format === 'kopf' || format === 'kopfband') && g[0] === 320) slot = SLOT_MOBIL;
     if (g && format === 'seite' && g[0] === 160) slot = SLOT_SKY;
     if (!slot || !g) return;               // ohne Slot-ID kein reservierter Platz, kein Layoutsprung
     var platz = box.querySelector('.anz-platz');
