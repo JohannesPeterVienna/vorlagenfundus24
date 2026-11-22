@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+SHOP_LINK = (ROOT / 'build' / 'shop-link.html').read_text(encoding='utf-8')
 SRC = ROOT / 'build' / 'content'
 OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
@@ -329,7 +330,7 @@ def fuss(s):
     </div>
     <p class="klein">© 2026 AdStern, Wien · Vorlagenfundus 24 ist ein unabhängiges Informationsangebot und steht in keiner Verbindung zu Behörden, Interessenvertretungen oder Postunternehmen.</p>
   </div>
-</footer>'''
+{SHOP_LINK}</footer>'''
 
 
 def krumen_html(s):
