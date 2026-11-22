@@ -385,11 +385,8 @@ def seite(s):
         stempel = f'<p class="stempel"><span>Stand: {stand_text(s)}</span><span class="laender">{laender}</span></p>'
     disclaimer = ''
     if s.get('vorlage'):
-        disclaimer = ('<div class="hinweis warn"><strong>Keine Rechtsberatung</strong><p>Diese Vorlage und die berechneten Fristen beruhen auf den gesetzlichen Grundregeln. '
-                      'Ihr Vertrag, Statuten oder Sonderregeln können abweichen. Wenn viel auf dem Spiel steht, lassen Sie das Schreiben prüfen, etwa bei der '
-                      '<a href="https://www.arbeiterkammer.at/" rel="noopener">Arbeiterkammer</a>, der '
-                      '<a href="https://www.verbraucherzentrale.de/" rel="noopener">Verbraucherzentrale</a>, dem '
-                      '<a href="https://www.mieterverband.ch/" rel="noopener">Mieterinnen- und Mieterverband</a> oder einer Anwaltskanzlei.</p></div>')
+        disclaimer = ('<div class="hinweis warn"><strong>Keine Rechtsberatung</strong><p>Prüfen Sie Vertrag, Statuten und mögliche Sonderregeln. '
+                      '<a href="/so-entsteht-eine-vorlage/#beratung">Grenzen der Berechnung und persönliche Beratungsstellen</a>.</p></div>')
     toc_html = ''
     if len(toc) >= 3 and not s.get('ohneLeiste'):
         toc_html = '<nav class="toc" aria-label="Auf dieser Seite"><b>Auf dieser Seite</b><ol>' + ''.join(
