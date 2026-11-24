@@ -78,11 +78,11 @@ def rechner_link(f):
     return f'/fristenrechner/#land={f["land"]}&n={r["n"]}&u={r["u"]}&v={r["v"]}{art}'
 
 
-def fristen_zeile(f, kompakt):
+def fristen_zeile(f):
     aktionen = []
     if rechner_link(f):
         aktionen.append(f'<a href="{rechner_link(f)}">Im Fristenrechner öffnen</a>')
-    if f.get('seite') and not kompakt:
+    if f.get('seite'):
         aktionen.append(f'<a href="{f["seite"]}">Zur Vorlage</a>')
     hinweis = f'<span class="ft-hinweis">{esc(f["hinweis"])}</span>' if f.get('hinweis') else ''
     akt = f'<span class="ft-akt">{" · ".join(aktionen)}</span>' if aktionen else ''
@@ -95,16 +95,13 @@ def fristen_zeile(f, kompakt):
             f'<td data-l="Hinweis">{hinweis}{akt}</td></tr>')
 
 
-def fristentabelle(zeilen, kompakt=False, titel=''):
+def fristentabelle(zeilen):
     kopf_ = ('<thead><tr><th scope="col">Land</th><th scope="col">Worum es geht</th><th scope="col">Frist</th>'
              '<th scope="col">Beginn oder Bezugspunkt</th><th scope="col">Fundstelle</th><th scope="col">Hinweis</th></tr></thead>')
-    rumpf = ''.join(fristen_zeile(f, kompakt) for f in zeilen)
-    cap = f'<caption>{esc(titel)}</caption>' if titel else ''
-    attr = '' if kompakt else f' data-fristentabelle data-abruf="{ABRUF}"'
-    return (f'<div class="ft"{attr}><div class="tabelle ft-tab"><table>{cap}{kopf_}<tbody>{rumpf}</tbody></table></div>'
+    rumpf = ''.join(fristen_zeile(f) for f in zeilen)
+    return (f'<div class="ft" data-fristentabelle data-abruf="{ABRUF}"><div class="tabelle ft-tab"><table>{kopf_}<tbody>{rumpf}</tbody></table></div>'
             f'<p class="ft-stand">Gesetzestexte abgerufen am {ABRUF}. Quellen: RIS (Österreich), Gesetze im Internet (Deutschland), Fedlex (Schweiz). '
-            f'Gesetzliche Grundregeln – Vertrag, Statuten und Sonderregeln können abweichen. Keine Rechtsberatung.'
-            f'{"" if not kompakt else " Alle Einträge: <a href=&quot;/fristen-tabelle/&quot;>Fristentabelle</a>."}</p></div>').replace('&quot;', '"')
+            f'Gesetzliche Grundregeln – Vertrag, Statuten und Sonderregeln können abweichen. Keine Rechtsberatung.</p></div>')
 
 
 def umbrechen(text, n=44):
@@ -153,7 +150,7 @@ def beispiel_html(bid):
 
 
 def daten_einfuegen(s, body):
-    """<!--fristentabelle--> = ganze Tabelle; <!--fristen--> = Einträge zu dieser Seite; <!--beispiel:id--> = Rechenbeispiel;
+    """<!--fristentabelle--> = ganze Tabelle (nur /fristen-tabelle/); <!--beispiel:id--> = Rechenbeispiel;
     href="rechner:id" = Fristenrechner-Link, vorbelegt mit Land, Dauer und Einheit dieses Tabelleneintrags."""
     def rechner_ziel(m):
         f = next((f for f in FRISTEN['fristen'] if f['id'] == m.group(1)), None)
@@ -165,10 +162,7 @@ def daten_einfuegen(s, body):
     alle = sorted(FRISTEN['fristen'], key=lambda f: (['AT', 'DE', 'CH'].index(f['land']), f['bereich'] == 'Rechenregel'))
     body = body.replace('<!--fristentabelle-->', fristentabelle(alle))
     if '<!--fristen-->' in body:
-        eigene = [f for f in FRISTEN['fristen'] if f.get('seite') == s['url']]
-        if not eigene:
-            raise SystemExit('Keine Fristen für ' + s['url'])
-        body = body.replace('<!--fristen-->', fristentabelle(eigene, True))
+        raise SystemExit('<!--fristen--> gibt es nicht mehr (wortgleiche Tabellenauszüge): ' + s['url'])
     return re.sub(r'<!--beispiel:([a-z0-9-]+)-->', lambda m: beispiel_html(m.group(1)), body)
 
 
