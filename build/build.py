@@ -17,7 +17,7 @@ OUT = ROOT / 'docs'
 BASE = 'https://vorlagenfundus24.de'
 STAND = '2. November 2026'
 LASTMOD = '2026-11-02'
-ASSETV = '2026-11-18a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
+ASSETV = '2026-11-24a'  # Cache-Schlüssel für CSS/JS; bei jeder Skriptänderung erhöhen
 PUB = 'ca-pub-7811071715414905'
 # Google Consent Mode v2: alle Zwecke abgelehnt, bevor irgendein Google-Skript lädt. Nur die Google-CMP
 # bzw. site.js (nach gemeldeter Zustimmung) heben einzelne Werte an.
@@ -153,7 +153,14 @@ def beispiel_html(bid):
 
 
 def daten_einfuegen(s, body):
-    """<!--fristentabelle--> = ganze Tabelle; <!--fristen--> = Einträge zu dieser Seite; <!--beispiel:id--> = Rechenbeispiel."""
+    """<!--fristentabelle--> = ganze Tabelle; <!--fristen--> = Einträge zu dieser Seite; <!--beispiel:id--> = Rechenbeispiel;
+    href="rechner:id" = Fristenrechner-Link, vorbelegt mit Land, Dauer und Einheit dieses Tabelleneintrags."""
+    def rechner_ziel(m):
+        f = next((f for f in FRISTEN['fristen'] if f['id'] == m.group(1)), None)
+        if not f or not rechner_link(f):
+            raise SystemExit(f'Kein Rechner-Eintrag {m.group(1)} auf {s["url"]}')
+        return f'href="{rechner_link(f)}"'
+    body = re.sub(r'href="rechner:([a-z0-9-]+)"', rechner_ziel, body)
     # Reihenfolge der großen Tabelle: je Land zuerst die Alltagsfristen, die Rechenregeln am Schluss
     alle = sorted(FRISTEN['fristen'], key=lambda f: (['AT', 'DE', 'CH'].index(f['land']), f['bereich'] == 'Rechenregel'))
     body = body.replace('<!--fristentabelle-->', fristentabelle(alle))
